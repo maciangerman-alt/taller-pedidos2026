@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Taller Artesanal — Pedidos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --madera: #8B5E3C; --madera-light: #C49A6C; --madera-dark: #5C3D20;
+    --crema: #FAF4EC; --crema-dark: #F0E6D3;
+    --verde: #2D7A4F; --verde-light: #E8F5EE;
+    --rojo: #C0392B; --rojo-light: #FDECEA;
+    --amarillo: #D4820A; --amarillo-light: #FEF3E2;
+    --azul: #2563EB; --azul-light: #EFF6FF;
+    --violeta: #7C3AED; --violeta-light: #EDE9FE;
+    --gris: #6B7280; --texto: #1C1008; --borde: #E5D9CC; --bg: #F5EFE8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--texto); min-height:100vh; font-size:14px; }
+  .header { background:var(--madera-dark); color:white; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,0.2); }
+  .header-left { display:flex; align-items:center; gap:10px; }
+  .header-logo { font-size:22px; }
+  .header-title { font-size:16px; font-weight:700; }
+  .header-sub { font-size:11px; opacity:0.6; }
+  .header-stats { display:flex; gap:16px; }
+  .hstat { text-align:right; }
+  .hstat-val { font-size:15px; font-weight:700; color:var(--madera-light); }
+  .hstat-label { font-size:10px; opacity:0.6; }
+  .tabs { background:white; display:flex; border-bottom:2px solid var(--borde); overflow-x:auto; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { padding:12px 16px; font-size:13px; font-weight:600; color:var(--gris); cursor:pointer; white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-2px; transition:all 0.2s; display:flex; align-items:center; gap:6px; }
+  .tab.active { color:var(--madera); border-bottom-color:var(--madera); }
+  .tab-badge { background:var(--crema-dark); color:var(--madera); font-size:10px; font-weight:700; padding:2px 6px; border-radius:100px; }
+  .tab.active .tab-badge { background:var(--madera); color:white; }
+  .main { padding:16px; max-width:900px; margin:0 auto; }
+  .btn-nuevo { width:100%; background:var(--madera); color:white; border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:16px; font-family:'DM Sans',sans-serif; }
+  .btn-nuevo:hover { background:var(--madera-dark); }
+  .filtros { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; scrollbar-width:none; padding-bottom:4px; }
+  .filtros::-webkit-scrollbar { display:none; }
+  .filtro-btn { padding:6px 14px; border-radius:100px; border:1.5px solid var(--borde); background:white; font-size:12px; font-weight:600; color:var(--gris); cursor:pointer; white-space:nowrap; font-family:'DM Sans',sans-serif; }
+  .filtro-btn.active { background:var(--madera); border-color:var(--madera); color:white; }
+  .buscador { background:white; border:1.5px solid var(--borde); border-radius:10px; padding:10px 14px; width:100%; font-size:14px; font-family:'DM Sans',sans-serif; margin-bottom:16px; outline:none; }
+  .buscador:focus { border-color:var(--madera); }
+  .pedido-card { background:white; border-radius:14px; padding:16px; margin-bottom:12px; border:1.5px solid var(--borde); cursor:pointer; position:relative; overflow:hidden; }
+  .pedido-card:hover { border-color:var(--madera-light); box-shadow:0 4px 16px rgba(139,94,60,0.1); }
+  .pedido-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--gris); }
+  .pedido-card.pendiente::before { background:var(--amarillo); }
+  .pedido-card.produccion::before { background:var(--azul); }
+  .pedido-card.listo::before { background:var(--verde); }
+  .pedido-card.entregado::before { background:var(--madera-light); }
+  .pedido-card.cobrado::before { background:#9CA3AF; }
+  .pedido-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .pedido-nombre { font-weight:700; font-size:15px; }
+  .pedido-escuela { font-size:12px; color:var(--gris); margin-top:2px; }
+  .estado-badge { font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px; white-space:nowrap; }
+  .estado-pendiente { background:var(--amarillo-light); color:var(--amarillo); }
+  .estado-produccion { background:var(--azul-light); color:var(--azul); }
+  .estado-listo { background:var(--verde-light); color:var(--verde); }
+  .estado-entregado { background:var(--crema-dark); color:var(--madera); }
+  .estado-cobrado { background:#F3F4F6; color:#6B7280; }
+  .pedido-productos { font-size:13px; margin-bottom:10px; background:var(--crema); padding:8px 10px; border-radius:8px; line-height:1.4; }
+  .pedido-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  .pedido-dinero { display:flex; gap:12px; flex-wrap:wrap; }
+  .dinero-item { text-align:center; }
+  .dinero-val { font-size:14px; font-weight:700; color:var(--madera-dark); }
+  .dinero-val.saldo { color:var(--rojo); }
+  .dinero-val.cobrado-full { color:var(--verde); }
+  .dinero-label { font-size:10px; color:var(--gris); }
+  .pedido-meta { display:flex; gap:8px; flex-wrap:wrap; }
+  .meta-chip { font-size:11px; color:var(--gris); }
+  .factura-chip { background:var(--violeta-light); color:var(--violeta); font-size:10px; font-weight:700; padding:2px 8px; border-radius:100px; }
+  .autocomplete-wrap { position:relative; }
+  .autocomplete-list { position:absolute; top:100%; left:0; right:0; background:white; border:1.5px solid var(--madera-light); border-radius:10px; z-index:500; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.15); }
+  .autocomplete-item { padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--crema-dark); }
+  .autocomplete-item:last-child { border-bottom:none; }
+  .autocomplete-item:hover { background:var(--crema); }
+  .autocomplete-item strong { color:var(--madera-dark); display:block; }
+  .autocomplete-item span { color:var(--gris); font-size:11px; }
+  .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:flex-end; justify-content:center; }
+  .overlay.show { display:flex; }
+  .modal { background:white; width:100%; max-width:600px; max-height:92vh; border-radius:20px 20px 0 0; overflow-y:auto; padding:20px; animation:slideUp 0.25s ease; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width:36px; height:4px; background:var(--borde); border-radius:100px; margin:0 auto 16px; }
+  .modal-title { font-size:18px; font-weight:700; margin-bottom:20px; color:var(--madera-dark); }
+  .form-group { margin-bottom:14px; }
+  .form-label { display:block; font-size:12px; font-weight:600; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .form-input, .form-select, .form-textarea { width:100%; padding:11px 14px; border:1.5px solid var(--borde); border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif; background:white; color:var(--texto); outline:none; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--madera); }
+  .form-textarea { min-height:80px; resize:vertical; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .form-section { background:var(--crema); border-radius:12px; padding:14px; margin-bottom:14px; }
+  .form-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--madera); margin-bottom:12px; }
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; }
+  .toggle-label { font-size:14px; font-weight:500; }
+  .toggle { width:44px; height:24px; background:var(--borde); border-radius:100px; position:relative; cursor:pointer; border:none; transition:background 0.2s; }
+  .toggle.on { background:var(--madera); }
+  .toggle::after { content:''; position:absolute; width:18px; height:18px; background:white; border-radius:50%; top:3px; left:3px; transition:left 0.2s; }
+  .toggle.on::after { left:23px; }
+  .dinero-resumen { background:var(--madera-dark); color:white; border-radius:12px; padding:14px; margin-bottom:14px; display:flex; justify-content:space-around; text-align:center; }
+  .dr-val { font-size:18px; font-weight:700; color:var(--madera-light); }
+  .dr-label { font-size:11px; opacity:0.7; margin-top:2px; }
+  .btn-row { display:flex; gap:10px; margin-top:6px; }
+  .btn { flex:1; padding:13px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .btn-primary { background:var(--madera); color:white; }
+  .btn-primary:hover { background:var(--madera-dark); }
+  .btn-secondary { background:var(--crema-dark); color:var(--madera-dark); }
+  .btn-danger { background:var(--rojo-light); color:var(--rojo); }
+  .estado-selector { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .estado-opt { padding:8px 4px; border-radius:8px; border:1.5px solid var(--borde); font-size:11px; font-weight:600; text-align:center; cursor:pointer; color:var(--gris); }
+  .estado-opt.selected { border-width:2px; }
+  .estado-opt[data-val="pendiente"].selected { background:var(--amarillo-light); border-color:var(--amarillo); color:var(--amarillo); }
+  .estado-opt[data-val="produccion"].selected { background:var(--azul-light); border-color:var(--azul); color:var(--azul); }
+  .estado-opt[data-val="listo"].selected { background:var(--verde-light); border-color:var(--verde); color:var(--verde); }
+  .estado-opt[data-val="entregado"].selected { background:var(--crema-dark); border-color:var(--madera-light); color:var(--madera); }
+  .estado-opt[data-val="cobrado"].selected { background:#F3F4F6; border-color:#9CA3AF; color:#6B7280; }
+  .logistica-selector { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .log-opt { padding:10px 6px; border-radius:8px; border:1.5px solid var(--borde); font-size:12px; font-weight:600; text-align:center; cursor:pointer; color:var(--gris); }
+  .log-opt.selected { background:var(--crema-dark); border-color:var(--madera); color:var(--madera-dark); }
+  .caja-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .caja-card { background:white; border-radius:12px; padding:16px; border:1.5px solid var(--borde); text-align:center; }
+  .caja-val { font-size:22px; font-weight:700; color:var(--madera-dark); margin-bottom:4px; }
+  .caja-val.verde { color:var(--verde); }
+  .caja-val.rojo { color:var(--rojo); }
+  .caja-val.azul { color:var(--azul); }
+  .caja-label { font-size:12px; color:var(--gris); }
+  .export-row { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .btn-export { padding:10px 16px; border-radius:10px; border:1.5px solid var(--borde); background:white; font-size:13px; font-weight:600; color:var(--madera-dark); cursor:pointer; font-family:'DM Sans',sans-serif; display:flex; align-items:center; gap:6px; }
+  .btn-export:hover { background:var(--crema-dark); border-color:var(--madera); }
+  .analytics-title { font-size:16px; font-weight:700; color:var(--madera-dark); margin-bottom:12px; margin-top:20px; }
+  .period-selector { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .period-btn { padding:6px 16px; border-radius:100px; border:1.5px solid var(--borde); background:white; font-size:12px; font-weight:600; color:var(--gris); cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .period-btn.active { background:var(--madera); border-color:var(--madera); color:white; }
+  .periodo-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+  @media (max-width:400px) { .periodo-cards { grid-template-columns:repeat(2,1fr); } }
+  .periodo-card { background:white; border-radius:12px; padding:14px; border:1.5px solid var(--borde); text-align:center; }
+  .periodo-val { font-size:18px; font-weight:700; color:var(--madera-dark); margin-bottom:4px; }
+  .periodo-label { font-size:11px; color:var(--gris); }
+  .bar-chart { background:white; border-radius:12px; padding:16px; border:1.5px solid var(--borde); margin-bottom:16px; }
+  .bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .bar-label { font-size:12px; color:var(--texto); width:110px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar-track { flex:1; background:var(--crema-dark); border-radius:100px; height:20px; overflow:hidden; }
+  .bar-fill { height:100%; background:var(--madera); border-radius:100px; }
+  .bar-fill.verde { background:var(--verde); }
+  .bar-val { font-size:11px; font-weight:700; color:var(--gris); width:70px; text-align:right; flex-shrink:0; }
+  .empty { text-align:center; padding:40px 20px; color:var(--gris); }
+  .empty-icon { font-size:48px; margin-bottom:12px; }
+  .empty-title { font-size:16px; font-weight:600; margin-bottom:6px; }
+  .loading { text-align:center; padding:40px; color:var(--gris); }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--madera-dark); color:white; padding:12px 20px; border-radius:100px; font-size:13px; font-weight:600; z-index:999; transition:transform 0.3s; white-space:nowrap; }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+  @media (min-width:600px) { .modal { border-radius:20px; margin:20px; max-height:85vh; } .overlay { align-items:center; } }
+
+  /* HOY */
+  .hoy-header { background:linear-gradient(135deg,var(--madera-dark),var(--madera)); color:white; border-radius:14px; padding:16px 20px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; }
+  .hoy-header-left { }
+  .hoy-titulo { font-size:18px; font-weight:700; }
+  .hoy-fecha { font-size:12px; opacity:0.75; margin-top:2px; }
+  .hoy-count { font-size:32px; font-weight:700; color:var(--madera-light); text-align:right; line-height:1; }
+  .hoy-count-label { font-size:11px; opacity:0.7; text-align:right; }
+  .hoy-empty { text-align:center; padding:60px 20px; }
+  .hoy-empty-icon { font-size:56px; margin-bottom:12px; }
+  .hoy-empty-title { font-size:18px; font-weight:700; color:var(--madera-dark); margin-bottom:6px; }
+  .hoy-empty-sub { font-size:13px; color:var(--gris); }
+  .hoy-card { background:white; border-radius:14px; padding:16px; margin-bottom:10px; border:2px solid var(--borde); cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s; }
+  .hoy-card:hover { border-color:var(--madera-light); box-shadow:0 4px 16px rgba(139,94,60,0.12); }
+  .hoy-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; }
+  .hoy-card.pendiente::before { background:var(--amarillo); }
+  .hoy-card.produccion::before { background:var(--azul); }
+  .hoy-card.listo::before { background:var(--verde); }
+  .hoy-card.entregado::before { background:var(--madera-light); }
+  .hoy-card.cobrado::before { background:#9CA3AF; }
+  .hoy-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .hoy-nombre { font-size:16px; font-weight:700; color:var(--texto); }
+  .hoy-escuela { font-size:12px; color:var(--gris); margin-top:2px; }
+  .hoy-productos { background:var(--crema); border-radius:8px; padding:10px 12px; font-size:13px; line-height:1.5; color:var(--texto); margin-bottom:10px; border-left:3px solid var(--madera-light); }
+  .hoy-footer { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  .hoy-dinero { display:flex; gap:16px; }
+  .hoy-dinero-item { text-align:center; }
+  .hoy-dinero-val { font-size:15px; font-weight:700; color:var(--madera-dark); }
+  .hoy-dinero-val.saldo { color:var(--rojo); }
+  .hoy-dinero-val.ok { color:var(--verde); }
+  .hoy-dinero-label { font-size:10px; color:var(--gris); }
+  .hoy-chips { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .hoy-chip { font-size:11px; font-weight:600; padding:3px 10px; border-radius:100px; }
+  .hoy-chip.log { background:var(--crema-dark); color:var(--madera-dark); }
+  .hoy-chip.tel { background:var(--verde-light); color:var(--verde); }
+  .hoy-resumen { background:white; border-radius:12px; padding:14px; border:1.5px solid var(--borde); margin-bottom:16px; display:flex; justify-content:space-around; text-align:center; }
+  .hoy-res-val { font-size:18px; font-weight:700; color:var(--madera-dark); }
+  .hoy-res-val.verde { color:var(--verde); }
+  .hoy-res-val.rojo { color:var(--rojo); }
+  .hoy-res-label { font-size:11px; color:var(--gris); margin-top:2px; }
+
+  .meta-card { background:var(--madera-dark); color:white; border-radius:14px; padding:16px 20px; margin-bottom:16px; }
+  .meta-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+  .meta-titulo { font-size:13px; font-weight:700; opacity:0.8; text-transform:uppercase; letter-spacing:0.5px; }
+  .meta-mes { font-size:11px; opacity:0.6; margin-top:2px; }
+  .meta-nums { text-align:right; }
+  .meta-actual { font-size:22px; font-weight:700; color:var(--madera-light); }
+  .meta-objetivo { font-size:11px; opacity:0.6; margin-top:2px; }
+  .meta-bar-track { background:rgba(255,255,255,0.15); border-radius:100px; height:10px; overflow:hidden; margin-bottom:8px; }
+  .meta-bar-fill { height:100%; border-radius:100px; background:var(--madera-light); transition:width 0.6s ease; }
+  .meta-bar-fill.superada { background:#4ade80; }
+  .meta-footer { display:flex; justify-content:space-between; font-size:12px; opacity:0.75; }
+  .weekly-chart { background:white; border-radius:14px; padding:16px; border:1.5px solid var(--borde); margin-bottom:16px; }
+  .weekly-bars { display:flex; align-items:flex-end; gap:6px; height:100px; margin-bottom:8px; }
+  .weekly-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; justify-content:flex-end; }
+  .weekly-bar { width:100%; border-radius:6px 6px 0 0; background:var(--madera-light); transition:height 0.4s ease; min-height:2px; }
+  .weekly-bar.actual { background:var(--madera); }
+  .weekly-bar-val { font-size:9px; font-weight:700; color:var(--gris); text-align:center; }
+  .weekly-bar-label { font-size:10px; color:var(--gris); font-weight:600; }
+
+  /* LOGIN */
+  .login-screen {
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; background:var(--madera-dark);
+    position:fixed; inset:0; z-index:9999;
+  }
+  .login-box {
+    background:white; border-radius:20px; padding:36px 32px;
+    width:100%; max-width:360px; margin:20px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    text-align:center;
+  }
+  .login-logo { font-size:48px; margin-bottom:8px; }
+  .login-title { font-family:'DM Sans',sans-serif; font-size:22px; font-weight:700; color:var(--madera-dark); margin-bottom:4px; }
+  .login-sub { font-size:13px; color:var(--gris); margin-bottom:28px; }
+  .login-label { display:block; font-size:12px; font-weight:600; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; text-align:left; }
+  .login-select { width:100%; padding:12px 14px; border:1.5px solid var(--borde); border-radius:10px; font-size:15px; font-family:'DM Sans',sans-serif; background:white; color:var(--texto); outline:none; margin-bottom:16px; cursor:pointer; }
+  .login-select:focus { border-color:var(--madera); }
+  .login-input { width:100%; padding:12px 14px; border:1.5px solid var(--borde); border-radius:10px; font-size:15px; font-family:'DM Sans',sans-serif; background:white; color:var(--texto); outline:none; margin-bottom:20px; }
+  .login-input:focus { border-color:var(--madera); }
+  .login-btn { width:100%; background:var(--madera); color:white; border:none; border-radius:10px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.2s; }
+  .login-btn:hover { background:var(--madera-dark); }
+  .login-error { background:var(--rojo-light); color:var(--rojo); border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+  .login-loading { color:var(--gris); font-size:13px; margin-top:12px; display:none; }
+</style>
+</head>
+<body>
+
+<!-- PANTALLA DE LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <img src="https://i.ibb.co/R4dnhnkH/Dise-o-sin-t-tulo-2.png" id="logo-img" style="width:130px;height:auto;margin-bottom:8px;" onerror="this.outerHTML='<div style=font-size:60px>🐊</div>'">
+    <div class="login-title">Taller Artesanal</div>
+    <div class="login-sub">Sistema de Gestión de Pedidos</div>
+    <div class="login-error" id="login-error">Contraseña incorrecta. Intentá de nuevo.</div>
+    <label class="login-label">¿Quién sos?</label>
+    <select class="login-select" id="login-usuario">
+      <option value="">— Elegí tu usuario —</option>
+      <option value="maciangerman@gmail.com">👨‍💼 Germán</option>
+      <option value="noracoronel25@gmail.com">👩‍🏭 Nora</option>
+    </select>
+    <label class="login-label">Contraseña</label>
+    <input class="login-input" id="login-pass" type="password" placeholder="Tu contraseña" onkeydown="if(event.key==='Enter')hacerLogin()">
+    <button class="login-btn" onclick="hacerLogin()">Entrar</button>
+    <div class="login-loading" id="login-loading">Verificando...</div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <img src="https://i.ibb.co/R4dnhnkH/Dise-o-sin-t-tulo-2.png" style="width:38px;height:38px;object-fit:contain;border-radius:8px;" onerror="this.outerHTML='<div class=header-logo>🐊</div>'">
+    <div>
+      <div class="header-title">Taller Artesanal</div>
+      <div class="header-sub">Gestión de Pedidos v2</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat" id="stat-vencidos-wrap" style="display:none">
+      <div class="hstat-val" id="stat-vencidos" style="color:#ff6b6b">0</div>
+      <div class="hstat-label">vencidos</div>
+    </div>
+    <div class="hstat"><div class="hstat-val" id="stat-activos">—</div><div class="hstat-label">activos</div></div>
+    <div class="hstat"><div class="hstat-val" id="stat-cobrar">—</div><div class="hstat-label">a cobrar</div></div>
+    <button onclick="cerrarSesion()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;">🚪 Salir</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('pedidos')" id="tab-pedidos">📦 Pedidos <span class="tab-badge" id="badge-pedidos">0</span></div>
+  <div class="tab" onclick="setTab('hoy')" id="tab-hoy">📅 Hoy <span class="tab-badge" id="badge-hoy">0</span></div>
+  <div class="tab" onclick="setTab('caja')" id="tab-caja">💰 Caja</div>
+  <div class="tab" onclick="setTab('analytics')" id="tab-analytics">📊 Analytics</div>
+</div>
+
+<div class="main">
+
+  <div id="panel-pedidos">
+    <button class="btn-nuevo" onclick="abrirModal()">➕ Nuevo Pedido</button>
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="setFiltro('todos',this)">Todos</button>
+      <button class="filtro-btn" onclick="setFiltro('pendiente',this)">⏳ Pendiente</button>
+      <button class="filtro-btn" onclick="setFiltro('produccion',this)">🔧 Producción</button>
+      <button class="filtro-btn" onclick="setFiltro('listo',this)">✅ Listo</button>
+      <button class="filtro-btn" onclick="setFiltro('entregado',this)">🚚 Entregado</button>
+      <button class="filtro-btn" onclick="setFiltro('cobrado',this)">💵 Cobrado</button>
+      <button class="filtro-btn" onclick="setFiltro('pendiente_cobro',this)">⚠️ Deben</button>
+    </div>
+    <input class="buscador" type="text" placeholder="🔍  Buscar por maestra o escuela..." oninput="renderPedidos()" id="buscador">
+    <div id="lista-pedidos"><div class="loading">⏳ Cargando pedidos...</div></div>
+  </div>
+
+  <!-- PANEL HOY -->
+  <div id="panel-hoy" style="display:none">
+    <div class="hoy-header">
+      <div class="hoy-header-left">
+        <div class="hoy-titulo">📅 Entregas de hoy</div>
+        <div class="hoy-fecha" id="hoy-fecha-label">—</div>
+      </div>
+      <div>
+        <div class="hoy-count" id="hoy-count">0</div>
+        <div class="hoy-count-label">pedidos</div>
+      </div>
+    </div>
+    <div class="hoy-resumen" id="hoy-resumen" style="display:none">
+      <div><div class="hoy-res-val" id="hoy-total">$0</div><div class="hoy-res-label">Total a cobrar hoy</div></div>
+      <div><div class="hoy-res-val verde" id="hoy-cobrado">$0</div><div class="hoy-res-label">Ya señado</div></div>
+      <div><div class="hoy-res-val rojo" id="hoy-saldo">$0</div><div class="hoy-res-label">Saldo pendiente</div></div>
+    </div>
+    <a id="btn-wa-nora" href="#" target="_blank" style="display:none;width:100%;background:#25D366;color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;margin-bottom:16px;box-sizing:border-box;font-family:DM Sans,sans-serif;">
+      💬 Mandarle resumen a Nora
+    </a>
+    <div id="lista-hoy"></div>
+  </div>
+
+  <div id="panel-caja" style="display:none">
+    <div class="export-row">
+      <button class="btn-export" onclick="exportarPedidos()">📥 Pedidos Excel</button>
+      <button class="btn-export" onclick="exportarCaja()">📥 Caja Excel</button>
+    </div>
+    <div class="caja-grid">
+      <div class="caja-card"><div class="caja-val verde" id="caja-cobrado">$0</div><div class="caja-label">💵 Cobrado</div></div>
+      <div class="caja-card"><div class="caja-val rojo" id="caja-saldo">$0</div><div class="caja-label">⏳ Saldo pendiente</div></div>
+      <div class="caja-card"><div class="caja-val azul" id="caja-total">$0</div><div class="caja-label">📊 Facturación total</div></div>
+      <div class="caja-card"><div class="caja-val" id="caja-pedidos">0</div><div class="caja-label">📦 Pedidos totales</div></div>
+    </div>
+    <div style="background:white;border-radius:14px;padding:16px;border:1.5px solid var(--borde)">
+      <div style="font-weight:700;margin-bottom:14px;color:var(--madera-dark)">📋 Por estado</div>
+      <div id="caja-estados"></div>
+    </div>
+  </div>
+
+  <div id="panel-analytics" style="display:none">
+
+    <!-- META MENSUAL -->
+    <div class="meta-card" id="meta-card">
+      <div class="meta-top">
+        <div>
+          <div class="meta-titulo">🎯 Meta mensual</div>
+          <div class="meta-mes" id="meta-mes-label">—</div>
+        </div>
+        <div class="meta-nums">
+          <div class="meta-actual" id="meta-actual">$0</div>
+          <div class="meta-objetivo" id="meta-objetivo-label">de $0</div>
+        </div>
+      </div>
+      <div class="meta-bar-track">
+        <div class="meta-bar-fill" id="meta-bar" style="width:0%"></div>
+      </div>
+      <div class="meta-footer">
+        <span id="meta-pct">0% alcanzado</span>
+        <span id="meta-resta">Faltan $0</span>
+      </div>
+    </div>
+
+    <!-- GRÁFICO SEMANAL -->
+    <div class="weekly-chart">
+      <div style="font-weight:700;color:var(--madera-dark);margin-bottom:12px;font-size:14px">📊 Facturación por semana</div>
+      <div class="weekly-bars" id="weekly-bars"></div>
+      <div style="font-size:11px;color:var(--gris);text-align:center">Últimas 8 semanas</div>
+    </div>
+
+    <div class="analytics-title">📅 Facturación por período</div>
+    <div class="period-selector">
+      <button class="period-btn active" onclick="setPeriodo('semana',this)">Esta semana</button>
+      <button class="period-btn" onclick="setPeriodo('mes',this)">Este mes</button>
+      <button class="period-btn" onclick="setPeriodo('anio',this)">Este año</button>
+      <button class="period-btn" onclick="setPeriodo('todo',this)">Todo</button>
+    </div>
+    <div class="periodo-cards">
+      <div class="periodo-card"><div class="periodo-val" id="an-total">$0</div><div class="periodo-label">Facturado</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-cobrado">$0</div><div class="periodo-label">Cobrado real</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-pedidos">0</div><div class="periodo-label">Pedidos</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-ticket">$0</div><div class="periodo-label">Ticket promedio</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-saldo">$0</div><div class="periodo-label">Por cobrar</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-factura">0%</div><div class="periodo-label">Con factura</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-factura-pendiente" style="color:var(--rojo)">0</div><div class="periodo-label">🧾 Fact. pendientes</div></div>
+    </div>
+    <div class="analytics-title">🏆 Productos más vendidos</div>
+    <div class="bar-chart" id="chart-productos"><div class="loading">Calculando...</div></div>
+    <div class="analytics-title">🏫 Escuelas top</div>
+    <div class="bar-chart" id="chart-escuelas"><div class="loading">Calculando...</div></div>
+    <div class="export-row" style="margin-top:16px">
+      <button class="btn-export" onclick="exportarAnalytics()">📥 Reporte completo Excel</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="cerrarModalSiOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Nuevo Pedido</div>
+
+    <div class="form-section">
+      <div class="form-section-title">👩‍🏫 Datos del cliente</div>
+      <div class="form-group autocomplete-wrap">
+        <label class="form-label">Nombre de la maestra *</label>
+        <input class="form-input" id="f-nombre" placeholder="Ej: María González" type="text" oninput="buscarCliente()" autocomplete="off">
+        <div class="autocomplete-list" id="autocomplete-list" style="display:none"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Escuela *</label>
+          <input class="form-input" id="f-escuela" placeholder="Nombre del jardín">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Turno</label>
+          <select class="form-select" id="f-turno">
+            <option value="">—</option>
+            <option>Mañana</option><option>Tarde</option><option>Todo el día</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono</label>
+        <input class="form-input" id="f-tel" placeholder="381 123 4567" type="tel">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">📦 Detalle del pedido</div>
+      <div class="form-group">
+        <label class="form-label">Productos y cantidades *</label>
+        <textarea class="form-textarea" id="f-productos" placeholder="Ej: 20 rompecabezas cuerpo humano, 15 mapas Argentina..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha pedido</label>
+          <input class="form-input" id="f-fecha-pedido" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha entrega</label>
+          <input class="form-input" id="f-fecha-entrega" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observaciones</label>
+        <input class="form-input" id="f-obs" placeholder="Notas adicionales...">
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🧾 Facturación</div>
+      <div class="toggle-row">
+        <span class="toggle-label">¿Requiere factura?</span>
+        <button class="toggle" id="toggle-factura" onclick="toggleFactura()"></button>
+      </div>
+      <div id="factura-extra" style="display:none;margin-top:12px">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">CUIT</label>
+            <input class="form-input" id="f-cuit" placeholder="20-12345678-9">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Razón social</label>
+            <input class="form-input" id="f-razon" placeholder="Institución o nombre">
+          </div>
+        </div>
+        <div class="toggle-row" style="margin-top:10px">
+          <span class="toggle-label">¿Factura ya emitida?</span>
+          <button class="toggle" id="toggle-factura-emitida" onclick="toggleFacturaEmitida()"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">💰 Pagos</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Total $</label>
+          <input class="form-input" id="f-total" placeholder="0" type="number" oninput="calcularSaldo()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Seña $</label>
+          <input class="form-input" id="f-senia" placeholder="0" type="number" oninput="calcularSaldo()">
+        </div>
+      </div>
+      <div class="dinero-resumen">
+        <div><div class="dr-val" id="resumen-total">$0</div><div class="dr-label">Total</div></div>
+        <div><div class="dr-val" id="resumen-senia">$0</div><div class="dr-label">Señado</div></div>
+        <div><div class="dr-val" id="resumen-saldo">$0</div><div class="dr-label">Saldo</div></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forma de pago</label>
+        <select class="form-select" id="f-pago">
+          <option value="">—</option>
+          <option>Transferencia</option><option>Efectivo</option><option>Mercado Pago</option><option>Mixto</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🔄 Estado</div>
+      <div class="estado-selector">
+        <div class="estado-opt selected" data-val="pendiente" onclick="selEstado(this)">⏳<br>Pendiente</div>
+        <div class="estado-opt" data-val="produccion" onclick="selEstado(this)">🔧<br>Producción</div>
+        <div class="estado-opt" data-val="listo" onclick="selEstado(this)">✅<br>Listo</div>
+        <div class="estado-opt" data-val="entregado" onclick="selEstado(this)">🚚<br>Entregado</div>
+        <div class="estado-opt" data-val="cobrado" onclick="selEstado(this)">💵<br>Cobrado</div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🚚 Logística</div>
+      <div class="logistica-selector">
+        <div class="log-opt selected" data-val="tucuman" onclick="selLog(this)">📍<br>Tucumán</div>
+        <div class="log-opt" data-val="retira" onclick="selLog(this)">🏪<br>Retira</div>
+        <div class="log-opt" data-val="paqar" onclick="selLog(this)">📮<br>Paq.ar</div>
+      </div>
+      <div id="paqar-extra" style="display:none;margin-top:10px">
+        <input class="form-input" id="f-provincia" placeholder="Provincia de destino">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPedido()">💾 Guardar</button>
+    </div>
+    <div id="btn-eliminar-wrap" style="display:none;margin-top:10px">
+      <button class="btn btn-danger" style="width:100%" onclick="eliminarPedido()">🗑️ Eliminar pedido</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777",
+  measurementId: "G-5X3TZW1VVV"
+});
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Ocultar app hasta que el usuario este autenticado
+document.querySelector('.header').style.display='none';
+document.querySelector('.tabs').style.display='none';
+document.querySelector('.main').style.display='none';
+
+// Verificar si ya habia sesion activa
+auth.onAuthStateChanged(user => {
+  if(user){
+    // Ya esta logueado, mostrar app
+    document.getElementById('login-screen').style.display='none';
+    document.querySelector('.header').style.display='flex';
+    document.querySelector('.tabs').style.display='flex';
+    document.querySelector('.main').style.display='block';
+    // Mostrar nombre del usuario en header
+    const email = user.email;
+    const nombre = email==='maciangerman@gmail.com'?'Germán':'Nora';
+    const subEl = document.querySelector('.header-sub');
+    if(subEl) subEl.textContent = 'Hola, ' + nombre + ' 👋';
+  } else {
+    // No logueado, mostrar pantalla de login
+    document.getElementById('login-screen').style.display='flex';
+    document.querySelector('.header').style.display='none';
+    document.querySelector('.tabs').style.display='none';
+    document.querySelector('.main').style.display='none';
+  }
+});
+
+window.hacerLogin = async function(){
+  const email = document.getElementById('login-usuario').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const loadEl = document.getElementById('login-loading');
+  errEl.style.display='none';
+  if(!email){ errEl.textContent='Por favor elegí tu usuario.'; errEl.style.display='block'; return; }
+  if(!pass){ errEl.textContent='Ingresá tu contraseña.'; errEl.style.display='block'; return; }
+  loadEl.style.display='block';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    loadEl.style.display='none';
+  } catch(e) {
+    loadEl.style.display='none';
+    let msg = 'Error al iniciar sesión.';
+    if(e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') msg='Contraseña incorrecta. Intentá de nuevo.';
+    else if(e.code==='auth/user-not-found') msg='Usuario no encontrado.';
+    else if(e.code==='auth/too-many-requests') msg='Demasiados intentos. Esperá unos minutos.';
+    else if(e.code==='auth/network-request-failed') msg='Error de conexión. Verificá internet.';
+    else msg='Error: '+e.code+' - '+e.message;
+    errEl.textContent=msg;
+    errEl.style.display='block';
+  }
+}
+
+let pedidos = [], filtroActual = 'todos', editandoId = null, periodoActual = 'semana', facturaOn = false, facturaEmitidaOn = false;
+
+db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
+  pedidos = []; snap.forEach(d => pedidos.push({id:d.id,...d.data()}));
+  renderPedidos(); renderCaja(); actualizarHeader();
+  if(document.getElementById('tab-analytics').classList.contains('active')) renderAnalytics();
+  // Actualizar badge y contenido de hoy siempre
+  const hoyStr=hoy();
+  const deHoy=pedidos.filter(p=>p.fechaEntrega===hoyStr&&p.estado!=='cobrado').length;
+  document.getElementById('badge-hoy').textContent=deHoy;
+  // Si el tab hoy está activo, re-renderizarlo
+  if(document.getElementById('tab-hoy').classList.contains('active')) renderHoy();
+}, () => {
+  db.collection("pedidos").onSnapshot(snap => {
+    pedidos = []; snap.forEach(d => pedidos.push({id:d.id,...d.data()}));
+    pedidos.sort((a,b)=>(b.fechaPedido||'').localeCompare(a.fechaPedido||''));
+    renderPedidos(); renderCaja(); actualizarHeader();
+    if(document.getElementById('tab-analytics').classList.contains('active')) renderAnalytics();
+    const hoyStr=hoy();
+    const deHoy=pedidos.filter(p=>p.fechaEntrega===hoyStr&&p.estado!=='cobrado').length;
+    document.getElementById('badge-hoy').textContent=deHoy;
+    if(document.getElementById('tab-hoy').classList.contains('active')) renderHoy();
+  });
+});
+
+window.renderPedidos = function() {
+  const busq = document.getElementById('buscador').value.toLowerCase();
+  const lista = pedidos.filter(p => {
+    const matchBusq = !busq||(p.nombre||'').toLowerCase().includes(busq)||(p.escuela||'').toLowerCase().includes(busq);
+    let matchFiltro;
+    if(filtroActual==='cobrado'){
+      matchFiltro=p.estado==='cobrado';
+    } else if(filtroActual==='todos'){
+      matchFiltro=p.estado!=='cobrado';
+    } else if(filtroActual==='pendiente_cobro'){
+      const sal=(Number(p.total)||0)-(Number(p.senia)||0);
+      matchFiltro=p.estado!=='cobrado'&&sal>0;
+    } else {
+      matchFiltro=p.estado===filtroActual;
+    }
+    return matchFiltro&&matchBusq;
+  });
+  document.getElementById('badge-pedidos').textContent = lista.length;
+  const cont = document.getElementById('lista-pedidos');
+  if (!lista.length) { cont.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">Sin pedidos</div></div>'; return; }
+  const eL={pendiente:'⏳ Pendiente',produccion:'🔧 Producción',listo:'✅ Listo',entregado:'🚚 Entregado',cobrado:'💵 Cobrado'};
+  const logL={tucuman:'📍 Tucumán',retira:'🏪 Retira',paqar:'📮 Paq.ar'};
+  cont.innerHTML = lista.map(p => {
+    const t=Number(p.total)||0, s=Number(p.senia)||0;
+    // Si está cobrado, saldo real = 0 (ya se cobró todo)
+    const sal = p.estado==='cobrado' ? 0 : Math.max(0, t-s);
+    const cobradoReal = p.estado==='cobrado' ? t : s;
+    return `<div class="pedido-card ${p.estado||'pendiente'}" onclick="abrirEditar('${p.id}')">
+      <div class="pedido-top">
+        <div>
+          <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}</div>
+          <div class="pedido-escuela">${p.escuela||''}${p.turno?' · '+p.turno:''}</div>
+        </div>
+        <span class="estado-badge estado-${p.estado||'pendiente'}">${eL[p.estado]||''}</span>
+      </div>
+      ${p.productos?`<div class="pedido-productos">${p.productos}</div>`:''}
+      <div class="pedido-bottom">
+        <div class="pedido-dinero">
+          <div class="dinero-item"><div class="dinero-val">$${fmt(t)}</div><div class="dinero-label">Total</div></div>
+          ${cobradoReal>0&&p.estado!=='cobrado'?`<div class="dinero-item"><div class="dinero-val">$${fmt(cobradoReal)}</div><div class="dinero-label">Señado</div></div>`:''}
+          ${sal>0?`<div class="dinero-item"><div class="dinero-val saldo">$${fmt(sal)}</div><div class="dinero-label">Saldo</div></div>`:''}
+          ${p.estado==='cobrado'?`<div class="dinero-item"><div class="dinero-val cobrado-full">✓ Cobrado</div><div class="dinero-label">&nbsp;</div></div>`:''}
+          ${sal<=0&&t>0&&p.estado!=='cobrado'?`<div class="dinero-item"><div class="dinero-val cobrado-full">✓ Pagado</div><div class="dinero-label">&nbsp;</div></div>`:''}
+        </div>
+        <div class="pedido-meta">
+          ${p.fechaEntrega?`<span class="meta-chip">📅 ${p.fechaEntrega}</span>`:''}
+          ${diasChip(p.fechaEntrega,p.estado)}
+          ${p.logistica?`<span class="meta-chip">${logL[p.logistica]||''}</span>`:''}
+          ${p.tel?`<a href="${waLink(p)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;background:#E7F9EF;color:#25D366;font-weight:700;padding:3px 10px;border-radius:100px;text-decoration:none;">💬 WA</a>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function diasChip(fechaEntrega,estado){
+  if(!fechaEntrega||estado==='cobrado'||estado==='entregado') return '';
+  const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+  const entD=new Date(fechaEntrega+'T00:00:00');
+  const dias=Math.round((entD-hoyD)/(1000*60*60*24));
+  let bg,color,texto;
+  if(dias<0){ bg='#FEE2E2';color='#991B1B';texto=`⚠️ Vencido hace ${Math.abs(dias)}d`; }
+  else if(dias===0){ bg='#FEF08A';color='#713F12';texto='🔥 Entrega HOY'; }
+  else if(dias===1){ bg='#FED7AA';color='#9A3412';texto='🔴 Mañana'; }
+  else if(dias===2){ bg='#FFEDD5';color='#C2410C';texto='🟠 Pasado mañana'; }
+  else if(dias<=5){ bg='#FEF9C3';color='#854D0E';texto=`🟡 ${dias} días`; }
+  else { bg='#DCFCE7';color='#166534';texto=`🟢 ${dias} días`; }
+  return `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:${bg};color:${color}">${texto}</span>`;
+}
+
+function renderCaja() {
+  let tF=0,tC=0,tS=0; const xE={};
+  pedidos.forEach(p=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    tF+=t;
+    if(p.estado==='cobrado'){tC+=t;}
+    else{tC+=s;tS+=Math.max(0,t-s);}
+    xE[p.estado]=(xE[p.estado]||0)+1;
+  });
+  document.getElementById('caja-total').textContent='$'+fmt(tF);
+  document.getElementById('caja-cobrado').textContent='$'+fmt(tC);
+  document.getElementById('caja-saldo').textContent='$'+fmt(tS);
+  document.getElementById('caja-pedidos').textContent=pedidos.length;
+  const eL={pendiente:'⏳ Pendiente',produccion:'🔧 Producción',listo:'✅ Listo',entregado:'🚚 Entregado',cobrado:'💵 Cobrado'};
+  // Calcular montos por estado
+  const montoXE={};
+  pedidos.forEach(p=>{const t=Number(p.total)||0;montoXE[p.estado]=(montoXE[p.estado]||0)+t;});
+  document.getElementById('caja-estados').innerHTML=Object.entries(xE).map(([e,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--borde);font-size:13px"><span>${eL[e]||e}</span><div style="text-align:right"><strong>${c} pedido${c>1?'s':''}</strong><div style="font-size:11px;color:var(--gris)">$${fmt(montoXE[e]||0)}</div></div></div>`).join('');
+}
+
+function renderAnalytics() {
+  const ahora=new Date();
+  const sub=pedidos.filter(p=>{
+    if(periodoActual==='todo')return true;
+    const rawF=p.fechaPedido||p.createdAt||'';
+    // Forzar parseo como fecha local (no UTC) para evitar desfase de zona horaria
+    const fStr=rawF.substring(0,10); // tomar solo YYYY-MM-DD
+    const fp=fStr.split('-');
+    if(fp.length<3)return false;
+    const f=new Date(parseInt(fp[0]),parseInt(fp[1])-1,parseInt(fp[2]));
+    if(isNaN(f))return false;
+    if(periodoActual==='semana'){const d=new Date(ahora);d.setDate(d.getDate()-7);return f>=d;}
+    if(periodoActual==='mes')return f.getMonth()===ahora.getMonth()&&f.getFullYear()===ahora.getFullYear();
+    if(periodoActual==='anio')return f.getFullYear()===ahora.getFullYear();
+    return true;
+  });
+  const tF=sub.reduce((a,p)=>a+(Number(p.total)||0),0);
+  // Cobrado real: si cobrado=total, sino=seña
+  const tC=sub.reduce((a,p)=>p.estado==='cobrado'?a+(Number(p.total)||0):a+(Number(p.senia)||0),0);
+  const tS=sub.filter(p=>p.estado!=='cobrado').reduce((a,p)=>a+Math.max(0,(Number(p.total)||0)-(Number(p.senia)||0)),0);
+  const ticket=sub.length>0?Math.round(tF/sub.length):0;
+  const conFactura=sub.filter(p=>p.factura).length;
+  const facturaEmitida=sub.filter(p=>p.factura&&p.facturaEmitida).length;
+  const facturaPendiente=conFactura-facturaEmitida;
+  const pctFactura=sub.length>0?Math.round(conFactura/sub.length*100):0;
+  document.getElementById('an-total').textContent='$'+fmtK(tF);
+  document.getElementById('an-cobrado').textContent='$'+fmtK(tC);
+  document.getElementById('an-pedidos').textContent=sub.length;
+  const anT=document.getElementById('an-ticket');if(anT)anT.textContent='$'+fmtK(ticket);
+  const anS=document.getElementById('an-saldo');if(anS)anS.textContent='$'+fmtK(tS);
+  const anF=document.getElementById('an-factura');if(anF)anF.textContent=pctFactura+'%';
+  const anFP=document.getElementById('an-factura-pendiente');if(anFP)anFP.textContent=facturaPendiente;
+
+  // --- META MENSUAL ---
+  const METAS = {'2026-04':7000000,'2026-05':12000000};
+  const mesActual=`${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}`;
+  const metaObj=METAS[mesActual]||null;
+  const facturadoMes=pedidos.filter(p=>(p.fechaPedido||'').substring(0,7)===mesActual).reduce((a,p)=>a+(Number(p.total)||0),0);
+  const metaCard=document.getElementById('meta-card');
+  if(metaObj){
+    const pct=Math.min(100,Math.round(facturadoMes/metaObj*100));
+    const superada=facturadoMes>=metaObj;
+    const mesNombre=ahora.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    document.getElementById('meta-mes-label').textContent=mesNombre.charAt(0).toUpperCase()+mesNombre.slice(1);
+    document.getElementById('meta-actual').textContent='$'+fmtK(facturadoMes);
+    document.getElementById('meta-objetivo-label').textContent='de $'+fmtK(metaObj);
+    document.getElementById('meta-bar').style.width=pct+'%';
+    document.getElementById('meta-bar').classList.toggle('superada',superada);
+    document.getElementById('meta-pct').textContent=pct+'% alcanzado'+(superada?' 🎉':'');
+    const resta=Math.max(0,metaObj-facturadoMes);
+    document.getElementById('meta-resta').textContent=superada?'Meta superada! 🎉':'Faltan $'+fmtK(resta);
+    metaCard.style.display='block';
+  } else { metaCard.style.display='none'; }
+
+  // --- GRÁFICO SEMANAL (últimas 8 semanas) ---
+  const semanas=[];
+  for(let i=7;i>=0;i--){
+    const desde=new Date(ahora);
+    desde.setDate(desde.getDate()-i*7-desde.getDay());
+    desde.setHours(0,0,0,0);
+    const hasta=new Date(desde);hasta.setDate(hasta.getDate()+6);
+    const label=`${desde.getDate()}/${desde.getMonth()+1}`;
+    const total=pedidos.filter(p=>{
+      const f=p.fechaPedido||'';if(!f)return false;
+      const fp=f.split('-');if(fp.length<3)return false;
+      const fd=new Date(parseInt(fp[0]),parseInt(fp[1])-1,parseInt(fp[2]));
+      return fd>=desde&&fd<=hasta;
+    }).reduce((a,p)=>a+(Number(p.total)||0),0);
+    semanas.push({label,total,esActual:i===0});
+  }
+  const maxSem=Math.max(...semanas.map(s=>s.total),1);
+  document.getElementById('weekly-bars').innerHTML=semanas.map(s=>{
+    const h=Math.max(2,Math.round(s.total/maxSem*100));
+    return `<div class="weekly-bar-wrap">
+      <div class="weekly-bar-val">${s.total>0?'$'+fmtK(s.total):''}</div>
+      <div class="weekly-bar ${s.esActual?'actual':''}" style="height:${h}px"></div>
+      <div class="weekly-bar-label">${s.label}</div>
+    </div>`;
+  }).join('');
+
+  const prodCount={};
+  const IGNORAR=['mil','pesos','combo','unidad','unidades','set','kit','por','para','con','sin','mas','de','la','el','los','las','un','una','del','al','en','y','o','que','se','su','total','precio','valor'];
+  sub.forEach(p=>{
+    if(!p.productos)return;
+    // Buscar patron: numero seguido de nombre de producto
+    const rx=/(\d+)\s+([a-záéíóúüñ][a-záéíóúüñ\s]{2,})/gi;
+    let m;
+    while((m=rx.exec(p.productos))!==null){
+      const cant=parseInt(m[1]);
+      // Ignorar cantidades muy grandes (probablemente precios) o muy pequeñas palabras
+      if(cant>500)continue;
+      const prod=m[2].trim().toLowerCase().replace(/\s+/g,' ');
+      // Ignorar palabras de la blacklist o muy cortas
+      if(IGNORAR.includes(prod)||prod.length<4)continue;
+      // Tomar solo las primeras 3 palabras del nombre del producto
+      const prodCorto=prod.split(' ').slice(0,3).join(' ');
+      prodCount[prodCorto]=(prodCount[prodCorto]||0)+cant;
+    }
+  });
+  const prods=Object.entries(prodCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxP=prods[0]?.[1]||1;
+  document.getElementById('chart-productos').innerHTML=prods.length
+    ?prods.map(([n,c])=>`<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill verde" style="width:${(c/maxP*100).toFixed(0)}%"></div></div><div class="bar-val">${c} u.</div></div>`).join('')
+    :'<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos suficientes aún</div>';
+
+  const escCount={};
+  sub.forEach(p=>{const e=p.escuela||'Sin escuela';escCount[e]=(escCount[e]||0)+(Number(p.total)||0);});
+  const escs=Object.entries(escCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxE=escs[0]?.[1]||1;
+  document.getElementById('chart-escuelas').innerHTML=escs.length
+    ?escs.map(([n,v])=>`<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxE*100).toFixed(0)}%"></div></div><div class="bar-val">$${fmtK(v)}</div></div>`).join('')
+    :'<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos suficientes aún</div>';
+}
+
+window.setPeriodo=function(p,el){periodoActual=p;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderAnalytics();}
+
+function actualizarHeader(){
+  const activos=pedidos.filter(p=>p.estado!=='cobrado').length;
+  // Solo sumar saldo de pedidos NO cobrados
+  const saldo=pedidos.filter(p=>p.estado!=='cobrado').reduce((a,p)=>a+Math.max(0,(Number(p.total)||0)-(Number(p.senia)||0)),0);
+  // Contar vencidos
+  const hoyDate=new Date();hoyDate.setHours(0,0,0,0);
+  const vencidos=pedidos.filter(p=>{
+    if(p.estado==='cobrado'||p.estado==='entregado'||!p.fechaEntrega)return false;
+    return new Date(p.fechaEntrega+'T00:00:00')<hoyDate;
+  }).length;
+  document.getElementById('stat-activos').textContent=activos;
+  document.getElementById('stat-cobrar').textContent='$'+fmtK(saldo);
+  const _svw=document.getElementById('stat-vencidos-wrap');
+  const _sv=document.getElementById('stat-vencidos');
+  if(_sv)_sv.textContent=vencidos;
+  if(_svw)_svw.style.display=vencidos>0?'flex':'none';
+}
+
+window.buscarCliente=function(){
+  const q=document.getElementById('f-nombre').value.toLowerCase().trim();
+  const list=document.getElementById('autocomplete-list');
+  if(q.length<2){list.style.display='none';return;}
+  const clientes={};
+  pedidos.forEach(p=>{if(p.nombre)clientes[p.nombre.toLowerCase()]=p;});
+  const matches=Object.values(clientes).filter(p=>(p.nombre||'').toLowerCase().includes(q)).slice(0,5);
+  if(!matches.length){list.style.display='none';return;}
+  list.style.display='block';
+  list.innerHTML=matches.map(p=>`<div class="autocomplete-item" onclick="autocompletar('${p.id}')"><strong>${p.nombre}</strong><span>${p.escuela||''}${p.turno?' · '+p.turno:''}</span></div>`).join('');
+}
+
+window.autocompletar=function(id){
+  const p=pedidos.find(x=>x.id===id);
+  if(!p)return;
+  document.getElementById('f-nombre').value=p.nombre||'';
+  document.getElementById('f-escuela').value=p.escuela||'';
+  document.getElementById('f-turno').value=p.turno||'';
+  document.getElementById('f-tel').value=p.tel||'';
+  document.getElementById('autocomplete-list').style.display='none';
+  toast('✅ Cliente autocompletado');
+}
+
+document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete-wrap'))document.getElementById('autocomplete-list').style.display='none';});
+
+window.abrirModal=function(){
+  editandoId=null;
+  document.getElementById('modal-title').textContent='Nuevo Pedido';
+  document.getElementById('btn-eliminar-wrap').style.display='none';
+  resetForm();
+  document.getElementById('overlay').classList.add('show');
+}
+
+window.abrirEditar=function(id){
+  const p=pedidos.find(x=>x.id===id);if(!p)return;
+  editandoId=id;
+  document.getElementById('modal-title').textContent='Editar Pedido';
+  document.getElementById('btn-eliminar-wrap').style.display='block';
+  document.getElementById('f-nombre').value=p.nombre||'';
+  document.getElementById('f-escuela').value=p.escuela||'';
+  document.getElementById('f-turno').value=p.turno||'';
+  document.getElementById('f-tel').value=p.tel||'';
+  document.getElementById('f-productos').value=p.productos||'';
+  document.getElementById('f-fecha-pedido').value=p.fechaPedido||'';
+  document.getElementById('f-fecha-entrega').value=p.fechaEntrega||'';
+  document.getElementById('f-obs').value=p.obs||'';
+  document.getElementById('f-total').value=p.total||'';
+  document.getElementById('f-senia').value=p.senia||'';
+  document.getElementById('f-pago').value=p.pago||'';
+  document.getElementById('f-cuit').value=p.cuit||'';
+  document.getElementById('f-razon').value=p.razon||'';
+  facturaOn=!!p.factura;
+  facturaEmitidaOn=!!p.facturaEmitida;
+  document.getElementById('toggle-factura').classList.toggle('on',facturaOn);
+  document.getElementById('factura-extra').style.display=facturaOn?'block':'none';
+  document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);
+  document.querySelectorAll('.estado-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.estado||'pendiente')));
+  document.querySelectorAll('.log-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.logistica||'tucuman')));
+  document.getElementById('f-provincia').value=p.provincia||'';
+  document.getElementById('paqar-extra').style.display=p.logistica==='paqar'?'block':'none';
+  calcularSaldo();
+  document.getElementById('overlay').classList.add('show');
+}
+
+window.cerrarModal=function(){document.getElementById('overlay').classList.remove('show');}
+window.cerrarModalSiOverlay=function(e){if(e.target===document.getElementById('overlay'))cerrarModal();}
+
+function resetForm(){
+  ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-turno').value='';
+  document.getElementById('f-pago').value='';
+  document.getElementById('f-fecha-pedido').value=hoy();
+  document.getElementById('f-fecha-entrega').value='';
+  document.querySelectorAll('.estado-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val==='pendiente'));
+  document.querySelectorAll('.log-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val==='tucuman'));
+  document.getElementById('paqar-extra').style.display='none';
+  facturaOn=false;
+  facturaEmitidaOn=false;
+  document.getElementById('toggle-factura').classList.remove('on');
+  document.getElementById('toggle-factura-emitida').classList.remove('on');
+  document.getElementById('factura-extra').style.display='none';
+  document.getElementById('autocomplete-list').style.display='none';
+  calcularSaldo();
+}
+
+window.toggleFactura=function(){facturaOn=!facturaOn;document.getElementById('toggle-factura').classList.toggle('on',facturaOn);document.getElementById('factura-extra').style.display=facturaOn?'block':'none';if(!facturaOn){facturaEmitidaOn=false;document.getElementById('toggle-factura-emitida').classList.remove('on');}}
+window.toggleFacturaEmitida=function(){facturaEmitidaOn=!facturaEmitidaOn;document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);}
+window.selEstado=function(el){
+  document.querySelectorAll('.estado-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  // Si se marca como cobrado y hay saldo pendiente, autocompletar seña=total
+  if(el.dataset.val==='cobrado'){
+    const t=Number(document.getElementById('f-total').value)||0;
+    const s=Number(document.getElementById('f-senia').value)||0;
+    if(t>0&&s<t){
+      document.getElementById('f-senia').value=t;
+      calcularSaldo();
+      toast('💵 Seña actualizada al total — pedido cobrado completo');
+    }
+  }
+}
+window.selLog=function(el){document.querySelectorAll('.log-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('paqar-extra').style.display=el.dataset.val==='paqar'?'block':'none';}
+window.calcularSaldo=function(){const t=Number(document.getElementById('f-total').value)||0,s=Number(document.getElementById('f-senia').value)||0;document.getElementById('resumen-total').textContent='$'+fmt(t);document.getElementById('resumen-senia').textContent='$'+fmt(s);document.getElementById('resumen-saldo').textContent='$'+fmt(Math.max(0,t-s));}
+
+window.guardarPedido=async function(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  const escuela=document.getElementById('f-escuela').value.trim();
+  if(!nombre||!escuela){toast('Completá nombre y escuela');return;}
+  const _total=Number(document.getElementById('f-total').value)||0;
+  const _senia=Number(document.getElementById('f-senia').value)||0;
+  if(_senia>_total&&_total>0){toast('⚠️ La seña no puede ser mayor al total');return;}
+  const fechaPedido=document.getElementById('f-fecha-pedido').value||hoy();
+  const fechaEntrega=document.getElementById('f-fecha-entrega').value;
+  if(fechaEntrega && fechaEntrega<fechaPedido){toast('⚠️ La fecha de entrega no puede ser anterior a la fecha del pedido');return;}
+  const estado=document.querySelector('.estado-opt.selected')?.dataset.val||'pendiente';
+  const logistica=document.querySelector('.log-opt.selected')?.dataset.val||'tucuman';
+  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,productos:document.getElementById('f-productos').value,fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,estado,logistica,provincia:document.getElementById('f-provincia').value,updatedAt:new Date().toISOString()};
+  try{
+    if(editandoId){await db.collection("pedidos").doc(editandoId).update(data);toast('✅ Pedido actualizado');}
+    else{data.createdAt=new Date().toISOString();await db.collection("pedidos").add(data);toast('✅ Pedido guardado');}
+    cerrarModal();
+  }catch(e){toast('❌ Error al guardar. Verificá conexión.');console.error(e);}
+}
+
+window.eliminarPedido=async function(){
+  if(!editandoId)return;
+  if(!confirm('¿Eliminar este pedido?'))return;
+  try{await db.collection("pedidos").doc(editandoId).delete();toast('🗑️ Eliminado');cerrarModal();}
+  catch(e){toast('❌ Error al eliminar');}
+}
+
+window.setTab=function(tab){
+  ['pedidos','hoy','caja','analytics'].forEach(t=>{document.getElementById('panel-'+t).style.display=t===tab?'block':'none';document.getElementById('tab-'+t).classList.toggle('active',t===tab);});
+  if(tab==='analytics')renderAnalytics();
+  if(tab==='hoy')renderHoy();
+}
+
+window.setFiltro=function(f,el){filtroActual=f;document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderPedidos();}
+
+window.renderHoy=function(){
+  const hoyStr=hoy();
+  const deHoy=pedidos.filter(p=>p.fechaEntrega===hoyStr && p.estado!=='cobrado');
+  const pendientesHoy=deHoy.filter(p=>p.estado!=='entregado');
+
+  document.getElementById('badge-hoy').textContent=pendientesHoy.length||deHoy.length;
+
+  const fechaLabel=new Date(hoyStr+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('hoy-fecha-label').textContent=fechaLabel.charAt(0).toUpperCase()+fechaLabel.slice(1);
+  document.getElementById('hoy-count').textContent=deHoy.length;
+
+  const cont=document.getElementById('lista-hoy');
+  const resDiv=document.getElementById('hoy-resumen');
+  const btnNora=document.getElementById('btn-wa-nora');
+
+  // --- BOTÓN WA NORA ---
+  const diasLabel=['hoy','mañana','pasado mañana'];
+  let msg='*Resumen de entregas - Taller Artesanal* 🪵\n\n';
+  let hayAlgo=false;
+  for(let d=0;d<3;d++){
+    const fecha=new Date(); fecha.setDate(fecha.getDate()+d);
+    const fechaStr=fecha.toISOString().split('T')[0];
+    const pedidosDia=pedidos.filter(p=>p.fechaEntrega===fechaStr&&p.estado!=='cobrado'&&p.estado!=='entregado');
+    if(!pedidosDia.length) continue;
+    hayAlgo=true;
+    const fLabel=fecha.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
+    msg+=`📅 *${diasLabel[d].toUpperCase()} - ${fLabel}*\n`;
+    pedidosDia.forEach((p,i)=>{
+      const sal=Math.max(0,(Number(p.total)||0)-(Number(p.senia)||0));
+      msg+=`${i+1}. ${p.nombre||'—'} (${p.escuela||'—'})\n`;
+      msg+=`   ${p.productos||'Sin detalle'}\n`;
+      if(sal>0) msg+=`   Saldo a cobrar: $${fmt(sal)}\n`;
+      if(p.logistica==='paqar') msg+=`   Envio por Paq.ar${p.provincia?' - '+p.provincia:''}\n`;
+      if(p.tel) msg+=`   Tel: ${p.tel}\n`;
+    });
+    msg+='\n';
+  }
+  msg+='_Enviado desde el sistema de pedidos_';
+  if(hayAlgo){
+    btnNora.href=`https://wa.me/5493816544078?text=${encodeURIComponent(msg)}`;
+    btnNora.style.display='block';
+  } else { btnNora.style.display='none'; }
+
+  if(!deHoy.length){
+    resDiv.style.display='none';
+    cont.innerHTML=`<div class="hoy-empty">
+      <div class="hoy-empty-icon">🎉</div>
+      <div class="hoy-empty-title">No hay entregas para hoy</div>
+      <div class="hoy-empty-sub">No hay pedidos con fecha de entrega hoy.<br>¡Momento para producir!</div>
+    </div>`;
+    return;
+  }
+
+  let sumTotal=0,sumSenia=0,sumSaldo=0;
+  pendientesHoy.forEach(p=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    sumTotal+=t;sumSenia+=s;sumSaldo+=Math.max(0,t-s);
+  });
+  document.getElementById('hoy-total').textContent='$'+fmt(sumTotal);
+  document.getElementById('hoy-cobrado').textContent='$'+fmt(sumSenia);
+  document.getElementById('hoy-saldo').textContent='$'+fmt(sumSaldo);
+  resDiv.style.display='flex';
+
+  const logL={tucuman:'📍 Tucumán',retira:'🏪 Retira',paqar:'📮 Paq.ar'};
+  const eL={pendiente:'⏳ Pendiente',produccion:'🔧 Producción',listo:'✅ Listo',entregado:'🚚 Entregado',cobrado:'💵 Cobrado'};
+  const orden={listo:0,produccion:1,pendiente:2,entregado:3,cobrado:4};
+  const ordenados=[...deHoy].sort((a,b)=>(orden[a.estado]??5)-(orden[b.estado]??5));
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  cont.innerHTML=ordenados.map(p=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    const sal=Math.max(0,t-s);
+    const esBadgeColor={
+      pendiente:'background:var(--amarillo-light);color:var(--amarillo)',
+      produccion:'background:var(--azul-light);color:var(--azul)',
+      listo:'background:var(--verde-light);color:var(--verde)',
+      entregado:'background:var(--crema-dark);color:var(--madera)',
+      cobrado:'background:#F3F4F6;color:#6B7280'
+    }[p.estado]||'';
+    const esEntregado=p.estado==='entregado';
+    return `<div class="hoy-card ${p.estado||'pendiente'}" onclick="abrirEditar('${p.id}')" style="${esEntregado?'opacity:0.7':''}">
+      <div class="hoy-card-top">
+        <div>
+          <div class="hoy-nombre">${esc(p.nombre)}${esEntregado?' <span style="font-size:12px;color:var(--gris);font-weight:400">(ya entregado)</span>':''}</div>
+          <div class="hoy-escuela">${esc(p.escuela)}${p.turno?' · '+esc(p.turno):''}</div>
+        </div>
+        <span class="estado-badge" style="${esBadgeColor}">${eL[p.estado]||''}</span>
+      </div>
+      <div class="hoy-productos">📦 ${esc(p.productos)||'Sin descripción'}</div>
+      ${p.obs?`<div style="font-size:12px;color:var(--amarillo);margin-bottom:8px;font-weight:600;">⚠️ ${esc(p.obs)}</div>`:''}
+      <div class="hoy-footer">
+        <div class="hoy-dinero">
+          <div class="hoy-dinero-item"><div class="hoy-dinero-val">$${fmt(t)}</div><div class="hoy-dinero-label">Total</div></div>
+          <div class="hoy-dinero-item"><div class="hoy-dinero-val">$${fmt(s)}</div><div class="hoy-dinero-label">Señado</div></div>
+          <div class="hoy-dinero-item"><div class="hoy-dinero-val ${sal>0?'saldo':'ok'}">$${fmt(sal)}</div><div class="hoy-dinero-label">${sal>0?'Saldo':'✓ Pago'}</div></div>
+        </div>
+        <div class="hoy-chips">
+          ${p.logistica?`<span class="hoy-chip log">${logL[p.logistica]||p.logistica}</span>`:''}
+          ${p.tel?`<a href="${waLink(p)}" target="_blank" onclick="event.stopPropagation()" class="hoy-chip tel" style="text-decoration:none;">💬 ${esc(p.tel)}</a>`:''}
+          ${p.factura&&!p.facturaEmitida?`<span class="hoy-chip" style="background:var(--violeta-light);color:var(--violeta)">🧾 Falta factura</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.exportarPedidos=function(){
+  const estadoLabel={pendiente:'⏳ Pendiente',produccion:'🔧 En producción',listo:'✅ Listo',entregado:'🚚 Entregado',cobrado:'💵 Cobrado'};
+  const logLabel={tucuman:'📍 Tucumán',retira:'🏪 Retira',paqar:'📮 Paq.ar'};
+  const estadoColor={pendiente:'#FEF3E2',produccion:'#EFF6FF',listo:'#E8F5EE',entregado:'#F0E6D3',cobrado:'#F3F4F6'};
+  const estadoText={pendiente:'#D4820A',produccion:'#2563EB',listo:'#2D7A4F',entregado:'#8B5E3C',cobrado:'#6B7280'};
+
+  let sumTotal=0,sumSenia=0,sumSaldo=0;
+  pedidos.forEach(p=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    sumTotal+=t;sumSenia+=s;
+    sumSaldo+=p.estado==='cobrado'?0:Math.max(0,t-s);
+  });
+
+  let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;font-size:11px;}
+  .titulo{background:#5C3D20;color:white;font-size:16px;font-weight:bold;text-align:center;padding:12px;letter-spacing:1px;}
+  .subtitulo{background:#5C3D20;color:#C49A6C;font-size:10px;text-align:center;padding:4px;font-style:italic;}
+  .header{background:#8B5E3C;color:white;font-weight:bold;text-align:center;padding:6px 8px;border:1px solid #5C3D20;font-size:11px;}
+  .fila-par{background:#FAF4EC;}
+  .fila-impar{background:#FFFFFF;}
+  td{padding:5px 8px;border:1px solid #E5D9CC;font-size:11px;vertical-align:middle;}
+  .monto{font-weight:bold;text-align:right;}
+  .saldo-rojo{color:#C0392B;font-weight:bold;text-align:right;}
+  .saldo-verde{color:#2D7A4F;font-weight:bold;text-align:right;}
+  .total-row{background:#5C3D20;color:white;font-weight:bold;}
+  .total-row td{border:1px solid #3D2510;color:white;font-weight:bold;text-align:right;}
+  .seccion{background:#F0E6D3;color:#5C3D20;font-weight:bold;font-size:12px;padding:8px;}
+</style></head><body>
+<table border="0" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+<tr><td colspan="18" class="titulo">🪵 TALLER ARTESANAL — REGISTRO DE PEDIDOS</td></tr>
+<tr><td colspan="18" class="subtitulo">Generado: ${new Date().toLocaleString('es-AR')} · Total: ${pedidos.length} pedidos</td></tr>
+<tr><td colspan="18" style="height:8px;background:#FAF4EC;border:none;"></td></tr>
+<tr>
+  <td class="header" style="width:30px">#</td>
+  <td class="header">Fecha Pedido</td>
+  <td class="header">Maestra</td>
+  <td class="header">Escuela</td>
+  <td class="header">Turno</td>
+  <td class="header">Teléfono</td>
+  <td class="header" style="width:300px">Productos</td>
+  <td class="header">Fecha Entrega</td>
+  <td class="header">Total</td>
+  <td class="header">Seña</td>
+  <td class="header">Saldo</td>
+  <td class="header">Estado</td>
+  <td class="header">Logística</td>
+  <td class="header">Provincia</td>
+  <td class="header">Forma Pago</td>
+  <td class="header">Factura</td>
+  <td class="header">CUIT</td>
+  <td class="header">Observaciones</td>
+</tr>`;
+
+  pedidos.forEach((p,i)=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    const sal=p.estado==='cobrado'?0:Math.max(0,t-s);
+    const bg=i%2===0?'fila-par':'fila-impar';
+    const eColor=estadoColor[p.estado]||'#fff';
+    const eTColor=estadoText[p.estado]||'#333';
+    html+=`<tr class="${bg}">
+      <td style="text-align:center;color:#8B5E3C;font-weight:bold;">${i+1}</td>
+      <td style="text-align:center;">${p.fechaPedido||''}</td>
+      <td style="font-weight:bold;">${p.nombre||''}</td>
+      <td>${p.escuela||''}</td>
+      <td style="text-align:center;">${p.turno||''}</td>
+      <td>${p.tel||''}</td>
+      <td style="font-size:10px;">${p.productos||''}</td>
+      <td style="text-align:center;">${p.fechaEntrega||''}</td>
+      <td class="monto">$${Number(t).toLocaleString('es-AR')}</td>
+      <td class="monto" style="color:#2563EB;">$${Number(s).toLocaleString('es-AR')}</td>
+      <td class="${sal>0?'saldo-rojo':'saldo-verde'}">$${Number(sal).toLocaleString('es-AR')}</td>
+      <td style="background:${eColor};color:${eTColor};font-weight:bold;text-align:center;">${estadoLabel[p.estado]||p.estado||''}</td>
+      <td style="text-align:center;">${logLabel[p.logistica]||p.logistica||''}</td>
+      <td>${p.provincia||''}</td>
+      <td>${p.pago||''}</td>
+      <td style="text-align:center;${p.factura?'color:#7C3AED;font-weight:bold;':''}">${p.factura?'✅ Sí':'No'}</td>
+      <td style="font-size:10px;">${p.cuit||''}</td>
+      <td style="font-size:10px;">${p.obs||''}</td>
+    </tr>`;
+  });
+
+  html+=`<tr class="total-row">
+    <td colspan="8" style="text-align:right;font-size:12px;">TOTALES</td>
+    <td>$${sumTotal.toLocaleString('es-AR')}</td>
+    <td>$${sumSenia.toLocaleString('es-AR')}</td>
+    <td style="color:#FF9999;">$${sumSaldo.toLocaleString('es-AR')}</td>
+    <td colspan="7"></td>
+  </tr>`;
+  html+=`</table></body></html>`;
+
+  const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='taller-pedidos-'+hoy()+'.xls';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📥 Excel de pedidos exportado');
+}
+window.exportarCaja=function(){
+  let tF=0,tC=0,tS=0;const est={};const montoEst={};
+  pedidos.forEach(p=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    tF+=t;
+    if(p.estado==='cobrado'){tC+=t;}else{tC+=s;tS+=(t-s);}
+    est[p.estado]=(est[p.estado]||0)+1;
+    montoEst[p.estado]=(montoEst[p.estado]||0)+t;
+  });
+
+  const estadoRows=[
+    {label:'⏳ Pendientes',key:'pendiente',color:'#FEF3E2',tc:'#D4820A'},
+    {label:'🔧 En producción',key:'produccion',color:'#EFF6FF',tc:'#2563EB'},
+    {label:'✅ Listos',key:'listo',color:'#E8F5EE',tc:'#2D7A4F'},
+    {label:'🚚 Entregados',key:'entregado',color:'#F0E6D3',tc:'#8B5E3C'},
+    {label:'💵 Cobrados',key:'cobrado',color:'#F3F4F6',tc:'#6B7280'},
+  ];
+
+  let html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8">
+<style>
+  body{font-family:Arial,sans-serif;font-size:12px;}
+  td{padding:8px 14px;border:1px solid #E5D9CC;vertical-align:middle;}
+  .titulo{background:#5C3D20;color:white;font-size:16px;font-weight:bold;text-align:center;padding:14px;letter-spacing:1px;}
+  .subtitulo{background:#5C3D20;color:#C49A6C;font-size:10px;text-align:center;padding:5px;font-style:italic;}
+  .seccion{background:#8B5E3C;color:white;font-size:13px;font-weight:bold;padding:10px;letter-spacing:0.5px;}
+  .header{background:#F0E6D3;color:#5C3D20;font-weight:bold;text-align:center;}
+  .num{text-align:right;font-weight:bold;}
+  .verde{color:#2D7A4F;}
+  .rojo{color:#C0392B;}
+  .total-row{background:#5C3D20;color:white;font-weight:bold;}
+</style></head><body>
+<table border="0" cellspacing="0" cellpadding="0" style="width:500px;border-collapse:collapse;">
+<tr><td colspan="3" class="titulo">🪵 TALLER ARTESANAL — RESUMEN DE CAJA</td></tr>
+<tr><td colspan="3" class="subtitulo">Generado: ${new Date().toLocaleString('es-AR')}</td></tr>
+<tr><td colspan="3" style="height:12px;background:#FAF4EC;border:none;"></td></tr>
+
+<tr><td colspan="3" class="seccion">💰 RESUMEN FINANCIERO</td></tr>
+<tr>
+  <td style="background:#FAF4EC;font-weight:bold;font-size:13px;">Facturación total</td>
+  <td colspan="2" class="num" style="background:#FAF4EC;font-size:15px;color:#5C3D20;">$${tF.toLocaleString('es-AR')}</td>
+</tr>
+<tr>
+  <td style="font-weight:bold;font-size:13px;">Total cobrado</td>
+  <td colspan="2" class="num verde" style="font-size:15px;">$${tC.toLocaleString('es-AR')}</td>
+</tr>
+<tr>
+  <td style="background:#FAF4EC;font-weight:bold;font-size:13px;">Saldo por cobrar</td>
+  <td colspan="2" class="num rojo" style="background:#FAF4EC;font-size:15px;">$${tS.toLocaleString('es-AR')}</td>
+</tr>
+
+<tr><td colspan="3" style="height:12px;background:#FAF4EC;border:none;"></td></tr>
+<tr><td colspan="3" class="seccion">📦 PEDIDOS POR ESTADO</td></tr>
+<tr>
+  <td class="header">Estado</td>
+  <td class="header">Cantidad</td>
+  <td class="header">Monto total</td>
+</tr>`;
+
+  estadoRows.forEach((row,i)=>{
+    const bg=i%2===0?'#FAF4EC':'#FFFFFF';
+    html+=`<tr>
+      <td style="background:${row.color};color:${row.tc};font-weight:bold;">${row.label}</td>
+      <td style="background:${bg};text-align:center;font-weight:bold;color:${row.tc};">${est[row.key]||0}</td>
+      <td class="num" style="background:${bg};">$${(montoEst[row.key]||0).toLocaleString('es-AR')}</td>
+    </tr>`;
+  });
+
+  html+=`<tr class="total-row">
+    <td>TOTAL PEDIDOS</td>
+    <td style="text-align:center;color:white;">${pedidos.length}</td>
+    <td class="num" style="color:white;">$${tF.toLocaleString('es-AR')}</td>
+  </tr>
+</table></body></html>`;
+
+  const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='taller-caja-'+hoy()+'.xls';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📥 Excel de caja exportado');
+}
+window.exportarAnalytics=function(){
+  // Filtrar por el período actualmente seleccionado (igual que renderAnalytics)
+  const ahora=new Date();
+  const periodoLabel={'semana':'Esta semana','mes':'Este mes','anio':'Este año','todo':'Historial completo'};
+  const sub=pedidos.filter(p=>{
+    if(periodoActual==='todo')return true;
+    const rawF=p.fechaPedido||p.createdAt||'';
+    const fStr=rawF.substring(0,10);
+    const fp=fStr.split('-');
+    if(fp.length<3)return false;
+    const f=new Date(parseInt(fp[0]),parseInt(fp[1])-1,parseInt(fp[2]));
+    if(isNaN(f))return false;
+    if(periodoActual==='semana'){const d=new Date(ahora);d.setDate(d.getDate()-7);return f>=d;}
+    if(periodoActual==='mes')return f.getMonth()===ahora.getMonth()&&f.getFullYear()===ahora.getFullYear();
+    if(periodoActual==='anio')return f.getFullYear()===ahora.getFullYear();
+    return true;
+  });
+
+  const labelPeriodo=periodoLabel[periodoActual]||'Todo';
+
+  // Calcular productos del período
+  const prodCount={};
+  const _IGNORAR=['mil','pesos','combo','unidad','unidades','set','kit','por','para','con','sin','mas','de','la','el','los','las','un','una','del','al','en','y','o','que','se','su','total','precio','valor'];
+  sub.forEach(p=>{if(!p.productos)return;const rx=/(\d+)\s+([a-záéíóúüñ][a-záéíóúüñ\s]{2,})/gi;let m;while((m=rx.exec(p.productos))!==null){const cant=parseInt(m[1]);if(cant>500)continue;const prod=m[2].trim().toLowerCase().replace(/\s+/g,' ');if(_IGNORAR.includes(prod)||prod.length<4)continue;const prodCorto=prod.split(' ').slice(0,3).join(' ');prodCount[prodCorto]=(prodCount[prodCorto]||0)+cant;}});
+  const prods=Object.entries(prodCount).sort((a,b)=>b[1]-a[1]);
+  const totalUnidades=prods.reduce((a,[,c])=>a+c,0);
+
+  // Calcular escuelas del período
+  const escData={};
+  sub.forEach(p=>{
+    const e=p.escuela||'Sin escuela';
+    if(!escData[e])escData[e]={total:0,pedidos:0,cobrado:0};
+    escData[e].total+=(Number(p.total)||0);
+    escData[e].pedidos+=1;
+    escData[e].cobrado+=p.estado==='cobrado'?(Number(p.total)||0):(Number(p.senia)||0);
+  });
+  const escs=Object.entries(escData).sort((a,b)=>b[1].total-a[1].total);
+
+  const estadoLabel={pendiente:'⏳ Pendiente',produccion:'🔧 Producción',listo:'✅ Listo',entregado:'🚚 Entregado',cobrado:'💵 Cobrado'};
+  const estadoColor={pendiente:'#FEF3E2',produccion:'#EFF6FF',listo:'#E8F5EE',entregado:'#F0E6D3',cobrado:'#F3F4F6'};
+  const estadoText={pendiente:'#D4820A',produccion:'#2563EB',listo:'#2D7A4F',entregado:'#8B5E3C',cobrado:'#6B7280'};
+
+  const estiloBase=`<style>
+    body{font-family:Arial,sans-serif;font-size:11px;}
+    td{padding:6px 10px;border:1px solid #E5D9CC;vertical-align:middle;}
+    .titulo{background:#5C3D20;color:white;font-size:15px;font-weight:bold;text-align:center;padding:12px;letter-spacing:1px;}
+    .subtitulo{background:#5C3D20;color:#C49A6C;font-size:10px;text-align:center;padding:4px;font-style:italic;}
+    .header{background:#8B5E3C;color:white;font-weight:bold;text-align:center;padding:7px;}
+    .fila-par{background:#FAF4EC;} .fila-impar{background:#FFFFFF;}
+    .monto{text-align:right;font-weight:bold;}
+    .verde{color:#2D7A4F;font-weight:bold;} .rojo{color:#C0392B;font-weight:bold;}
+    .total-row td{background:#5C3D20;color:white;font-weight:bold;text-align:right;}
+  </style>`;
+
+  // Hoja 1: Productos
+  let h1=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8">${estiloBase}</head><body>
+  <table border="0" cellspacing="0" style="width:500px;border-collapse:collapse;">
+  <tr><td colspan="4" class="titulo">🏆 TALLER ARTESANAL — PRODUCTOS MÁS VENDIDOS</td></tr>
+  <tr><td colspan="4" class="subtitulo">Período: ${labelPeriodo} · Generado: ${new Date().toLocaleString('es-AR')} · ${prods.length} productos detectados</td></tr>
+  <tr><td colspan="4" style="height:8px;border:none;background:#FAF4EC;"></td></tr>
+  <tr><td class="header" style="width:30px">#</td><td class="header" style="width:280px">Producto</td><td class="header">Unidades</td><td class="header">% del total</td></tr>`;
+  prods.forEach(([prod,cant],i)=>{
+    const pct=totalUnidades>0?(cant/totalUnidades*100).toFixed(1):0;
+    const bg=i%2===0?'fila-par':'fila-impar';
+    const barW=totalUnidades>0?Math.round(cant/prods[0][1]*100):0;
+    h1+=`<tr class="${bg}">
+      <td style="text-align:center;color:#8B5E3C;font-weight:bold;">${i+1}</td>
+      <td style="font-weight:${i<3?'bold':'normal'};color:${i===0?'#5C3D20':i===1?'#8B5E3C':'#333'};">${prod}</td>
+      <td style="text-align:center;font-weight:bold;color:#2D7A4F;font-size:13px;">${cant}</td>
+      <td style="text-align:center;color:#6B7280;">${pct}%</td>
+    </tr>`;
+  });
+  h1+=`<tr class="total-row"><td colspan="2">TOTAL</td><td style="text-align:center;">${totalUnidades}</td><td>100%</td></tr>`;
+  h1+=`</table></body></html>`;
+
+  // Hoja 2: Escuelas
+  let h2=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8">${estiloBase}</head><body>
+  <table border="0" cellspacing="0" style="width:650px;border-collapse:collapse;">
+  <tr><td colspan="5" class="titulo">🏫 TALLER ARTESANAL — ESCUELAS TOP</td></tr>
+  <tr><td colspan="5" class="subtitulo">Período: ${labelPeriodo} · Generado: ${new Date().toLocaleString('es-AR')} · ${escs.length} escuelas</td></tr>
+  <tr><td colspan="5" style="height:8px;border:none;background:#FAF4EC;"></td></tr>
+  <tr><td class="header">#</td><td class="header" style="width:260px">Escuela</td><td class="header">Pedidos</td><td class="header">Facturado</td><td class="header">Saldo</td></tr>`;
+  escs.forEach(([esc,d],i)=>{
+    const sal=Math.max(0,d.total-d.cobrado);
+    const bg=i%2===0?'fila-par':'fila-impar';
+    h2+=`<tr class="${bg}">
+      <td style="text-align:center;color:#8B5E3C;font-weight:bold;">${i+1}</td>
+      <td style="font-weight:${i<3?'bold':'normal'};">${esc}</td>
+      <td style="text-align:center;font-weight:bold;">${d.pedidos}</td>
+      <td class="monto verde">$${d.total.toLocaleString('es-AR')}</td>
+      <td class="${sal>0?'monto rojo':'monto verde'}">$${sal.toLocaleString('es-AR')}</td>
+    </tr>`;
+  });
+  const totEsc=escs.reduce((a,[,d])=>a+d.total,0);
+  h2+=`<tr class="total-row"><td colspan="3">TOTAL</td><td>$${totEsc.toLocaleString('es-AR')}</td><td></td></tr>`;
+  h2+=`</table></body></html>`;
+
+  // Hoja 3: Detalle del período
+  let h3=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8">${estiloBase}</head><body>
+  <table border="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+  <tr><td colspan="7" class="titulo">📋 TALLER ARTESANAL — DETALLE COMPLETO</td></tr>
+  <tr><td colspan="7" class="subtitulo">Período: ${labelPeriodo} · Generado: ${new Date().toLocaleString('es-AR')} · ${sub.length} pedidos</td></tr>
+  <tr><td colspan="7" style="height:8px;border:none;background:#FAF4EC;"></td></tr>
+  <tr><td class="header">Fecha</td><td class="header">Maestra</td><td class="header">Escuela</td><td class="header">Total</td><td class="header">Cobrado</td><td class="header">Saldo</td><td class="header">Estado</td></tr>`;
+  let tT=0,tC2=0,tS2=0;
+  sub.forEach((p,i)=>{
+    const t=Number(p.total)||0,s=Number(p.senia)||0;
+    const cobrado=p.estado==='cobrado'?t:s;
+    const saldo=p.estado==='cobrado'?0:Math.max(0,t-s);
+    tT+=t;tC2+=cobrado;tS2+=saldo;
+    const bg=i%2===0?'fila-par':'fila-impar';
+    const ec=estadoColor[p.estado]||'#fff';
+    const et=estadoText[p.estado]||'#333';
+    h3+=`<tr class="${bg}">
+      <td style="text-align:center;">${p.fechaPedido||''}</td>
+      <td style="font-weight:bold;">${p.nombre||''}</td>
+      <td>${p.escuela||''}</td>
+      <td class="monto">$${t.toLocaleString('es-AR')}</td>
+      <td class="monto verde">$${cobrado.toLocaleString('es-AR')}</td>
+      <td class="${saldo>0?'monto rojo':'monto verde'}">$${saldo.toLocaleString('es-AR')}</td>
+      <td style="background:${ec};color:${et};font-weight:bold;text-align:center;">${estadoLabel[p.estado]||p.estado||''}</td>
+    </tr>`;
+  });
+  h3+=`<tr class="total-row"><td colspan="3">TOTALES</td><td>$${tT.toLocaleString('es-AR')}</td><td>$${tC2.toLocaleString('es-AR')}</td><td style="color:#FF9999;">$${tS2.toLocaleString('es-AR')}</td><td></td></tr>`;
+  h3+=`</table></body></html>`;
+
+  // Descargar los 3 archivos
+  [[h1,'taller-productos'],[h2,'taller-escuelas'],[h3,'taller-detalle']].forEach(([html,nombre])=>{
+    const blob=new Blob([html],{type:'application/vnd.ms-excel;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=nombre+'-'+hoy()+'.xls';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  toast('📥 3 reportes Excel — '+labelPeriodo);
+}
+window.cerrarSesion = async function(){
+  if(!confirm('¿Cerrar sesión?')) return;
+  await auth.signOut();
+  toast('👋 Sesión cerrada');
+}
+
+function waLink(p){
+  const t=Number(p.total)||0,s=Number(p.senia)||0;
+  const sal=p.estado==='cobrado'?0:Math.max(0,t-s);
+  const entrega=p.fechaEntrega?formatFechaCorta(p.fechaEntrega):'a confirmar';
+  let msg=`Hola ${p.nombre||''}! Te confirmo tu pedido de *Taller Artesanal*\n\n`;
+  msg+=`- ${p.productos||'Pedido'}\n`;
+  msg+=`- Entrega: ${entrega}\n`;
+  if(t>0){
+    msg+=`- Total: $${fmt(t)}`;
+    if(s>0&&p.estado!=='cobrado') msg+=` | Seña: $${fmt(s)} | *Saldo: $${fmt(sal)}*`;
+    if(p.estado==='cobrado') msg+=` (cobrado)`;
+    msg+='\n';
+  }
+  msg+=`\nCualquier consulta avisame!`;
+  const tel=(p.tel||'').replace(/\D/g,'');
+  const telWA=tel?formatTelWA(p.tel):'';
+  const base=telWA?`https://wa.me/${telWA}`:`https://wa.me/`;
+  return base+'?text='+encodeURIComponent(msg);
+}
+function formatTelWA(tel){
+  // Limpiar todo lo que no sea número
+  let n=tel.replace(/\D/g,'');
+  // Si ya empieza con 54, dejarlo
+  if(n.startsWith('54')) return n;
+  // Si empieza con 9 y tiene 11 dígitos (ej: 93815691528), agregar 54
+  if(n.startsWith('9')&&n.length===11) return '54'+n;
+  // Si tiene 10 dígitos (ej: 3815691528), agregar 549
+  if(n.length===10) return '549'+n;
+  // Si tiene 8 dígitos (sin código de área), no podemos arreglarlo bien
+  return '549'+n;
+}
+function formatFechaCorta(f){
+  if(!f)return'';
+  const [y,m,d]=f.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fmt(n){return Number(n).toLocaleString('es-AR');}
+function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':fmt(n);}
+function hoy(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
