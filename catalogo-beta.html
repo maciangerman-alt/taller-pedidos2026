@@ -130,6 +130,19 @@ body { font-family:'Nunito',sans-serif; background:var(--crema); color:var(--tex
 </style>
 </head>
 <body>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777"
+});
+const db = firebase.firestore();
+</script>
 
 <!-- TUTORIAL -->
 <div class="tutorial-overlay" id="tutorial-overlay">
@@ -495,7 +508,7 @@ function abrirModal(){
 function cerrarModal(){ document.getElementById('overlay').classList.remove('show'); }
 function cerrarModalSiOverlay(e){ if(e.target===document.getElementById('overlay')) cerrarModal(); }
 
-function enviarPedido(){
+async function enviarPedido(){
   const nombre = document.getElementById('m-nombre').value.trim();
   const escuela = document.getElementById('m-escuela').value.trim();
   if(!nombre||!escuela){ toast('Completá nombre y escuela'); return; }
@@ -506,45 +519,63 @@ function enviarPedido(){
   const tel = document.getElementById('m-tel').value.trim();
   const obs = document.getElementById('m-obs').value.trim();
 
-  // --- LINK MÁGICO para cargar en el sistema de gestión ---
   const productosTexto = items.map(([id,qty])=>{
     const p = PRODUCTOS.find(x=>x.id===Number(id));
     return `${qty} ${p.nombre}`;
   }).join(', ');
 
-  const baseURL = 'https://maciangerman-alt.github.io/taller-pedidos2026/taller-pedidos-v8.html';
-  const params = new URLSearchParams({
-    nombre, escuela,
-    tel: tel||'',
-    productos: productosTexto,
-    total: totalPesos,
-    obs: obs||''
-  });
-  const linkMagico = baseURL + '?' + params.toString();
+  // --- GUARDAR EN FIREBASE ---
+  const btnEnviar = document.querySelector('.btn-enviar');
+  btnEnviar.textContent = 'Guardando...';
+  btnEnviar.disabled = true;
 
-  // --- UN SOLO MENSAJE con todo ---
-  let msgCompleto = `🔔 *Nuevo pedido del catálogo - Taller Artesanal*\n\n`;
-  msgCompleto += `👩‍🏫 *${nombre}*\n`;
-  msgCompleto += `🏫 ${escuela}\n`;
-  if(tel) msgCompleto += `📞 ${tel}\n`;
-  msgCompleto += `\n📋 *Detalle:*\n`;
-  items.forEach(([id,qty])=>{
-    const p = PRODUCTOS.find(x=>x.id===Number(id));
-    msgCompleto += `▪️ ${p.nombre}`;
-    if(qty>1) msgCompleto += ` × *${qty} unidades*`;
-    msgCompleto += ` — $${fmt(p.precio*qty)}\n`;
-  });
-  msgCompleto += `\n💰 *Total: $${fmt(totalPesos)}* (${totalItems} ${totalItems===1?'unidad':'unidades'})`;
-  if(obs) msgCompleto += `\n📝 ${obs}`;
-  msgCompleto += `\n\n👇 *Cargar en el sistema:*\n${linkMagico}`;
+  try {
+    await db.collection('pedidos').add({
+      nombre, escuela, tel, obs,
+      productos: productosTexto,
+      total: totalPesos,
+      senia: 0,
+      estado: 'pendiente',
+      logistica: 'tucuman',
+      factura: false,
+      facturaEmitida: false,
+      origen: 'catalogo',
+      fechaPedido: new Date().toISOString().split('T')[0],
+      fechaEntrega: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
 
-  window.open(`https://wa.me/5493813311414?text=${encodeURIComponent(msgCompleto)}`, '_blank');
+    // --- MENSAJE WA LIMPIO A NORA (sin links) ---
+    let msg = `🔔 *Nuevo pedido del catálogo*\n\n`;
+    msg += `👩‍🏫 *${nombre}*\n`;
+    msg += `🏫 ${escuela}\n`;
+    if(tel) msg += `📞 ${tel}\n`;
+    msg += `\n📋 *Detalle:*\n`;
+    items.forEach(([id,qty])=>{
+      const p = PRODUCTOS.find(x=>x.id===Number(id));
+      msg += `▪️ ${p.nombre}`;
+      if(qty>1) msg += ` × *${qty}*`;
+      msg += ` — $${fmt(p.precio*qty)}\n`;
+    });
+    msg += `\n💰 *Total: $${fmt(totalPesos)}*`;
+    if(obs) msg += `\n📝 ${obs}`;
+    msg += `\n\n_Ya cargado en el sistema ✅_`;
 
-  cerrarModal();
-  carrito = {};
-  renderCatalogo();
-  renderCarrito();
-  toast('✅ Pedidos enviados a Nora y a vos!');
+    window.open(`https://wa.me/5493813311414?text=${encodeURIComponent(msg)}`, '_blank');
+
+    cerrarModal();
+    carrito = {};
+    renderCatalogo();
+    renderCarrito();
+    toast('✅ Pedido enviado y guardado!');
+
+  } catch(e) {
+    console.error(e);
+    toast('❌ Error al guardar. Verificá conexión.');
+    btnEnviar.textContent = 'Enviar por WhatsApp';
+    btnEnviar.disabled = false;
+  }
 }
 
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
