@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller Artesanal — Catálogo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --madera: #8B5E3C; --madera-dark: #5C3D20; --madera-light: #C49A6C;
+  --crema: #FAF4EC; --crema-dark: #F0E6D3; --borde: #E5D9CC;
+  --verde: #2D7A4F; --verde-light: #E8F5EE;
+  --rojo: #C0392B; --rojo-light: #FDECEA;
+  --amarillo: #F59E0B; --azul: #3B82F6;
+  --texto: #1C1008; --gris: #6B7280;
+  --carrito-bg: #FFF9F3;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Nunito',sans-serif; background:var(--crema); color:var(--texto); min-height:100vh; }
+
+/* HEADER */
+.header { background:var(--madera-dark); color:white; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,0.2); }
+.header-brand { display:flex; align-items:center; gap:10px; }
+.header-logo { font-family:'Fredoka One',cursive; font-size:20px; color:var(--madera-light); }
+.header-sub { font-size:11px; opacity:0.6; }
+.header-carrito-btn { background:var(--amarillo); color:white; border:none; border-radius:100px; padding:8px 16px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Nunito',sans-serif; display:flex; align-items:center; gap:6px; transition:transform 0.1s; }
+.header-carrito-btn:hover { transform:scale(1.05); }
+.carrito-badge { background:white; color:var(--amarillo); font-size:11px; font-weight:800; border-radius:100px; padding:1px 7px; }
+
+/* LAYOUT */
+.layout { display:grid; grid-template-columns:1fr 360px; gap:0; min-height:calc(100vh - 56px); }
+@media(max-width:768px){ .layout { grid-template-columns:1fr; } .carrito-panel { display:none; } .carrito-panel.open { display:flex; position:fixed; inset:0; z-index:200; } }
+
+/* CATÁLOGO */
+.catalogo { padding:20px; overflow-y:auto; }
+.search-bar { background:white; border:2px solid var(--borde); border-radius:12px; padding:10px 16px; width:100%; font-size:14px; font-family:'Nunito',sans-serif; outline:none; margin-bottom:16px; }
+.search-bar:focus { border-color:var(--madera); }
+.categorias { display:flex; gap:8px; margin-bottom:20px; overflow-x:auto; scrollbar-width:none; padding-bottom:4px; flex-wrap:wrap; }
+.cat-btn { padding:7px 16px; border-radius:100px; border:2px solid var(--borde); background:white; font-size:12px; font-weight:700; color:var(--gris); cursor:pointer; white-space:nowrap; font-family:'Nunito',sans-serif; transition:all 0.15s; }
+.cat-btn:hover { border-color:var(--madera-light); color:var(--madera); }
+.cat-btn.active { background:var(--madera); border-color:var(--madera); color:white; }
+.cat-titulo { font-family:'Fredoka One',cursive; font-size:18px; color:var(--madera-dark); margin-bottom:12px; margin-top:4px; }
+.productos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; margin-bottom:28px; }
+.producto-card { background:white; border-radius:16px; border:2px solid var(--borde); overflow:hidden; cursor:pointer; transition:all 0.2s; position:relative; }
+.producto-card:hover { border-color:var(--madera-light); box-shadow:0 6px 20px rgba(139,94,60,0.15); transform:translateY(-2px); }
+.producto-card.en-carrito { border-color:var(--verde); }
+.producto-img { width:100%; aspect-ratio:1; object-fit:cover; display:block; background:var(--crema-dark); }
+.producto-img-placeholder { width:100%; aspect-ratio:1; background:var(--crema-dark); display:flex; align-items:center; justify-content:center; font-size:40px; }
+.producto-info { padding:10px 12px; }
+.producto-nombre { font-size:12px; font-weight:800; color:var(--texto); line-height:1.3; margin-bottom:4px; }
+.producto-precio { font-size:13px; font-weight:700; color:var(--madera-dark); }
+.producto-edad { font-size:10px; color:var(--gris); margin-top:2px; }
+.producto-add-btn { width:100%; background:var(--madera); color:white; border:none; padding:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; transition:background 0.15s; }
+.producto-add-btn:hover { background:var(--madera-dark); }
+.producto-add-btn.added { background:var(--verde); }
+.qty-badge { position:absolute; top:8px; right:8px; background:var(--verde); color:white; font-size:11px; font-weight:800; border-radius:100px; padding:2px 8px; display:none; }
+.qty-badge.show { display:block; }
+
+/* CARRITO */
+.carrito-panel { background:var(--carrito-bg); border-left:2px solid var(--borde); display:flex; flex-direction:column; height:calc(100vh - 56px); position:sticky; top:56px; }
+.carrito-header { padding:16px 20px; border-bottom:2px solid var(--borde); background:white; }
+.carrito-titulo { font-family:'Fredoka One',cursive; font-size:18px; color:var(--madera-dark); }
+.carrito-sub { font-size:12px; color:var(--gris); margin-top:2px; }
+.carrito-body { flex:1; overflow-y:auto; padding:16px; }
+.carrito-empty { text-align:center; padding:40px 20px; color:var(--gris); }
+.carrito-empty-icon { font-size:48px; margin-bottom:12px; }
+.carrito-empty-title { font-size:15px; font-weight:700; margin-bottom:6px; }
+.carrito-empty-sub { font-size:12px; }
+.carrito-item { background:white; border-radius:12px; padding:12px; margin-bottom:10px; border:1.5px solid var(--borde); display:flex; align-items:center; gap:10px; }
+.carrito-item-img { width:48px; height:48px; border-radius:8px; object-fit:cover; background:var(--crema-dark); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.carrito-item-info { flex:1; min-width:0; }
+.carrito-item-nombre { font-size:13px; font-weight:700; color:var(--texto); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.carrito-item-precio { font-size:12px; color:var(--madera); font-weight:600; }
+.carrito-item-controles { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.qty-btn { width:26px; height:26px; border-radius:100px; border:1.5px solid var(--borde); background:white; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--madera-dark); transition:all 0.1s; }
+.qty-btn:hover { background:var(--madera); color:white; border-color:var(--madera); }
+.qty-num { font-size:14px; font-weight:800; color:var(--texto); min-width:20px; text-align:center; }
+.carrito-footer { padding:16px 20px; border-top:2px solid var(--borde); background:white; }
+.carrito-resumen { margin-bottom:14px; }
+.carrito-resumen-row { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:var(--gris); }
+.carrito-total-row { display:flex; justify-content:space-between; font-size:16px; font-weight:800; color:var(--madera-dark); border-top:1.5px solid var(--borde); padding-top:10px; margin-top:6px; }
+.btn-pedido { width:100%; background:var(--verde); color:white; border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Nunito',sans-serif; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.15s; }
+.btn-pedido:hover { background:#1f5c3a; }
+.btn-pedido:disabled { background:var(--gris); cursor:not-allowed; }
+.btn-vaciar { width:100%; background:var(--rojo-light); color:var(--rojo); border:none; border-radius:10px; padding:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; margin-top:8px; }
+
+/* MODAL DATOS */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:300; align-items:flex-end; justify-content:center; }
+.overlay.show { display:flex; }
+.modal { background:white; width:100%; max-width:500px; max-height:90vh; border-radius:20px 20px 0 0; overflow-y:auto; padding:24px; animation:slideUp 0.25s ease; }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle { width:36px; height:4px; background:var(--borde); border-radius:100px; margin:0 auto 16px; }
+.modal-titulo { font-family:'Fredoka One',cursive; font-size:20px; color:var(--madera-dark); margin-bottom:6px; }
+.modal-sub { font-size:13px; color:var(--gris); margin-bottom:20px; }
+.form-group { margin-bottom:14px; }
+.form-label { display:block; font-size:11px; font-weight:700; color:var(--gris); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+.form-input { width:100%; padding:11px 14px; border:2px solid var(--borde); border-radius:10px; font-size:14px; font-family:'Nunito',sans-serif; outline:none; }
+.form-input:focus { border-color:var(--madera); }
+.pedido-resumen { background:var(--crema); border-radius:12px; padding:14px; margin-bottom:16px; max-height:160px; overflow-y:auto; }
+.pedido-resumen-item { display:flex; justify-content:space-between; font-size:12px; padding:4px 0; border-bottom:1px solid var(--borde); }
+.pedido-resumen-item:last-child { border-bottom:none; }
+.btn-enviar { width:100%; background:var(--verde); color:white; border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; font-family:'Nunito',sans-serif; }
+.btn-cancelar { width:100%; background:var(--crema-dark); color:var(--madera-dark); border:none; border-radius:12px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Nunito',sans-serif; margin-top:8px; }
+
+/* TUTORIAL */
+.tutorial-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }
+.tutorial-box { background:white; border-radius:24px; padding:32px 28px; max-width:420px; width:100%; text-align:center; animation:popIn 0.3s ease; }
+@keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+.tutorial-titulo { font-family:'Fredoka One',cursive; font-size:24px; color:var(--madera-dark); margin-bottom:6px; }
+.tutorial-sub { font-size:13px; color:var(--gris); margin-bottom:24px; }
+.tutorial-pasos { text-align:left; margin-bottom:24px; display:flex; flex-direction:column; gap:12px; }
+.tutorial-paso { display:flex; align-items:flex-start; gap:12px; background:var(--crema); border-radius:12px; padding:12px 14px; }
+.paso-num { width:28px; height:28px; background:var(--madera); color:white; border-radius:100px; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.paso-texto { font-size:13px; font-weight:600; color:var(--texto); line-height:1.4; }
+.paso-texto span { color:var(--gris); font-weight:400; display:block; font-size:12px; margin-top:2px; }
+.btn-empezar { width:100%; background:var(--madera); color:white; border:none; border-radius:14px; padding:14px; font-size:16px; font-weight:800; cursor:pointer; font-family:'Nunito',sans-serif; }
+.btn-empezar:hover { background:var(--madera-dark); }
+
+/* DRAG & DROP */
+.producto-card { cursor:grab; }
+.producto-card.dragging { opacity:0.5; transform:scale(0.95); cursor:grabbing; }
+.carrito-panel.drag-over { background:#E8F5EE; border-left-color:var(--verde); }
+.carrito-drop-hint { display:none; text-align:center; padding:20px; border:3px dashed var(--verde); border-radius:16px; color:var(--verde); font-weight:700; font-size:14px; margin:10px; }
+.carrito-panel.drag-over .carrito-drop-hint { display:block; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--madera-dark); color:white; padding:12px 20px; border-radius:100px; font-size:13px; font-weight:700; z-index:999; transition:transform 0.3s; white-space:nowrap; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+@media(min-width:769px){ .overlay { align-items:center; } .modal { border-radius:20px; margin:20px; max-height:85vh; } }
+</style>
+</head>
+<body>
+
+<!-- TUTORIAL -->
+<div class="tutorial-overlay" id="tutorial-overlay">
+  <div class="tutorial-box">
+    <div style="font-size:48px;margin-bottom:12px">🧩</div>
+    <div class="tutorial-titulo">¡Bienvenida al catálogo!</div>
+    <div class="tutorial-sub">Armá tu pedido de juegos didácticos en 3 pasos simples</div>
+    <div class="tutorial-pasos">
+      <div class="tutorial-paso">
+        <div class="paso-num">1</div>
+        <div class="paso-texto">Explorá los juegos
+          <span>Usá los filtros por categoría o edad, o buscá por nombre</span>
+        </div>
+      </div>
+      <div class="tutorial-paso">
+        <div class="paso-num">2</div>
+        <div class="paso-texto">Agregá al pedido
+          <span>Tocá "+ Agregar" en cada juego, o arrastralo al carrito de la derecha</span>
+        </div>
+      </div>
+      <div class="tutorial-paso">
+        <div class="paso-num">3</div>
+        <div class="paso-texto">Enviá tu pedido
+          <span>Cuando termines, tocá "Enviar por WhatsApp" y completá tus datos</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn-empezar" onclick="cerrarTutorial()">¡Empezar a elegir! 🎉</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-brand">
+    <img src="https://i.ibb.co/R4dnhnkH/Dise-o-sin-t-tulo-2.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" onerror="this.outerHTML='<span style=font-size:28px>🐊</span>'">
+    <div>
+      <div class="header-logo">Taller Artesanal</div>
+      <div class="header-sub">Catálogo de juegos didácticos</div>
+    </div>
+  </div>
+  <button class="header-carrito-btn" onclick="toggleCarrito()">
+    🛒 Mi pedido <span class="carrito-badge" id="carrito-badge">0</span>
+  </button>
+</div>
+
+<div class="layout">
+
+  <!-- CATÁLOGO -->
+  <div class="catalogo">
+    <input class="search-bar" type="text" placeholder="🔍  Buscar juego..." oninput="filtrar()" id="buscador">
+    <div class="categorias">
+      <button class="cat-btn active" onclick="setCategoria('todas',this)">✨ Todos</button>
+      <button class="cat-btn" onclick="setCategoria('Rompecabezas',this)">🧩 Rompecabezas</button>
+      <button class="cat-btn" onclick="setCategoria('Encastres',this)">🔧 Encastres</button>
+      <button class="cat-btn" onclick="setCategoria('Apilables',this)">🏗️ Apilables</button>
+      <button class="cat-btn" onclick="setCategoria('Seriaciones',this)">📐 Seriaciones</button>
+      <button class="cat-btn" onclick="setCategoria('Mapas',this)">🗺️ Mapas</button>
+      <button class="cat-btn" onclick="setCategoria('Lúdicos',this)">🎲 Lúdicos</button>
+      <button class="cat-btn" onclick="setCategoria('3 años',this)">👶 3 años</button>
+      <button class="cat-btn" onclick="setCategoria('4 años',this)">🧒 4 años</button>
+      <button class="cat-btn" onclick="setCategoria('5 años',this)">🧒 5 años</button>
+      <button class="cat-btn" onclick="setCategoria('6 años',this)">👦 6 años</button>
+      <button class="cat-btn" onclick="setCategoria('8 años',this)">👧 8 años</button>
+    </div>
+    <div id="catalogo-content"></div>
+  </div>
+
+  <!-- CARRITO -->
+  <div class="carrito-panel" id="carrito-panel">
+    <div class="carrito-header">
+      <div class="carrito-titulo">🛒 Mi pedido</div>
+      <div class="carrito-sub" id="carrito-sub">Agregá juegos desde el catálogo</div>
+    </div>
+    <div class="carrito-body" id="carrito-body">
+      <div class="carrito-drop-hint">🎯 Soltá acá para agregar</div>
+      <div class="carrito-empty">
+        <div class="carrito-empty-icon">🧸</div>
+        <div class="carrito-empty-title">Tu pedido está vacío</div>
+        <div class="carrito-empty-sub">Tocá los juegos para agregarlos</div>
+      </div>
+    </div>
+    <div class="carrito-footer">
+      <div class="carrito-resumen">
+        <div class="carrito-resumen-row"><span>Productos</span><span id="carrito-cant">0 items</span></div>
+        <div class="carrito-total-row"><span>Total</span><span id="carrito-total">$0</span></div>
+      </div>
+      <button class="btn-pedido" onclick="abrirModal()" id="btn-pedido" disabled>💬 Enviar pedido por WhatsApp</button>
+      <button class="btn-vaciar" onclick="vaciarCarrito()">🗑️ Vaciar carrito</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL DATOS -->
+<div class="overlay" id="overlay" onclick="cerrarModalSiOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-titulo">Casi listo! 🎉</div>
+    <div class="modal-sub">Completá tus datos para enviar el pedido</div>
+
+    <div class="pedido-resumen" id="modal-resumen"></div>
+
+    <div class="form-group">
+      <label class="form-label">Tu nombre *</label>
+      <input class="form-input" id="m-nombre" placeholder="Ej: María González">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Escuela *</label>
+      <input class="form-input" id="m-escuela" placeholder="Nombre del jardín">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Teléfono</label>
+      <input class="form-input" id="m-tel" placeholder="381 123 4567" type="tel">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observaciones</label>
+      <input class="form-input" id="m-obs" placeholder="Fecha de entrega, notas...">
+    </div>
+
+    <button class="btn-enviar" onclick="enviarPedido()">💬 Enviar por WhatsApp</button>
+    <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PRODUCTOS = [
+  { id:1, nombre:'Rompecabezas Avión', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/qMkbD79N/DSC-0614.jpg', emoji:'✈️' },
+  { id:2, nombre:'Rompecabezas Auto', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/W4NdnwYg/DSC-0618.jpg', emoji:'🚗' },
+  { id:3, nombre:'Rompecabezas Ballena', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/Hfj34CbF/DSC-0620.jpg', emoji:'🐋' },
+  { id:4, nombre:'Rompecabezas Barco 1', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/KcyDzYBp/DSC-0623.jpg', emoji:'⛵' },
+  { id:5, nombre:'Rompecabezas Barco 2', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/G3bXc4RT/DSC-0625.jpg', emoji:'🚢' },
+  { id:6, nombre:'Rompecabezas Banana', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/s9Bs2h48/DSC-0627.jpg', emoji:'🍌' },
+  { id:7, nombre:'Rompecabezas Caballo', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/1Gg7ZgCJ/DSC-0629.jpg', emoji:'🐴' },
+  { id:8, nombre:'Rompecabezas Camión', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/zVscr9xr/DSC-0631.jpg', emoji:'🚛' },
+  { id:9, nombre:'Rompecabezas Casa Tangram', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/1GXj3PjY/DSC-0633.jpg', emoji:'🏠' },
+  { id:10, nombre:'Rompecabezas Conejo', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/jk95xXjF/DSC-0637.jpg', emoji:'🐰' },
+  { id:11, nombre:'Rompecabezas Corazón', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/JFW8Yfbm/DSC-0639.jpg', emoji:'❤️' },
+  { id:12, nombre:'Rompecabezas Delfín', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/n8zjGhwH/DSC-0641.jpg', emoji:'🐬' },
+  { id:13, nombre:'Rompecabezas Cebra', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/2Yy1L8qQ/DSC-0643.jpg', emoji:'🦓' },
+  { id:14, nombre:'Rompecabezas Cerdito', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/hFv6wd0b/DSC-0646.jpg', emoji:'🐷' },
+  { id:15, nombre:'Rompecabezas Caracol', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/gFjf8Yfv/DSC-0648.jpg', emoji:'🐌' },
+  { id:16, nombre:'Rompecabezas Casa 2', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/F4z35mkr/DSC-0651.jpg', emoji:'🏡' },
+  { id:17, nombre:'Rompecabezas Elefante', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/Rp9Kc7M5/DSC-0652.jpg', emoji:'🐘' },
+  { id:18, nombre:'Rompecabezas Elefante 2', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/v68NnsgF/DSC-0654.jpg', emoji:'🐘' },
+  { id:19, nombre:'Rompecabezas Dinosaurio', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/9kXLTjsb/DSC-0656.jpg', emoji:'🦕' },
+  { id:20, nombre:'Rompecabezas Dinosaurio 2', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/DDwqLtd8/DSC-0658.jpg', emoji:'🦖' },
+  { id:21, nombre:'Rompecabezas Elefante 3', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/bjwsnBkP/DSC-0660.jpg', emoji:'🐘' },
+  { id:22, nombre:'Rompecabezas Estrella de Mar', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/gnpc6cm/DSC-0662.jpg', emoji:'⭐' },
+  { id:23, nombre:'Rompecabezas Gallina', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/vxHfq43d/DSC-0664.jpg', emoji:'🐔' },
+  { id:24, nombre:'Rompecabezas Gato', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:3500, img:'https://i.ibb.co/LhPqNX7N/DSC-0667.jpg', emoji:'🐱' },
+];
+
+let carrito = {};
+let categoriaActual = 'todas';
+
+function cerrarTutorial(){
+  document.getElementById('tutorial-overlay').style.display='none';
+  localStorage.setItem('ta_tutorial_visto','1');
+}
+
+// No mostrar tutorial si ya lo vio
+if(localStorage.getItem('ta_tutorial_visto')) {
+  document.getElementById('tutorial-overlay').style.display='none';
+}
+
+function fmt(n){ return Number(n).toLocaleString('es-AR'); }
+
+function setCategoria(cat, el){
+  categoriaActual = cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderCatalogo();
+}
+
+function filtrar(){ renderCatalogo(); }
+
+function renderCatalogo(){
+  const busq = document.getElementById('buscador').value.toLowerCase();
+  const content = document.getElementById('catalogo-content');
+
+  let filtrados = PRODUCTOS.filter(p => {
+    const matchBusq = !busq || p.nombre.toLowerCase().includes(busq);
+    const matchCat = categoriaActual === 'todas' ||
+      p.categoria === categoriaActual ||
+      p.edades.includes(categoriaActual);
+    return matchBusq && matchCat;
+  });
+
+  if(!filtrados.length){
+    content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris)">No se encontraron juegos</div>';
+    return;
+  }
+
+  // Agrupar por categoría si es "todas"
+  if(categoriaActual === 'todas' && !busq){
+    const cats = [...new Set(PRODUCTOS.map(p=>p.categoria))];
+    content.innerHTML = cats.map(cat => {
+      const prods = filtrados.filter(p=>p.categoria===cat);
+      if(!prods.length) return '';
+      return `<div class="cat-titulo">${catEmoji(cat)} ${cat}</div>
+        <div class="productos-grid">${prods.map(productoCard).join('')}</div>`;
+    }).join('');
+  } else {
+    content.innerHTML = `<div class="productos-grid">${filtrados.map(productoCard).join('')}</div>`;
+  }
+}
+
+function catEmoji(cat){
+  const map = {'Rompecabezas':'🧩','Encastres':'🔧','Apilables':'🏗️','Seriaciones':'📐','Mapas':'🗺️','Lúdicos':'🎲'};
+  return map[cat]||'🎯';
+}
+
+function productoCard(p){
+  const qty = carrito[p.id]||0;
+  return `<div class="producto-card ${qty>0?'en-carrito':''}" id="card-${p.id}"
+    draggable="true"
+    ondragstart="dragStart(event,${p.id})"
+    ondragend="dragEnd(event)">
+    <div class="qty-badge ${qty>0?'show':''}" id="badge-${p.id}">${qty}</div>
+    <img class="producto-img" src="${p.img}" alt="${p.nombre}" onerror="this.outerHTML='<div class=producto-img-placeholder>${p.emoji}</div>'">
+    <div class="producto-info">
+      <div class="producto-nombre">${p.nombre}</div>
+      <div class="producto-precio">$${fmt(p.precio)}</div>
+      <div class="producto-edad">${p.edades.join(' · ')}</div>
+    </div>
+    <button class="producto-add-btn ${qty>0?'added':''}" onclick="agregar(${p.id})">
+      ${qty>0?`✓ En pedido (${qty})`:'+ Agregar al pedido'}
+    </button>
+  </div>`;
+}
+
+// DRAG & DROP
+let draggingId = null;
+
+function dragStart(e, id){
+  draggingId = id;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'copy';
+}
+
+function dragEnd(e){
+  e.target.classList.remove('dragging');
+  document.getElementById('carrito-panel').classList.remove('drag-over');
+}
+
+// Setup carrito drop zone after DOM ready
+function setupDropZone(){
+  const panel = document.getElementById('carrito-panel');
+  panel.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    panel.classList.add('drag-over');
+  });
+  panel.addEventListener('dragleave', e => {
+    if(!panel.contains(e.relatedTarget)) panel.classList.remove('drag-over');
+  });
+  panel.addEventListener('drop', e => {
+    e.preventDefault();
+    panel.classList.remove('drag-over');
+    if(draggingId !== null){
+      agregar(draggingId);
+      draggingId = null;
+    }
+  });
+}
+
+function agregar(id){
+  carrito[id] = (carrito[id]||0) + 1;
+  renderCatalogo();
+  renderCarrito();
+  toast('✓ Agregado al pedido');
+}
+
+function quitarUno(id){
+  if(!carrito[id]) return;
+  carrito[id]--;
+  if(carrito[id]===0) delete carrito[id];
+  renderCatalogo();
+  renderCarrito();
+}
+
+function renderCarrito(){
+  const items = Object.entries(carrito);
+  const badge = document.getElementById('carrito-badge');
+  const body = document.getElementById('carrito-body');
+  const totalEl = document.getElementById('carrito-total');
+  const cantEl = document.getElementById('carrito-cant');
+  const subEl = document.getElementById('carrito-sub');
+  const btnPedido = document.getElementById('btn-pedido');
+
+  const totalItems = items.reduce((a,[,qty])=>a+qty,0);
+  const totalPesos = items.reduce((a,[id,qty])=>a+(PRODUCTOS.find(p=>p.id===Number(id))?.precio||0)*qty,0);
+
+  badge.textContent = totalItems;
+  totalEl.textContent = '$'+fmt(totalPesos);
+  cantEl.textContent = totalItems + (totalItems===1?' item':' items');
+  subEl.textContent = totalItems>0?`${totalItems} items · $${fmt(totalPesos)}`:'Agregá juegos desde el catálogo';
+  btnPedido.disabled = totalItems===0;
+
+  if(!items.length){
+    body.innerHTML = `<div class="carrito-empty">
+      <div class="carrito-empty-icon">🧸</div>
+      <div class="carrito-empty-title">Tu pedido está vacío</div>
+      <div class="carrito-empty-sub">Tocá los juegos para agregarlos</div>
+    </div>`;
+    return;
+  }
+
+  body.innerHTML = items.map(([id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===Number(id));
+    if(!p) return '';
+    return `<div class="carrito-item">
+      <img class="carrito-item-img" src="${p.img}" onerror="this.outerHTML='<div class=carrito-item-img>${p.emoji}</div>'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">
+      <div class="carrito-item-info">
+        <div class="carrito-item-nombre">${p.nombre}</div>
+        <div class="carrito-item-precio">$${fmt(p.precio)} c/u · $${fmt(p.precio*qty)} total</div>
+      </div>
+      <div class="carrito-item-controles">
+        <button class="qty-btn" onclick="quitarUno(${p.id})">−</button>
+        <span class="qty-num">${qty}</span>
+        <button class="qty-btn" onclick="agregar(${p.id})">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function vaciarCarrito(){
+  if(!Object.keys(carrito).length) return;
+  if(confirm('¿Vaciar el carrito?')){ carrito={}; renderCatalogo(); renderCarrito(); }
+}
+
+function toggleCarrito(){
+  document.getElementById('carrito-panel').classList.toggle('open');
+}
+
+function abrirModal(){
+  if(!Object.keys(carrito).length) return;
+  const items = Object.entries(carrito);
+  const resumen = document.getElementById('modal-resumen');
+  resumen.innerHTML = items.map(([id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===Number(id));
+    return `<div class="pedido-resumen-item"><span>${p.nombre} x${qty}</span><span>$${fmt(p.precio*qty)}</span></div>`;
+  }).join('');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function cerrarModal(){ document.getElementById('overlay').classList.remove('show'); }
+function cerrarModalSiOverlay(e){ if(e.target===document.getElementById('overlay')) cerrarModal(); }
+
+function enviarPedido(){
+  const nombre = document.getElementById('m-nombre').value.trim();
+  const escuela = document.getElementById('m-escuela').value.trim();
+  if(!nombre||!escuela){ toast('Completá nombre y escuela'); return; }
+
+  const items = Object.entries(carrito);
+  const totalPesos = items.reduce((a,[id,qty])=>a+(PRODUCTOS.find(p=>p.id===Number(id))?.precio||0)*qty,0);
+  const totalItems = items.reduce((a,[,qty])=>a+qty,0);
+  const tel = document.getElementById('m-tel').value.trim();
+  const obs = document.getElementById('m-obs').value.trim();
+
+  let msg = `¡Hola Nora! 👋 Soy *${nombre}* de *${escuela}*`;
+  if(tel) msg += ` (${tel})`;
+  msg += `.\n\nQuiero hacer un pedido de juegos didácticos 🧩\n\n`;
+  msg += `📋 *Mi selección:*\n`;
+  items.forEach(([id,qty])=>{
+    const p = PRODUCTOS.find(x=>x.id===Number(id));
+    msg += `▪️ ${p.nombre}`;
+    if(qty>1) msg += ` × *${qty} unidades*`;
+    msg += ` — $${fmt(p.precio*qty)}\n`;
+  });
+  msg += `\n💰 *Total del pedido: $${fmt(totalPesos)}* (${totalItems} ${totalItems===1?'unidad':'unidades'})`;
+  if(obs) msg += `\n\n📝 *Nota:* ${obs}`;
+  msg += `\n\n¡Muchas gracias! 😊`;
+
+  window.open(`https://wa.me/5493816544078?text=${encodeURIComponent(msg)}`, '_blank');
+  cerrarModal();
+  carrito = {};
+  renderCatalogo();
+  renderCarrito();
+  toast('✅ Pedido enviado!');
+}
+
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
+// Init
+renderCatalogo();
+renderCarrito();
+setupDropZone();
+</script>
+</body>
+</html>
