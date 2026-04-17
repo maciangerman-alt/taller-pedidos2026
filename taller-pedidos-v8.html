@@ -562,18 +562,37 @@ document.querySelector('.main').style.display='none';
 // Verificar si ya habia sesion activa
 auth.onAuthStateChanged(user => {
   if(user){
-    // Ya esta logueado, mostrar app
     document.getElementById('login-screen').style.display='none';
     document.querySelector('.header').style.display='flex';
     document.querySelector('.tabs').style.display='flex';
     document.querySelector('.main').style.display='block';
-    // Mostrar nombre del usuario en header
     const email = user.email;
     const nombre = email==='maciangerman@gmail.com'?'Germán':'Nora';
     const subEl = document.querySelector('.header-sub');
     if(subEl) subEl.textContent = 'Hola, ' + nombre + ' 👋';
+
+    // --- LINK MÁGICO: si viene con parámetros del catálogo, abrir modal pre-cargado ---
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('nombre')){
+      setTimeout(()=>{
+        editandoId=null;
+        document.getElementById('modal-title').textContent='Nuevo Pedido — Catálogo';
+        document.getElementById('btn-eliminar-wrap').style.display='none';
+        resetForm();
+        document.getElementById('f-nombre').value = params.get('nombre')||'';
+        document.getElementById('f-escuela').value = params.get('escuela')||'';
+        document.getElementById('f-tel').value = params.get('tel')||'';
+        document.getElementById('f-productos').value = params.get('productos')||'';
+        document.getElementById('f-total').value = params.get('total')||'';
+        document.getElementById('f-obs').value = params.get('obs')||'';
+        calcularSaldo();
+        document.getElementById('overlay').classList.add('show');
+        toast('📦 Pedido del catálogo cargado — revisá y guardá');
+        // Limpiar URL para que no se recargue si refresca
+        window.history.replaceState({}, '', window.location.pathname);
+      }, 1000);
+    }
   } else {
-    // No logueado, mostrar pantalla de login
     document.getElementById('login-screen').style.display='flex';
     document.querySelector('.header').style.display='none';
     document.querySelector('.tabs').style.display='none';
@@ -700,6 +719,8 @@ function diasChip(fechaEntrega,estado){
   else { bg='#DCFCE7';color='#166534';texto=`🟢 ${dias} días`; }
   return `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;background:${bg};color:${color}">${texto}</span>`;
 }
+
+function renderCaja() {
   let tF=0,tC=0,tS=0; const xE={};
   pedidos.forEach(p=>{
     const t=Number(p.total)||0,s=Number(p.senia)||0;
@@ -1463,7 +1484,7 @@ function formatFechaCorta(f){
 
 function fmt(n){return Number(n).toLocaleString('es-AR');}
 function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':fmt(n);}
-function hoy(){return new Date().toISOString().split('T')[0];}
+function hoy(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
