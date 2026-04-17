@@ -680,7 +680,7 @@ window.renderPedidos = function() {
     return `<div class="pedido-card ${p.estado||'pendiente'}" onclick="abrirEditar('${p.id}')">
       <div class="pedido-top">
         <div>
-          <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}</div>
+          <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''} ${p.origen==='catalogo'?'<span class="factura-chip" style="background:#EFF6FF;color:#2563EB">🛒 Catálogo</span>':''}</div>
           <div class="pedido-escuela">${p.escuela||''}${p.turno?' · '+p.turno:''}</div>
         </div>
         <span class="estado-badge estado-${p.estado||'pendiente'}">${eL[p.estado]||''}</span>
