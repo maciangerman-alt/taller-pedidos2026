@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Análisis de clientas — Taller Artesanal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1C2B24;
+  --pine:#2F5D50;
+  --pine-soft:#5C8A7B;
+  --ochre:#C8871B;
+  --brick:#A8452F;
+  --paper:#FFFDF8;
+  --linen:#E6E1D6;
+  --linen-2:#F2EEE5;
+  --muted:#6E7A73;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px}
+h1,h2,h3{font-family:"Bricolage Grotesque",Inter,sans-serif;margin:0;line-height:1.1;font-weight:800}
+h1{font-size:clamp(28px,6vw,44px);letter-spacing:-.02em}
+h2{font-size:clamp(20px,4vw,26px);letter-spacing:-.01em;font-weight:600}
+h3{font-size:16px;font-weight:600}
+p{margin:.5em 0}
+.sub{color:var(--muted);max-width:62ch;margin-top:10px}
+.rule{border:0;border-top:1.5px solid var(--ink);margin:34px 0 20px}
+.rule-soft{border:0;border-top:1px solid var(--linen);margin:20px 0}
+section{margin-top:12px}
+label{display:block;font-size:13px;font-weight:600;color:var(--pine);margin-bottom:5px}
+textarea,input,select{
+  width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;
+  background:#fff;border:1px solid var(--linen);border-radius:3px;padding:9px 10px;color:var(--ink);
+}
+textarea{min-height:120px;resize:vertical}
+select{font-family:Inter,sans-serif}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--ochre);outline-offset:1px}
+button{
+  font-family:Inter,sans-serif;font-size:15px;font-weight:600;cursor:pointer;
+  background:var(--pine);color:#fff;border:0;border-radius:3px;padding:11px 20px;
+}
+button:hover{background:var(--ink)}
+button.ghost{background:transparent;color:var(--pine);border:1px solid var(--linen);}
+button.ghost:hover{background:var(--linen-2);color:var(--ink)}
+button[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:14px}
+.grid{display:grid;gap:14px}
+.map-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0;border-top:1px solid var(--linen)}
+.stat{padding:14px 16px 14px 0;border-bottom:1px solid var(--linen)}
+.stat .n{font-family:"Bricolage Grotesque",sans-serif;font-size:30px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;display:block;line-height:1.05}
+.stat .k{font-size:12.5px;color:var(--muted);margin-top:3px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+.msg{padding:11px 14px;border-radius:3px;font-size:14px;margin-top:14px;border-left:3px solid var(--pine);background:var(--linen-2)}
+.msg.bad{border-left-color:var(--brick);color:var(--brick)}
+.hide{display:none}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:600;font-size:12.5px;color:var(--muted);padding:7px 10px 7px 0;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+td{padding:9px 10px 9px 0;border-bottom:1px solid var(--linen);vertical-align:top}
+td.num,th.num{text-align:right;padding-right:0}
+tr.hot td:first-child{box-shadow:inset 3px 0 0 var(--ochre);padding-left:10px}
+.name{font-weight:600}
+.tel{font-size:12.5px;color:var(--muted);font-family:ui-monospace,monospace}
+.tag{font-size:11.5px;font-weight:600;padding:1px 6px;border-radius:2px;background:var(--linen-2);color:var(--pine);white-space:nowrap}
+.tag.warn{background:#F6E7D8;color:var(--brick)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.bars{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;align-items:end;height:130px;margin-top:16px}
+.bar{background:var(--pine-soft);border-radius:2px 2px 0 0;min-height:2px;position:relative}
+.bar.peak{background:var(--ochre)}
+.barlabels{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;font-size:10.5px;color:var(--muted);text-align:center;margin-top:5px}
+.lead{font-size:17px;max-width:64ch}
+code{font-size:12.5px;background:var(--linen-2);padding:1px 4px;border-radius:2px}
+@media (max-width:560px){ .wrap{padding:20px 16px 60px} th,td{padding-right:8px} }
+@media (prefers-reduced-motion:no-preference){ .bar{transition:height .4s ease} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>¿A quién le vendo el lunes?</h1>
+<p class="sub">Lee la colección <code>pedidos</code> de Firestore y devuelve las clientas que ya te compraron, cuánto valen y hace cuánto no vuelven. Nada sale de tu navegador.</p>
+
+<hr class="rule">
+
+<!-- ── 1. Conexión ─────────────────────────────────── -->
+<section id="paso-conexion">
+  <h2>1 · Conectar</h2>
+  <p class="hint">Pegá el objeto <code>firebaseConfig</code> del catálogo. Si preferís no pegarlo cada vez, escribilo directo en la constante <code>CONFIG_FIJA</code> arriba del script.</p>
+  <div style="margin-top:14px">
+    <label for="cfg">firebaseConfig</label>
+    <textarea id="cfg" spellcheck="false" placeholder='{ "apiKey": "...", "authDomain": "...", "projectId": "...", "storageBucket": "...", "messagingSenderId": "...", "appId": "..." }'></textarea>
+  </div>
+  <div class="row">
+    <div style="flex:1;min-width:170px">
+      <label for="col">Colección</label>
+      <input id="col" value="pedidos" spellcheck="false">
+    </div>
+    <div style="flex:1;min-width:130px">
+      <label for="lim">Máximo de pedidos</label>
+      <input id="lim" type="number" value="5000" min="10">
+    </div>
+    <button id="btn-conectar">Leer pedidos</button>
+  </div>
+  <div id="msg-conexion"></div>
+</section>
+
+<!-- ── 2. Mapeo ────────────────────────────────────── -->
+<section id="paso-mapeo" class="hide">
+  <hr class="rule">
+  <h2>2 · Confirmar los campos</h2>
+  <p class="hint">Adiviné el nombre de cada campo mirando un pedido real. Corregí lo que esté mal y seguí.</p>
+  <div class="grid map-grid" style="margin-top:16px">
+    <div><label for="f-cli">Nombre de la clienta</label><select id="f-cli"></select></div>
+    <div><label for="f-tel">Teléfono (identifica a la clienta)</label><select id="f-tel"></select></div>
+    <div><label for="f-fec">Fecha del pedido</label><select id="f-fec"></select></div>
+    <div><label for="f-tot">Total del pedido</label><select id="f-tot"></select></div>
+    <div><label for="f-itm">Lista de productos</label><select id="f-itm"></select></div>
+    <div><label for="f-dias">Dormida a partir de</label><select id="f-dias">
+      <option value="60">60 días sin comprar</option>
+      <option value="90" selected>90 días sin comprar</option>
+      <option value="120">120 días sin comprar</option>
+      <option value="180">180 días sin comprar</option>
+    </select></div>
+  </div>
+  <div class="row"><button id="btn-analizar">Analizar</button></div>
+  <div id="msg-mapeo"></div>
+  <details style="margin-top:18px">
+    <summary style="cursor:pointer;font-size:13px;color:var(--muted)">Ver un pedido de ejemplo</summary>
+    <pre id="sample" style="font-size:11.5px;background:var(--linen-2);padding:12px;border-radius:3px;overflow:auto;max-height:260px"></pre>
+  </details>
+</section>
+
+<!-- ── 3. Resultados ───────────────────────────────── -->
+<section id="resultados" class="hide">
+
+  <hr class="rule">
+  <h2>Lo que hay</h2>
+  <div class="grid stats" id="stats" style="margin-top:18px"></div>
+  <p class="hint" id="nota-cobertura"></p>
+
+  <hr class="rule">
+  <h2>Llamalas esta semana</h2>
+  <p class="lead" style="margin-top:8px">Ya te compraron, les gustó lo suficiente como para pagar, y hace rato que no vuelven. Es la venta más barata que tenés disponible.</p>
+  <div class="row"><button class="ghost" id="btn-csv">Bajar la lista en CSV</button></div>
+  <div class="scroll" style="margin-top:16px"><table id="t-dormidas"></table></div>
+
+  <hr class="rule">
+  <h2>Tus mejores clientas</h2>
+  <p class="hint">Ordenadas por lo que te facturaron en total. Estas son las que tienen que recibir el catálogo nuevo antes que nadie.</p>
+  <div class="scroll" style="margin-top:16px"><table id="t-top"></table></div>
+
+  <hr class="rule">
+  <h2>Qué se vende de verdad</h2>
+  <p class="hint" id="nota-productos"></p>
+  <div class="scroll" style="margin-top:16px"><table id="t-productos"></table></div>
+
+  <hr class="rule">
+  <h2>Cuándo compran</h2>
+  <p class="hint">Facturación por mes, sumando todos los años. Te dice cuándo empujar y cuándo aguantar stock.</p>
+  <div class="bars" id="bars"></div>
+  <div class="barlabels" id="barlabels"></div>
+
+</section>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* Si querés evitar pegar el config cada vez, escribilo acá y listo. */
+const CONFIG_FIJA = {
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777"
+};
+
+const $ = id => document.getElementById(id);
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let PEDIDOS = [], CAMPOS = [], DORMIDAS = [];
+
+const money = n => '$' + Math.round(n||0).toLocaleString('es-AR');
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function aviso(donde, texto, malo){
+  $(donde).innerHTML = texto ? '<div class="msg'+(malo?' bad':'')+'">'+esc(texto)+'</div>' : '';
+}
+
+/* ── Lectura ─────────────────────────────────────── */
+$('btn-conectar').onclick = async () => {
+  const btn = $('btn-conectar');
+  let cfg = CONFIG_FIJA;
+  if (!cfg) {
+    const txt = $('cfg').value.trim().replace(/^const\s+\w+\s*=\s*/,'').replace(/;\s*$/,'');
+    if (!txt) return aviso('msg-conexion','Falta el firebaseConfig. Copialo del catálogo, entre llaves.',true);
+    try { cfg = (new Function('return ('+txt+')'))(); }
+    catch(e){ return aviso('msg-conexion','Ese texto no es un objeto válido. Copiá desde la llave de apertura hasta la de cierre.',true); }
+  }
+  if (!cfg || !cfg.projectId) return aviso('msg-conexion','Al config le falta projectId.',true);
+
+  if (typeof firebase === 'undefined'){
+    btn.disabled = false;
+    return aviso('msg-conexion','El SDK de Firebase no cargó. Estás abriendo el archivo en local y el navegador bloquea los scripts externos. Subilo a GitHub Pages o Netlify y abrilo desde ahí.',true);
+  }
+
+  btn.disabled = true; aviso('msg-conexion','Leyendo…');
+  try{
+    if (!firebase.apps.length) firebase.initializeApp(cfg);
+    const lim = Math.max(10, parseInt($('lim').value)||5000);
+    const snap = await firebase.firestore().collection($('col').value.trim()).limit(lim).get();
+    if (snap.empty){ btn.disabled=false; return aviso('msg-conexion','La colección existe pero está vacía. Revisá el nombre.',true); }
+
+    PEDIDOS = []; const set = new Set();
+    snap.forEach(d => { const o = d.data(); o.__id = d.id; PEDIDOS.push(o); Object.keys(o).forEach(k => { if(k!=='__id') set.add(k); }); });
+    CAMPOS = [...set].sort();
+
+    aviso('msg-conexion','Leí '+PEDIDOS.length+' pedidos.');
+    prepararMapeo();
+    $('paso-mapeo').classList.remove('hide');
+    $('paso-mapeo').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    aviso('msg-conexion','No pude leer: '+e.message+'. Suele ser una regla de Firestore que bloquea la lectura.',true);
+  }
+  btn.disabled = false;
+};
+
+/* ── Mapeo ───────────────────────────────────────── */
+function adivinar(pistas){
+  for (const p of pistas){
+    const m = CAMPOS.find(c => c.toLowerCase() === p);
+    if (m) return m;
+  }
+  for (const p of pistas){
+    const m = CAMPOS.find(c => c.toLowerCase().includes(p));
+    if (m) return m;
+  }
+  return '';
+}
+function llenar(sel, elegido, opcional){
+  const s = $(sel);
+  s.innerHTML = (opcional ? '<option value="">— ninguno —</option>' : '') +
+    CAMPOS.map(c => '<option value="'+esc(c)+'"'+(c===elegido?' selected':'')+'>'+esc(c)+'</option>').join('');
+}
+function prepararMapeo(){
+  llenar('f-cli', adivinar(['cliente','nombre','clienta','comprador','nombrecliente']));
+  llenar('f-tel', adivinar(['telefono','teléfono','tel','celular','whatsapp','phone']), true);
+  llenar('f-fec', adivinar(['fecha','createdat','fechapedido','timestamp','date','creado']));
+  llenar('f-tot', adivinar(['total','monto','importe','precio','totalpedido','subtotal']));
+  llenar('f-itm', adivinar(['items','productos','detalle','carrito','lineas','articulos']), true);
+  const ej = PEDIDOS.find(p => Object.keys(p).length > 3) || PEDIDOS[0];
+  $('sample').textContent = JSON.stringify(ej, (k,v) => (v && v.seconds!==undefined) ? '«fecha '+new Date(v.seconds*1000).toISOString().slice(0,10)+'»' : v, 2);
+}
+
+/* ── Normalización ───────────────────────────────── */
+function aFecha(v){
+  if (v==null) return null;
+  if (typeof v==='object'){
+    if (typeof v.toDate==='function') return v.toDate().getTime();
+    if (v.seconds!=null) return v.seconds*1000;
+  }
+  if (typeof v==='number') return v < 1e12 ? v*1000 : v;
+  if (typeof v==='string'){
+    const iso = Date.parse(v);
+    if (!isNaN(iso)) return iso;
+    const m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/); // dd/mm/aaaa
+    if (m){ const a = m[3].length===2 ? '20'+m[3] : m[3]; return new Date(+a, +m[2]-1, +m[1]).getTime(); }
+  }
+  return null;
+}
+function aNumero(v){
+  if (typeof v==='number') return v;
+  if (typeof v==='string'){
+    let s = v.replace(/[^\d.,-]/g,'');
+    if (s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
+    else if (s.includes(',')) s = s.replace(',','.');
+    const n = parseFloat(s); return isNaN(n) ? 0 : n;
+  }
+  return 0;
+}
+function normTel(v){
+  const d = String(v==null?'':v).replace(/\D/g,'');
+  return d.length >= 7 ? d.slice(-8) : '';
+}
+function leerItems(v){
+  const out = [];
+  const arr = Array.isArray(v) ? v : (v && typeof v==='object' ? Object.values(v) : []);
+  arr.forEach(it => {
+    if (typeof it === 'string'){ out.push({nombre:it, cant:1, imp:0}); return; }
+    if (!it || typeof it!=='object') return;
+    const k = Object.keys(it);
+    const kn = k.find(x=>/nombre|producto|titulo|title|descripcion|name/i.test(x));
+    const kc = k.find(x=>/cant|qty|quantity|unidades/i.test(x));
+    const kp = k.find(x=>/precio|price|unitario|valor/i.test(x));
+    const ks = k.find(x=>/subtotal|importe|total/i.test(x));
+    const cant = kc ? aNumero(it[kc]) || 1 : 1;
+    const imp = ks ? aNumero(it[ks]) : (kp ? aNumero(it[kp])*cant : 0);
+    out.push({ nombre: kn ? String(it[kn]) : '(sin nombre)', cant, imp });
+  });
+  return out;
+}
+
+/* ── Análisis ────────────────────────────────────── */
+$('btn-analizar').onclick = () => {
+  const fCli=$('f-cli').value, fTel=$('f-tel').value, fFec=$('f-fec').value, fTot=$('f-tot').value, fItm=$('f-itm').value;
+  const umbral = parseInt($('f-dias').value);
+  const ahora = Date.now(), DIA = 86400000;
+
+  const norm = PEDIDOS.map(p => {
+    const tel = fTel ? normTel(p[fTel]) : '';
+    const nombre = String(p[fCli] ?? '').trim();
+    return {
+      nombre: nombre || (tel ? 'Sin nombre · '+tel : 'Sin identificar'),
+      telCrudo: fTel ? String(p[fTel] ?? '') : '',
+      clave: tel || nombre.toLowerCase() || null,
+      fecha: aFecha(p[fFec]),
+      total: aNumero(p[fTot]),
+      items: fItm ? leerItems(p[fItm]) : []
+    };
+  }).filter(p => p.clave);
+
+  if (!norm.length) return aviso('msg-mapeo','Ningún pedido quedó con clienta identificable. Probá otro campo para nombre o teléfono.',true);
+  aviso('msg-mapeo','');
+
+  const conFecha = norm.filter(p => p.fecha);
+  const facturacion = norm.reduce((a,p)=>a+p.total,0);
+
+  // Clientas
+  const M = new Map();
+  norm.forEach(p => {
+    let c = M.get(p.clave);
+    if (!c){ c = {nombre:p.nombre, tel:p.telCrudo, gasto:0, n:0, primera:null, ultima:null}; M.set(p.clave,c); }
+    if (p.nombre && !/^Sin /.test(p.nombre)) c.nombre = p.nombre;
+    if (p.telCrudo) c.tel = p.telCrudo;
+    c.gasto += p.total; c.n++;
+    if (p.fecha){
+      if (!c.primera || p.fecha < c.primera) c.primera = p.fecha;
+      if (!c.ultima  || p.fecha > c.ultima)  c.ultima  = p.fecha;
+    }
+  });
+  const clientas = [...M.values()].map(c => ({...c, dias: c.ultima ? Math.floor((ahora-c.ultima)/DIA) : null}));
+  const repiten = clientas.filter(c => c.n >= 2).length;
+  const tasaRecompra = clientas.length ? repiten/clientas.length*100 : 0;
+
+  // Stats
+  $('stats').innerHTML = [
+    [norm.length.toLocaleString('es-AR'), 'pedidos'],
+    [money(facturacion), 'facturado'],
+    [money(facturacion/norm.length), 'ticket promedio'],
+    [clientas.length.toLocaleString('es-AR'), 'clientas distintas'],
+    [tasaRecompra.toFixed(0)+'%', 'volvió a comprar'],
+    [money(facturacion/(clientas.length||1)), 'valor por clienta']
+  ].map(([n,k]) => '<div class="stat"><span class="n">'+esc(n)+'</span><div class="k">'+k+'</div></div>').join('');
+
+  $('nota-cobertura').textContent = conFecha.length < norm.length
+    ? (norm.length-conFecha.length)+' pedidos no tienen fecha legible, así que quedan fuera del análisis temporal.'
+    : 'Todos los pedidos tienen fecha legible.';
+
+  // Dormidas
+  DORMIDAS = clientas.filter(c => c.dias !== null && c.dias >= umbral).sort((a,b)=>b.gasto-a.gasto).slice(0,40);
+  $('t-dormidas').innerHTML = DORMIDAS.length ? (
+    '<tr><th>Clienta</th><th class="num">Te facturó</th><th class="num">Pedidos</th><th class="num">Sin comprar</th><th></th></tr>' +
+    DORMIDAS.map((c,i) => '<tr'+(i<10?' class="hot"':'')+'>'+
+      '<td><div class="name">'+esc(c.nombre)+'</div>'+(c.tel?'<div class="tel">'+esc(c.tel)+'</div>':'')+'</td>'+
+      '<td class="num">'+money(c.gasto)+'</td>'+
+      '<td class="num">'+c.n+'</td>'+
+      '<td class="num">'+c.dias+' días</td>'+
+      '<td><span class="tag'+(c.n>=2?'':' warn')+'">'+(c.n>=2?'clienta fiel':'compró una vez')+'</span></td>'+
+    '</tr>').join('')
+  ) : '<tr><td>Ninguna clienta pasó el umbral de '+umbral+' días. Buena señal, probá con un umbral más corto.</td></tr>';
+
+  // Top
+  const top = [...clientas].sort((a,b)=>b.gasto-a.gasto).slice(0,30);
+  $('t-top').innerHTML =
+    '<tr><th>#</th><th>Clienta</th><th class="num">Facturó</th><th class="num">Pedidos</th><th class="num">Ticket</th><th class="num">Última compra</th></tr>' +
+    top.map((c,i) => '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td><div class="name">'+esc(c.nombre)+'</div>'+(c.tel?'<div class="tel">'+esc(c.tel)+'</div>':'')+'</td>'+
+      '<td class="num">'+money(c.gasto)+'</td>'+
+      '<td class="num">'+c.n+'</td>'+
+      '<td class="num">'+money(c.gasto/c.n)+'</td>'+
+      '<td class="num">'+(c.dias!==null ? 'hace '+c.dias+' d' : '—')+'</td>'+
+    '</tr>').join('');
+
+  const cuota = facturacion ? top.reduce((a,c)=>a+c.gasto,0)/facturacion*100 : 0;
+  $('t-top').insertAdjacentHTML('afterend','<p class="hint">Estas '+top.length+' clientas son el '+cuota.toFixed(0)+'% de tu facturación.</p>');
+
+  // Productos
+  const P = new Map();
+  norm.forEach(p => p.items.forEach(it => {
+    const k = it.nombre.trim().toLowerCase(); if (!k) return;
+    let r = P.get(k); if (!r){ r = {nombre:it.nombre.trim(), cant:0, imp:0, pedidos:0}; P.set(k,r); }
+    r.cant += it.cant; r.imp += it.imp; r.pedidos++;
+  }));
+  const prods = [...P.values()].sort((a,b)=> (b.imp-a.imp) || (b.cant-a.cant));
+  if (prods.length){
+    const totImp = prods.reduce((a,p)=>a+p.imp,0);
+    let acum = 0, cuantos = 0;
+    if (totImp > 0) for (const p of prods){ acum += p.imp; cuantos++; if (acum/totImp >= .8) break; }
+    $('nota-productos').textContent = totImp > 0
+      ? cuantos+' productos de '+prods.length+' hacen el 80% de la facturación. El resto es catálogo que te cuesta stock, fotos y decisiones.'
+      : 'Los productos no traen importe, así que van ordenados por unidades vendidas.';
+    $('t-productos').innerHTML =
+      '<tr><th>#</th><th>Producto</th><th class="num">Unidades</th><th class="num">Facturó</th><th class="num">En pedidos</th></tr>' +
+      prods.slice(0,25).map((p,i)=>'<tr'+(i<cuantos?' class="hot"':'')+'>'+
+        '<td>'+(i+1)+'</td><td class="name">'+esc(p.nombre)+'</td>'+
+        '<td class="num">'+Math.round(p.cant).toLocaleString('es-AR')+'</td>'+
+        '<td class="num">'+(p.imp?money(p.imp):'—')+'</td>'+
+        '<td class="num">'+p.pedidos+'</td></tr>').join('');
+  } else {
+    $('nota-productos').textContent = 'No mapeaste el campo de productos, o los pedidos no lo tienen. Sin eso no puedo decirte qué se vende.';
+    $('t-productos').innerHTML = '';
+  }
+
+  // Estacionalidad
+  const mes = new Array(12).fill(0);
+  conFecha.forEach(p => mes[new Date(p.fecha).getMonth()] += p.total);
+  const max = Math.max(...mes, 1);
+  $('bars').innerHTML = mes.map(v => '<div class="bar'+(v===max?' peak':'')+'" style="height:'+Math.max(2,v/max*100)+'%" title="'+money(v)+'"></div>').join('');
+  $('barlabels').innerHTML = MESES.map(m=>'<div>'+m+'</div>').join('');
+
+  $('resultados').classList.remove('hide');
+  $('resultados').scrollIntoView({behavior:'smooth',block:'start'});
+};
+
+/* ── CSV ─────────────────────────────────────────── */
+$('btn-csv').onclick = () => {
+  if (!DORMIDAS.length) return;
+  const filas = [['Clienta','Telefono','Facturado','Pedidos','Dias sin comprar']]
+    .concat(DORMIDAS.map(c => [c.nombre, c.tel, Math.round(c.gasto), c.n, c.dias]));
+  const csv = '\uFEFF' + filas.map(f => f.map(x => '"'+String(x).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'clientas-para-llamar.csv';
+  a.click();
+};
+
+if (CONFIG_FIJA) {
+  $('cfg').closest('div').style.display = 'none';
+  $('paso-conexion').querySelector('.hint').textContent = 'Ya está conectado al proyecto taller-artesanal-902ac. Sólo apretá el botón.';
+  window.addEventListener('load', () => {
+    let intentos = 0;
+    const esperar = setInterval(() => {
+      if (typeof firebase !== 'undefined' || ++intentos > 20){
+        clearInterval(esperar);
+        $('btn-conectar').click();
+      }
+    }, 250);
+  });
+}
+</script>
+</body>
+</html>
