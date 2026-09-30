@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>El Coco Didácticos — Elegí 5, pagás 1</title>
+<meta name="description" content="Juegos didácticos de madera. Elegí 5 y pagás el precio de 1. Envíos a todo el país y hasta 6 cuotas sin interés.">
+<meta property="og:title" content="El Coco Didácticos — Elegí 5, pagás 1">
+<meta property="og:description" content="Juegos didácticos de madera. Elegí 5 y pagás el precio de 1.">
+<meta name="theme-color" content="#17130E">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥥</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --acento:#FF5A1F; --acento-2:#E8440C; --acento-soft:#FFF3EC; --acento-borde:#FFD3BF;
+  --negro:#17130E; --negro-2:#2A241C; --texto:#1C1813; --gris:#6F685F; --gris-2:#A39B90;
+  --borde:#EEEAE4; --fondo:#FFFFFF; --img-bg:#F5F2EE; --verde:#15803D; --verde-soft:#ECFDF3;
+  --amarillo:#FFC83D; --radio:18px; --dock-h:118px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',system-ui,sans-serif;background:var(--fondo);color:var(--texto);-webkit-font-smoothing:antialiased;padding-bottom:calc(var(--dock-h) + env(safe-area-inset-bottom))}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+header{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--borde)}
+.hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:68px}
+.hd-help{justify-self:start;font-size:12px;font-weight:800;color:var(--gris);text-decoration:none;display:flex;align-items:center;gap:6px}
+.logo{grid-column:2;text-align:center;text-decoration:none;line-height:1}
+.logo b{font-family:'Baloo 2',system-ui,sans-serif;font-weight:800;font-size:30px;color:var(--negro);letter-spacing:-.5px}
+.logo b em{font-style:normal;color:var(--acento)}
+.logo small{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:1px;font-size:9.5px;font-weight:900;color:var(--acento-2);font-style:italic;letter-spacing:.4px;text-transform:uppercase}
+.logo small i{background:var(--acento);color:#fff;font-style:normal;padding:1px 5px;border-radius:4px}
+.hd-cart{grid-column:3;justify-self:end;position:relative;width:42px;height:42px;display:grid;place-items:center;border-radius:50%}
+.hd-cart:hover{background:#f6f3ef}
+.hd-cart .n{position:absolute;top:3px;right:2px;min-width:18px;height:18px;border-radius:9px;background:var(--negro);color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center;padding:0 4px}
+nav.menu{display:flex;justify-content:center;gap:26px;height:40px;align-items:center;font-size:14px;font-weight:700;border-top:1px solid var(--borde)}
+nav.menu a{text-decoration:none;white-space:nowrap}
+nav.menu a.on{color:var(--acento-2)}
+
+.ticker{background:var(--negro);color:#fff;overflow:hidden;white-space:nowrap;font-size:11px;font-weight:900;letter-spacing:.4px;height:28px;display:flex;align-items:center}
+.ticker-track{display:inline-flex;gap:40px;padding-left:40px;animation:tick 34s linear infinite}
+@keyframes tick{to{transform:translateX(-50%)}}
+.cd{background:var(--negro);color:#fff;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 12px 14px;border-top:1px solid var(--negro-2)}
+.cd-t{font-weight:900;font-size:14px}.cd-t em{font-style:normal;color:var(--acento)}
+.cd-boxes{display:flex;gap:6px}
+.cd-b{background:var(--negro-2);border-radius:8px;min-width:44px;padding:5px 6px 3px;text-align:center}
+.cd-b b{display:block;font-size:19px;font-weight:900;line-height:1.05;font-variant-numeric:tabular-nums}
+.cd-b span{font-size:8px;font-weight:800;color:#b3aa9d;letter-spacing:.6px}
+
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;padding:26px 0 8px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--borde);border-radius:999px;padding:6px 8px 6px 10px;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(30,20,10,.04)}
+.pill .tag{background:var(--negro);color:#fff;border-radius:999px;padding:3px 9px;font-size:11px}
+.pill .tag.y{background:var(--amarillo);color:var(--negro)}
+.pill .tag.o{background:var(--acento);color:#fff}
+h1{font-size:clamp(36px,4.6vw,50px);line-height:1;font-weight:900;letter-spacing:-1.4px}
+h1 .o{color:var(--acento)}
+.mini{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+.mini span{font-size:11px;font-weight:700;color:var(--gris);background:#F8F6F3;border:1px solid var(--borde);border-radius:999px;padding:5px 10px}
+.mini span::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--verde);margin-right:6px;vertical-align:1px}
+.lead b{font-size:15px;font-weight:900}.lead b .o{color:var(--acento-2)}
+.lead p{font-size:14px;color:var(--gris);line-height:1.5;margin-top:6px;max-width:470px}
+.side{display:flex;flex-direction:column;gap:10px;align-self:start}
+.side-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sbox{background:var(--negro);color:#fff;border-radius:14px;padding:13px 14px;display:flex;gap:11px;align-items:center;text-decoration:none}
+.sbox .ic{width:34px;height:34px;flex:none;border-radius:50%;background:var(--acento);display:grid;place-items:center;font-size:16px}
+.sbox small{display:block;font-size:9px;font-weight:900;letter-spacing:.8px;color:var(--acento)}
+.sbox b{display:block;font-size:14px;font-weight:900;line-height:1.2}
+.sbox span{display:block;font-size:11px;color:#c2b9ac}
+.trust{border:1.5px solid var(--negro);border-radius:14px;padding:11px 14px;display:flex;gap:12px;align-items:center;text-decoration:none}
+.trust .num{width:40px;height:40px;border-radius:50%;background:var(--negro);color:#fff;display:grid;place-items:center;font-size:18px;flex:none}
+.trust b{display:block;font-size:14px;font-weight:900}
+.trust span{font-size:11px;color:var(--gris);font-weight:700}
+
+.chips{display:flex;gap:8px;overflow-x:auto;padding:22px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--borde);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:800;background:#fff;white-space:nowrap}
+.chip small{color:var(--gris);font-weight:700;font-size:12px}
+.chip.on{background:var(--negro);color:#fff;border-color:var(--negro)}
+.chip.on small{color:#cfc7bb}
+.search{display:flex;align-items:center;gap:10px;border:1px solid var(--borde);border-radius:12px;padding:0 14px;height:44px;margin-bottom:18px}
+.search input{border:none;outline:none;flex:1;font-size:14px;background:none;min-width:0}
+
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{background:#fff;border:1px solid var(--borde);border-radius:var(--radio);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s,border-color .15s;position:relative}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(30,20,10,.08)}
+.card.sel{border-color:var(--acento);box-shadow:0 0 0 1px var(--acento)}
+.card .ph{aspect-ratio:1;background:var(--img-bg);margin:12px 12px 0;border-radius:10px;overflow:hidden;display:grid;place-items:center;position:relative}
+.card .ph img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s}
+.card .ph img.ok{opacity:1}
+.card .ph .emo{position:absolute;font-size:46px;opacity:.55}
+.card .ph img.ok + .emo{display:none}
+.badges{position:absolute;top:8px;left:8px;display:flex;flex-direction:column;gap:4px;z-index:2;align-items:flex-start}
+.bdg{font-size:10px;font-weight:900;border-radius:6px;padding:2px 7px;background:var(--negro);color:#fff;white-space:nowrap}
+.bdg.y{background:var(--amarillo);color:var(--negro)}
+.bdg.o{background:var(--acento)}
+.card .info{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card .nm{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.2px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
+.price{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.price b{font-size:18px;font-weight:900;letter-spacing:-.3px}
+.p5{background:var(--acento);color:#fff;font-size:10px;font-weight:900;border-radius:5px;padding:2px 6px}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--gris);font-weight:700;gap:6px}
+.ages{display:flex;gap:4px;min-width:0;overflow:hidden}
+.ages i{font-style:normal;background:#F5F2EE;border-radius:4px;padding:1px 5px;font-size:10px;font-weight:800;color:#5c554c;white-space:nowrap}
+.cu{white-space:nowrap}
+.inpack{border-top:1px solid var(--borde);margin-top:4px;padding-top:9px;display:none;justify-content:space-between;align-items:center;gap:6px}
+.card.sel .inpack{display:flex}
+.inpack span{font-size:12px;font-weight:900;color:var(--acento-2);white-space:nowrap}
+.inpack button{background:#F3F0EC;border-radius:999px;font-size:11px;font-weight:900;padding:6px 11px;white-space:nowrap}
+.inpack button:hover{background:var(--acento);color:#fff}
+.empty{grid-column:1/-1;text-align:center;padding:50px 0;color:var(--gris);font-weight:700}
+.skel{aspect-ratio:.72;border-radius:var(--radio);background:linear-gradient(90deg,#f5f2ee 25%,#faf8f5 50%,#f5f2ee 75%);background-size:200% 100%;animation:sk 1.2s infinite}
+@keyframes sk{to{background-position:-200% 0}}
+
+.info-sec{margin:56px 0 30px}
+.info-sec h2{font-size:26px;font-weight:900;letter-spacing:-.5px;margin-bottom:14px}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step{border:1px solid var(--borde);border-radius:16px;padding:18px}
+.step .n{width:30px;height:30px;border-radius:50%;background:var(--acento);color:#fff;display:grid;place-items:center;font-weight:900;margin-bottom:10px}
+.step b{display:block;font-size:15px;font-weight:900;margin-bottom:4px}
+.step p{font-size:13px;color:var(--gris);line-height:1.5}
+.faq{margin-top:26px;display:grid;gap:8px}
+.faq details{border:1px solid var(--borde);border-radius:12px;padding:14px 16px}
+.faq summary{font-weight:900;font-size:14px;cursor:pointer;list-style:none;display:flex;justify-content:space-between}
+.faq summary::after{content:'+';color:var(--acento);font-size:18px;line-height:1}
+.faq details[open] summary::after{content:'−'}
+.faq p{font-size:13px;color:var(--gris);line-height:1.55;margin-top:8px}
+footer{text-align:center;padding:24px 20px 30px;font-size:12px;color:var(--gris);font-weight:700;border-top:1px solid var(--borde)}
+footer b{font-family:'Baloo 2',system-ui,sans-serif;font-weight:800;color:var(--texto);font-size:17px}
+
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-top:1px solid var(--borde);padding:10px 16px calc(12px + env(safe-area-inset-bottom))}
+.dock-in{max-width:470px;margin:0 auto}
+.envio-line{font-size:11px;font-weight:900;text-align:center;color:var(--acento-2);margin-bottom:6px;display:none}
+.envio-line.on{display:block}
+.envio-line.ok{color:var(--verde)}
+.dock-top{display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:9px}
+.slots{display:flex;gap:6px}
+.slot{width:34px;height:34px;border-radius:8px;border:1.5px dashed #d6cfc5;background:#fff;overflow:hidden;position:relative;display:grid;place-items:center;font-size:16px;transition:transform .2s}
+.slot.full{border:1.5px solid var(--acento);background:var(--img-bg)}
+.slot img{width:100%;height:100%;object-fit:cover}
+.slot.full::after{content:'✓';position:absolute;top:1px;right:1px;width:12px;height:12px;border-radius:50%;background:var(--acento);color:#fff;font-size:8px;font-weight:900;display:grid;place-items:center}
+.slot.pop{animation:pop .35s}
+@keyframes pop{50%{transform:scale(1.18)}}
+.verpack{position:absolute;right:0;font-size:11px;font-weight:900;color:var(--gris);display:none}
+.verpack.on{display:block}
+.packlbl{position:absolute;left:0;font-size:11px;font-weight:900;color:var(--acento-2);display:none}
+.packlbl.on{display:block}
+.dock-row{display:flex;gap:8px}
+.go{flex:1;height:48px;border-radius:12px;background:#F4F1ED;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-weight:900;font-size:15px;min-width:0}
+.go .fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,var(--acento-2),var(--acento));transition:width .45s cubic-bezier(.2,.8,.2,1);border-radius:12px}
+.go .fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:18px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55));filter:blur(3px)}
+.go span{position:relative;z-index:1}
+.go span:first-of-type{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.go .ct{font-size:11px;color:var(--gris);font-weight:800;white-space:nowrap;flex:none;margin-left:8px}
+.go.mid span:first-of-type{color:#fff}
+.go.done{background:linear-gradient(90deg,var(--acento-2),var(--acento));color:#fff}
+.go.done .ct{color:#fff}
+.go.done .fill{display:none}
+.otro{flex:none;height:48px;border:1.5px solid var(--negro);border-radius:12px;padding:0 14px;font-weight:900;font-size:13px;background:#fff;display:none}
+.otro.on{display:block}
+
+.toast{position:fixed;top:92px;right:18px;z-index:70;background:var(--acento-2);color:#fff;border-radius:12px;padding:8px 10px;display:flex;align-items:center;gap:10px;min-width:240px;max-width:330px;box-shadow:0 12px 30px rgba(232,68,12,.35);transform:translateX(130%);transition:transform .35s cubic-bezier(.2,.9,.2,1)}
+.toast.on{transform:none}
+.toast .th{width:40px;height:40px;border-radius:8px;background:#fff;overflow:hidden;flex:none;display:grid;place-items:center;font-size:20px}
+.toast .th img{width:100%;height:100%;object-fit:cover}
+.toast .tx{flex:1;min-width:0}
+.toast .tx b{display:block;font-size:13px;font-weight:900;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast .tx span{font-size:11px;opacity:.92;font-weight:700}
+.toast .k{background:rgba(0,0,0,.25);border-radius:999px;padding:3px 9px;font-size:11px;font-weight:900;white-space:nowrap}
+
+.ov{position:fixed;inset:0;z-index:80;background:rgba(20,15,10,.55);display:none;align-items:center;justify-content:center;padding:20px}
+.ov.on{display:flex}
+.modal{background:#fff;border-radius:22px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;width:min(760px,100%);max-height:calc(100vh - 40px);position:relative;animation:up .25s}
+@keyframes up{from{transform:translateY(16px);opacity:0}}
+.m-img{background:var(--img-bg);position:relative;display:grid;place-items:center;min-height:320px}
+.m-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.m-img .emo{font-size:80px;opacity:.5}
+.m-body{padding:28px 26px 22px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.m-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12);font-size:16px;font-weight:900;z-index:3}
+.m-body h3{font-size:22px;font-weight:900;text-transform:uppercase;line-height:1.1;padding-right:30px}
+.m-body .lbl{font-size:13px;font-weight:700}.m-body .lbl b{font-weight:900}
+.m-desc{font-size:13px;color:var(--gris);line-height:1.55}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--borde);border-radius:12px;height:44px}
+.qty button{width:42px;height:100%;font-size:18px;font-weight:700;color:var(--gris)}
+.qty b{min-width:30px;text-align:center;font-weight:900}
+.m-row{display:flex;align-items:center;gap:16px}
+.m-note{font-size:12px;font-weight:800;color:var(--acento-2);line-height:1.35}
+.btn-o{height:50px;border-radius:12px;background:linear-gradient(90deg,var(--acento-2),var(--acento));color:#fff;font-weight:900;font-size:15px;width:100%;box-shadow:0 6px 18px rgba(232,68,12,.28)}
+.btn-o:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
+.m-foot{font-size:11px;color:var(--gris);text-align:center;font-weight:700}
+.m-tags{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.m-tags span{font-size:10px;font-weight:800;color:var(--gris);background:#F8F6F3;border-radius:999px;padding:4px 9px}
+
+.dr-ov{position:fixed;inset:0;z-index:90;background:rgba(20,15,10,.5);opacity:0;pointer-events:none;transition:opacity .25s}
+.dr-ov.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:91;width:min(430px,100%);background:#fff;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.9,.2,1);display:flex;flex-direction:column}
+.drawer.on{transform:none}
+.dr-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--borde)}
+.dr-hd b{font-size:16px;font-weight:900}
+.dr-hd button{font-size:20px;width:34px;height:34px;border-radius:50%}
+.dr-body{flex:1;overflow-y:auto;padding:14px 16px 24px}
+.hero-pack{border:1px solid var(--acento-borde);background:linear-gradient(180deg,var(--acento-soft),#fff);border-radius:18px;padding:16px;position:relative}
+.hp-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:900;color:var(--acento-2);background:#fff;border:1px solid var(--acento-borde);border-radius:999px;padding:4px 10px;letter-spacing:.4px}
+.hp-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--acento)}
+.hero-pack h4{font-size:26px;font-weight:900;letter-spacing:-.6px;margin:10px 0 4px;padding-right:70px;line-height:1.05}
+.hero-pack p{font-size:12px;color:var(--gris);font-weight:600;padding-right:70px}
+.hp-big{position:absolute;top:16px;right:16px;width:58px;height:58px;border-radius:14px;background:var(--negro);color:#fff;display:grid;place-items:center;text-align:center;line-height:1}
+.hp-big b{font-size:24px;font-weight:900;display:block}
+.hp-big span{font-size:8px;font-weight:900;letter-spacing:.6px}
+.hp-slots{display:flex;gap:6px;margin:14px 0 8px;padding-top:12px;border-top:1px solid #FFE3D6;flex-wrap:wrap}
+.hp-bar{height:4px;border-radius:2px;background:#FFE3D6;overflow:hidden}
+.hp-bar i{display:block;height:100%;background:var(--acento);transition:width .4s}
+.hp-meta{display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:var(--gris);margin-top:6px}
+.hp-meta b{color:var(--acento-2)}
+.hp-feats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.hp-feats div{border:1px solid var(--borde);border-left:3px solid var(--acento);border-radius:8px;background:#fff;padding:7px 8px;font-size:11px;font-weight:900;line-height:1.2}
+.hp-feats span{display:block;font-size:10px;color:var(--gris);font-weight:700}
+.line{display:grid;grid-template-columns:56px 1fr auto;gap:12px;padding:14px 0;border-bottom:1px solid var(--borde);align-items:start}
+.line .th{width:56px;height:56px;border-radius:10px;background:var(--img-bg);overflow:hidden;display:grid;place-items:center;font-size:24px}
+.line .th img{width:100%;height:100%;object-fit:cover}
+.line b.nm{display:block;font-size:12px;font-weight:900;text-transform:uppercase;line-height:1.25}
+.line .cat{display:inline-block;font-size:10px;font-weight:800;background:#F4F1ED;border-radius:5px;padding:2px 6px;margin:4px 0 8px;color:var(--gris)}
+.line .qty{height:32px;border-radius:9px}
+.line .qty button{width:30px;font-size:15px}
+.line .rt{text-align:right;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;height:100%;gap:10px}
+.line .rm{width:24px;height:24px;border-radius:50%;background:#F4F1ED;font-size:12px;font-weight:900;color:var(--gris)}
+.line .pr{font-size:13px;font-weight:900}
+.tot{padding:14px 0 4px}
+.tot .r{display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--gris);padding:3px 0}
+.promo-row{background:var(--verde-soft);border:1px solid #BBF7D0;color:var(--verde);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:900;margin:10px 0;display:flex;justify-content:space-between}
+.warn{background:#FFF8EB;border:1px solid #FCD9A0;color:#8A4B08;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:800;margin:10px 0;line-height:1.4}
+.envio-box{border:1px dashed var(--acento-borde);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12px;font-weight:900}
+.envio-box .bar{height:5px;border-radius:3px;background:#FFE3D6;margin-top:7px;overflow:hidden}
+.envio-box .bar i{display:block;height:100%;background:var(--acento);transition:width .4s}
+.envio-box.ok{border-color:#BBF7D0;background:var(--verde-soft);color:var(--verde)}
+.big-tot{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--borde);padding-top:14px;margin-top:6px}
+.big-tot span{font-size:14px;font-weight:800}
+.big-tot b{font-size:28px;font-weight:900;letter-spacing:-.5px}
+.sub-note{text-align:right;font-size:11px;color:var(--gris);font-weight:700;margin-top:2px}
+.safe{border:1px solid #D5E3FF;background:#F4F7FF;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:900;margin:12px 0;display:flex;gap:8px}
+.safe span{display:block;font-weight:700;color:var(--gris);font-size:11px}
+.dr-foot{padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--borde);background:#fff}
+.dr-foot .link{display:block;text-align:center;font-size:12px;font-weight:800;margin-top:10px;color:var(--gris)}
+.form label{display:block;font-size:12px;font-weight:900;margin:12px 0 5px}
+.form label small{font-weight:700;color:var(--gris)}
+.form input,.form select,.form textarea{width:100%;border:1px solid var(--borde);border-radius:10px;padding:11px 12px;font-size:16px;outline:none;background:#fff}
+.form input:focus,.form select:focus,.form textarea:focus{border-color:var(--acento)}
+.form .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form textarea{resize:vertical;min-height:56px}
+.form .sec{font-size:11px;font-weight:900;letter-spacing:.6px;color:var(--acento-2);margin-top:18px;text-transform:uppercase}
+.back{font-size:13px;font-weight:900;color:var(--gris);margin-bottom:6px}
+.empty-cart{text-align:center;padding:40px 10px;color:var(--gris);font-weight:700;line-height:1.5}
+.empty-cart .ico{display:block;font-size:44px;margin-bottom:8px}
+.empty-cart b{color:var(--texto)}
+.fin{background:var(--acento-soft);color:var(--acento-2);text-align:center;font-weight:900;padding:12px;font-size:14px}
+.err{color:#B91C1C;font-size:12px;font-weight:800;text-align:center;margin-top:8px;min-height:1em}
+
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,1fr)}.hero{grid-template-columns:1fr;gap:20px}}
+@media(max-width:640px){
+  .wrap{padding:0 14px}
+  .hd{height:60px}.logo b{font-size:25px}.hd-help span{display:none}
+  nav.menu{gap:16px;font-size:12.5px;overflow-x:auto;justify-content:flex-start;padding:0 14px;scrollbar-width:none}
+  nav.menu::-webkit-scrollbar{display:none}
+  .cd{gap:10px}.cd-t{font-size:12px}.cd-b{min-width:38px}.cd-b b{font-size:16px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .card .ph{margin:8px 8px 0}.card .info{padding:10px 10px 12px}
+  .card .nm{font-size:11.5px;min-height:29px}.price b{font-size:16px}
+  .meta .ages{display:none}
+  .inpack{flex-direction:column;align-items:stretch}.inpack button{padding:7px}
+  .how{grid-template-columns:1fr}
+  .ov{padding:0;align-items:flex-end}
+  .modal{grid-template-columns:1fr;border-radius:22px 22px 0 0;max-height:92vh;overflow-y:auto}
+  .m-img{min-height:0;aspect-ratio:1.15}
+  .m-body{padding:20px 18px calc(18px + env(safe-area-inset-bottom))}
+  .toast{top:auto;bottom:calc(var(--dock-h) + 14px + env(safe-area-inset-bottom));right:12px;left:12px;max-width:none;transform:translateY(220%)}
+  .toast.on{transform:none}
+  .slot{width:31px;height:31px}
+  .go{font-size:14px;padding:0 12px}.otro{padding:0 11px;font-size:12px}
+  .pills .pill:nth-child(n+4){display:none}
+}
+@media(prefers-reduced-motion:reduce){.ticker-track{animation:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap hd">
+    <a class="hd-help" id="hd-help" href="#" target="_blank" rel="noopener">💬 <span>Ayuda</span></a>
+    <a class="logo" href="#top">
+      <b>el c<em>o</em>co</b>
+      <small><i>5x1</i> didácticos · elegí 5, pagás 1</small>
+    </a>
+    <button class="hd-cart" onclick="abrirDrawer()" aria-label="Ver mi pack">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="n" id="hd-n">0</span>
+    </button>
+  </div>
+  <nav class="menu">
+    <a href="#top">Inicio</a>
+    <a href="#juegos" class="on">Juegos (TODOS EN 5x1)</a>
+    <a href="#como">Cómo funciona</a>
+    <a href="#envios">Envíos</a>
+    <a href="#" id="nav-ayuda" target="_blank" rel="noopener">Ayuda</a>
+  </nav>
+</header>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-track" id="ticker"></div></div>
+<div class="cd" id="cd">
+  <div class="cd-t">El <em>5x1</em> termina en</div>
+  <div class="cd-boxes" id="cd-boxes"></div>
+</div>
+
+<main class="wrap" id="top">
+  <section class="hero">
+    <div>
+      <div class="pills" id="pills"></div>
+      <h1>Elegí <span class="o">5</span> juegos.<br>Pagás el precio de <span class="o">1</span>.</h1>
+      <div class="mini" id="mini"></div>
+      <div class="lead">
+        <b>Armá tu pack en <span class="o">pocos clicks</span></b>
+        <p>Tocá un juego para verlo en grande y sumarlo. Podés repetir el mismo o combinar distintos. Cada uno entra a tu pack y el 5x1 se activa al llegar a 5.</p>
+      </div>
+    </div>
+    <div class="side">
+      <div class="side-row">
+        <a class="sbox" href="#como"><div class="ic">💳</div><div><small>PAGO SEGURO</small><b>Mercado Pago</b><span id="sb-cuotas">Tarjeta, débito o dinero en cuenta</span></div></a>
+        <a class="sbox" href="#envios"><div class="ic">📦</div><div><small>ENVÍOS</small><b>A todo el país</b><span>Por Correo Argentino</span></div></a>
+      </div>
+      <a class="trust" id="trust-wa" href="#" target="_blank" rel="noopener"><div class="num">💬</div><div><b>¿Tenés dudas antes de comprar?</b><span>Escribinos por WhatsApp →</span></div></a>
+    </div>
+  </section>
+
+  <div id="juegos"></div>
+  <div class="chips" id="chips"></div>
+  <label class="search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6F685F" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Buscar juego por nombre" autocomplete="off">
+  </label>
+  <div class="grid" id="grid"></div>
+
+  <section class="info-sec" id="como">
+    <h2>Cómo funciona el 5x1</h2>
+    <div class="how">
+      <div class="step"><div class="n">1</div><b>Elegí 5 juegos</b><p>Repetí o combiná como quieras: 5 rompecabezas, 3 seriaciones y 2 encastres, lo que necesites.</p></div>
+      <div class="step"><div class="n">2</div><b>Pagás el precio de 1</b><p>De tus 5, pagás solo el precio del más caro. Si armás más de un pack, cada pack paga el suyo.</p></div>
+      <div class="step"><div class="n">3</div><b>Te llega a tu casa</b><p id="step3">Pagás con Mercado Pago y te lo enviamos por Correo Argentino a todo el país.</p></div>
+    </div>
+    <div class="faq" id="envios">
+      <details><summary>¿Cuánto sale el envío?</summary><p id="faq-envio"></p></details>
+      <details><summary>¿Puedo repetir el mismo juego?</summary><p>Sí. Podés llevar 5 iguales o combinarlos como quieras. Mientras sean 5, pagás el precio de 1.</p></details>
+      <details><summary>¿Cómo pago?</summary><p id="faq-pago">Con Mercado Pago: tarjeta de crédito, débito o dinero en cuenta. Es un pago seguro y no guardamos los datos de tu tarjeta.</p></details>
+      <details><summary>¿De qué están hechos los juegos?</summary><p>Son juegos didácticos de madera, pensados para el nivel inicial: estimulan la motricidad fina, la concentración y el reconocimiento de formas, colores y números.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer><b>el coco didácticos</b><br>Juegos didácticos de madera · Envíos a todo el país</footer>
+
+<div class="dock" id="dock">
+  <div class="dock-in">
+    <div class="envio-line" id="envio-line"></div>
+    <div class="dock-top">
+      <span class="packlbl" id="packlbl"></span>
+      <div class="slots" id="slots"></div>
+      <button class="verpack" id="verpack" onclick="abrirDrawer()">Ver pack ↑</button>
+    </div>
+    <div class="dock-row">
+      <button class="go" id="go" onclick="clickGo()"><i class="fill" id="fill"></i><span id="go-t">Elegí el primero 👆</span><span class="ct" id="go-c">0 de 5</span></button>
+      <button class="otro" id="otro" onclick="otroPack()">+ Otro pack</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="th" id="t-th"></div><div class="tx"><b id="t-n"></b><span id="t-s"></span></div><span class="k" id="t-k"></span></div>
+
+<div class="ov" id="ov" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="m-x" onclick="cerrarModal()" aria-label="Cerrar">✕</button>
+    <div class="m-img" id="m-img"></div>
+    <div class="m-body">
+      <h3 id="m-n"></h3>
+      <div class="lbl" id="m-e"></div>
+      <div class="price" id="m-p"></div>
+      <p class="m-desc" id="m-d"></p>
+      <div class="m-row"><span class="lbl"><b>Cantidad</b></span>
+        <div class="qty"><button onclick="mq(-1)" aria-label="Menos">−</button><b id="m-q">1</b><button onclick="mq(1)" aria-label="Más">+</button></div>
+      </div>
+      <div class="m-note" id="m-note"></div>
+      <button class="btn-o" id="m-add" onclick="agregarDesdeModal()">Sumar al pack</button>
+      <div class="m-foot">Podés repetir el mismo juego o combinar distintos.</div>
+      <div class="m-tags" id="m-tags"></div>
+    </div>
+  </div>
+</div>
+
+<div class="dr-ov" id="dr-ov" onclick="cerrarDrawer()"></div>
+<aside class="drawer" id="drawer" aria-label="Carrito">
+  <div class="dr-hd"><b id="dr-title">Carrito de compras</b><button onclick="cerrarDrawer()" aria-label="Cerrar">✕</button></div>
+  <div class="dr-body" id="dr-body"></div>
+  <div class="dr-foot" id="dr-foot"></div>
+</aside>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================
+   CONFIG DE LA TIENDA (los precios y el envío los manda el Worker)
+   ========================================================= */
+const TIENDA = {
+  workerUrl: 'https://elcoco-pagos.maciangerman.workers.dev',  // el Worker nuevo de El Coco
+  whatsapp: '5493813311414',     // número de atención. Si querés otro para El Coco, cambialo acá
+  metaPixelId: '',               // pegá el ID del pixel de Meta y se activa solo
+};
+
+/* Motor de precios: el mismo que usa el Worker. Acá sirve para mostrar; el que cobra es el Worker. */
+/* =========================================================
+   EL COCO DIDÁCTICOS — CONFIG DE LA PROMO 5x1
+   Este bloque es el mismo en la tienda y en el Worker.
+   Si cambiás algo, cambialo en el Worker (es el que cobra).
+   ========================================================= */
+const CONFIG = {
+  marca: 'El Coco Didácticos',
+  cantidad: 5,                       // juegos por pack
+
+  // Precio de cada juego en la tienda = precio catálogo × 5 × publicidad × envío ÷ (1 − comisión)
+  factorPublicidad: 1.30,            // +30% para publicidad
+  cargaEnvio: 0.10,                  // +10% para financiar el envío gratis desde $100.000
+  comisionCobro: 0.15,               // Mercado Pago (~6%) + costo de 6 cuotas sin interés (~9%). Ajustalo con tu tarifa real
+
+  // Los precios se redondean hacia arriba al próximo escalón (como Adrenaline: pocos precios, todos terminados en 999)
+  escalera: [19999, 24999, 29999, 34999, 39999, 44999, 49999, 54999, 59999, 64999, 69999, 74999,
+             79999, 89999, 99999, 109999, 119999, 129999, 149999, 169999, 199999],
+
+  // Qué entra a la promo
+  precioMinimoCatalogo: 3000,        // los muy baratos (balero, tateti...) no cierran con envío gratis
+  excluirCategorias: ['Plan Canje', 'Combos', 'Juguetes Plásticos', 'Día del Estudiante'],
+  excluirIds: [116, 117],            // duplicados de Ábaco y Apilable de Figuras
+
+  // Envío por Correo Argentino (Paq.ar) desde Tucumán
+  envioGratisDesde: 100000,
+  envioPorProvincia: {
+    'Tucumán': 11000, 'Salta': 11000, 'Jujuy': 11000, 'Catamarca': 11000, 'Santiago del Estero': 11000, 'La Rioja': 11000,
+    'Córdoba': 13500, 'Santa Fe': 13500, 'Chaco': 13500, 'Formosa': 13500, 'Corrientes': 13500, 'Misiones': 13500,
+    'Entre Ríos': 13500, 'Buenos Aires': 13500, 'CABA': 13500, 'Mendoza': 13500, 'San Juan': 13500, 'San Luis': 13500,
+    'La Pampa': 13500,
+    'Neuquén': 16000, 'Río Negro': 16000, 'Chubut': 16000, 'Santa Cruz': 16000, 'Tierra del Fuego': 16000,
+  },
+
+  cuotasSinInteres: 6,               // lo que se muestra en la tienda. OJO: se activa en la cuenta de Mercado Pago
+  fin: '2026-10-31T23:59:00-03:00',  // fecha real de fin de la promo
+};
+
+function precio5x1(precioCatalogo){
+  const c = CONFIG;
+  const bruto = precioCatalogo * c.cantidad * c.factorPublicidad * (1 + c.cargaEnvio) / (1 - c.comisionCobro);
+  const esc = c.escalera.find(x => x >= bruto);
+  return esc || (Math.ceil((bruto + 1) / 10000) * 10000 - 1);
+}
+
+function entraEnPromo(p){
+  return p && p.precio >= CONFIG.precioMinimoCatalogo &&
+    !CONFIG.excluirCategorias.includes(p.categoria) && !CONFIG.excluirIds.includes(p.id);
+}
+
+// Umbral con $1 de tolerancia: como los precios terminan en 999, $99.999 ya cuenta como $100.000
+function tieneEnvioGratis(totalProductos){ return totalProductos >= CONFIG.envioGratisDesde - 1; }
+function faltaParaEnvioGratis(totalProductos){ return Math.max(0, CONFIG.envioGratisDesde - 1 - totalProductos); }
+
+function costoEnvio(provincia, totalProductos){
+  if(tieneEnvioGratis(totalProductos)) return 0;
+  return CONFIG.envioPorProvincia[provincia] || 13500;
+}
+
+/* unidades: [{id, precio}] donde precio = precio 5x1.
+   Se ordenan de más caro a más barato y se agrupan de a 5: en cada pack se paga el más caro.
+   Es el agrupamiento que más le conviene a la clienta, y cada pack igual cubre sus 5 juegos. */
+function armarPacks(unidades){
+  const N = CONFIG.cantidad;
+  const orden = unidades.slice().sort((a, b) => b.precio - a.precio);
+  const packs = [];
+  for(let i = 0; i + N <= orden.length; i += N){
+    const ids = orden.slice(i, i + N).map(u => u.id);
+    packs.push({ ids, cobro: orden[i].precio });
+  }
+  const faltan = orden.length % N === 0 ? 0 : N - (orden.length % N);
+  const subtotal = unidades.reduce((a, u) => a + u.precio, 0);
+  const totalProductos = packs.reduce((a, p) => a + p.cobro, 0);
+  return { packs, faltan, subtotal, totalProductos, promo: packs.length ? subtotal - totalProductos : 0 };
+}
+
+
+/* Respaldo por si el Worker no responde: la tienda se ve, pero para pagar hace falta el Worker */
+const RESPALDO = [{"id":1,"nombre":"Avión 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1-wExix1jRVs2NoQ1ysyhw883V7Zr5CrS&sz=w1000","emoji":"✈️","desc":"Rompecabezas de madera de 15x15 cm con la figura de un avión, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":2,"nombre":"Auto 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1xzwrBXt7NkgNOb40oRQUgmsUeza6bX8I&sz=w1000","emoji":"🚗","desc":"Rompecabezas de madera de 15x15 cm con la figura de un auto, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":3,"nombre":"Ballena 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=15DsGDlAeJf51IGIxp0F8SXGeLY3S8l5z&sz=w1000","emoji":"🐋","desc":"Rompecabezas de madera de 15x15 cm con la figura de un ballena, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":4,"nombre":"Barco 1 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1GCX2e7oPvsVR91GDUPMj9-D1rFv0PwIy&sz=w1000","emoji":"⛵","desc":"Rompecabezas de madera de 15x15 cm con la figura de un barco, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":5,"nombre":"Barco 2 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1oKVhA8w2W80wD83rXzx6aUmM9zDnfyVJ&sz=w1000","emoji":"🚢","desc":"Rompecabezas de madera de 15x15 cm con la figura de un barco, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":6,"nombre":"Banana 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1fbrx1Qx2tf6yp5eXg1lZ_mZojNwLeMXS&sz=w1000","emoji":"🍌","desc":"Rompecabezas de madera de 15x15 cm con la figura de un banana, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":7,"nombre":"Caballo 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1cHB2-RYWorjjWTkb8ZZw0IasrBT0xSs4&sz=w1000","emoji":"🐴","desc":"Rompecabezas de madera de 15x15 cm con la figura de un caballo, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":8,"nombre":"Camión 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=17eXsH51Ls4JCXyOppf2Q8cZM6Wpr18oR&sz=w1000","emoji":"🚛","desc":"Rompecabezas de madera de 15x15 cm con la figura de un camión, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":9,"nombre":"Casa Tangram 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1ClbwZ5bd7c_8SBNfZfrSQjUZBdgZSoJj&sz=w1000","emoji":"🏠","desc":"Rompecabezas de madera de 15x15 cm con la figura de un casa, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":10,"nombre":"Conejo 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1nY1gcitjlVjHeVH4ehHEjZD9y0KROrw7&sz=w1000","emoji":"🐰","desc":"Rompecabezas de madera de 15x15 cm con la figura de un conejo, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":11,"nombre":"Corazón Tangram 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=17Ytqskh1Yv9toEnT4rA6rOA1Cj2c8uJs&sz=w1000","emoji":"❤️","desc":"Rompecabezas de madera de 15x15 cm con la figura de un corazón, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":12,"nombre":"Delfín 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1ZuCyty-cTDpi8JwTHoTOHNBITTb7W3sB&sz=w1000","emoji":"🐬","desc":"Rompecabezas de madera de 15x15 cm con la figura de un delfín, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":13,"nombre":"Cebra 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1uVvEOAPOpfg-WjAaOYrJJGife4jptsxA&sz=w1000","emoji":"🦓","desc":"Rompecabezas de madera de 15x15 cm con la figura de un cebra, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":14,"nombre":"Cerdito 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1565w0ihoKM4DgzNN8HwQdDHeKmANjKMU&sz=w1000","emoji":"🐷","desc":"Rompecabezas de madera de 15x15 cm con la figura de un cerdito, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":15,"nombre":"Caracol 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1rNa9OYJ_FrWklT-IqIfM6bJPTdtUXrbL&sz=w1000","emoji":"🐌","desc":"Rompecabezas de madera de 15x15 cm con la figura de un caracol, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":16,"nombre":"Casa 2 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1ZUDN16VTTvfmV1PSwduaeGRdifIztAGk&sz=w1000","emoji":"🏡","desc":"Rompecabezas de madera de 15x15 cm con la figura de un casa, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":17,"nombre":"Elefante 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1gzhos2vVg_1JbN4Vq4T6kC__tl7i0tbB&sz=w1000","emoji":"🐘","desc":"Rompecabezas de madera de 15x15 cm con la figura de un elefante, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":18,"nombre":"Elefante 2 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1NGDd587_PhzoWyhDk5LzWaOwBPfBHG4_&sz=w1000","emoji":"🐘","desc":"Rompecabezas de madera de 15x15 cm con la figura de un elefante, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":19,"nombre":"Dinosaurio 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1P2KfR1MVVNjaI_NdpSYis9ecNpuhh2wP&sz=w1000","emoji":"🦕","desc":"Rompecabezas de madera de 15x15 cm con la figura de un dinosaurio, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":20,"nombre":"Dinosaurio 2 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1NMVb2jOnzLzaOVfmr5mkLOJHIs1D11nE&sz=w1000","emoji":"🦖","desc":"Rompecabezas de madera de 15x15 cm con la figura de un dinosaurio, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":21,"nombre":"Elefante 3 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=11kMV9SoCzIZ86UfikUgQOmYdsTsyDvx5&sz=w1000","emoji":"🐘","desc":"Rompecabezas de madera de 15x15 cm con la figura de un elefante, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":22,"nombre":"Estrella de Mar 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1yQHCy4e-YSFs1mtZvvH4zyoWRBao6YmP&sz=w1000","emoji":"⭐","desc":"Rompecabezas de madera de 15x15 cm con la figura de un estrella, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":23,"nombre":"Gallina 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1GFJVhJ8FgeGYreAYz_vW0UZqeTQOzCWJ&sz=w1000","emoji":"🐔","desc":"Rompecabezas de madera de 15x15 cm con la figura de un gallina, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":24,"nombre":"Gato 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1NMsca0zsCW1jqkDqIeduAZrL5OxYWhp9&sz=w1000","emoji":"🐱","desc":"Rompecabezas de madera de 15x15 cm con la figura de un gato, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":25,"nombre":"Animales de la Selva 2 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1PR_54j9ssPh7-rAnPpESpTDGvbx256Uh&sz=w1000","emoji":"🦁","desc":"Rompecabezas de madera de 19x17 cm con animales que estimula el vocabulario y el reconocimiento del mundo natural. Favorece la concentración y la motricidad fina.","precio":44999},{"id":26,"nombre":"Cebra 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=17qcJHCm71sP7X03feKIYQfkSxVZNyphH&sz=w1000","emoji":"🦓","desc":"Rompecabezas de madera de 19x17 cm con la figura de un cebra, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":44999},{"id":27,"nombre":"Monito 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1gXtjRhaR_gsfQ2UufZ-To45rYJUFTviH&sz=w1000","emoji":"🐵","desc":"Rompecabezas de madera de 19x17 cm con la figura de un monito, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":44999},{"id":28,"nombre":"Hipopótamo 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1toiw5fW85clshd84ITOJo7_bp_qp58-g&sz=w1000","emoji":"🦛","desc":"Rompecabezas de madera de 19x17 cm con la figura de un hipopótamo, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":44999},{"id":29,"nombre":"León 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1ZmcK9NijL24gGsS988NqqgliqySpOW6C&sz=w1000","emoji":"🦁","desc":"Rompecabezas de madera de 19x17 cm de madera que estimula la concentración, la motricidad fina y el reconocimiento de formas. Elaborado artesanalmente en Tucumán.","precio":44999},{"id":30,"nombre":"Tigre 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1-15QN926lE_bzfz9q-bUmbKGsBIHjT4W&sz=w1000","emoji":"🐯","desc":"Rompecabezas de madera de 19x17 cm con la figura de un tigre, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":44999},{"id":31,"nombre":"Elefante 2.0 19x17","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1OZYBA8KwmhQTzYQ1dXgdcv7nJRPKp_u-&sz=w1000","emoji":"🐘","desc":"Rompecabezas de madera de 19x17 cm con la figura de un elefante, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":44999},{"id":32,"nombre":"Figuras Geométricas 2 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1kJI3OCiy2Cyisqy8E1mTyeNVCzVHS1p7&sz=w1000","emoji":"🔷","desc":"Rompecabezas de madera de 25x25 cm con figuras geométricas que ayuda a identificar colores, formas y tamaños. Excelente recurso para el aprendizaje de conceptos matemáticos básicos.","precio":54999},{"id":33,"nombre":"Figuras Geométricas 3 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=11fnDppPZEMMpzkOUoctXD9Vl6_33imqW&sz=w1000","emoji":"🔶","desc":"Rompecabezas de madera de 25x25 cm con figuras geométricas que ayuda a identificar colores, formas y tamaños. Excelente recurso para el aprendizaje de conceptos matemáticos básicos.","precio":54999},{"id":34,"nombre":"Pez 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=19mmOsupb2ElBNoeA3bArOHKUBMlLUzZi&sz=w1000","emoji":"🐟","desc":"Rompecabezas de madera de 25x25 cm con la figura de un pez, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":54999},{"id":35,"nombre":"Figuras Geométricas con Números 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=12QsGpn_eamAMfF4iLrr-iXYbswHslGD-&sz=w1000","emoji":"🔢","desc":"Rompecabezas de madera de 25x25 cm con figuras geométricas que ayuda a identificar colores, formas y tamaños. Excelente recurso para el aprendizaje de conceptos matemáticos básicos.","precio":54999},{"id":36,"nombre":"Animales de la Selva 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1vsF-GBzw3_pOIWvo5S3fE-SxnCDbDqdM&sz=w1000","emoji":"🦁","desc":"Rompecabezas de madera de 25x25 cm con animales que estimula el vocabulario y el reconocimiento del mundo natural. Favorece la concentración y la motricidad fina.","precio":54999},{"id":37,"nombre":"Pizza con Correspondencia 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1RihQiHQeMVITGhjbK5YuqPjFOr7yHkco&sz=w1000","emoji":"🍕","desc":"Rompecabezas de madera de 25x25 cm de correspondencia que trabaja nociones de cantidad, color y forma de manera lúdica. Ideal para sala de 4 y 5 años.","precio":54999},{"id":38,"nombre":"Tangram 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1y-PkspZ4blLetfm_3NdkDdmU9gssmV9s&sz=w1000","emoji":"🔺","desc":"Rompecabezas tipo tangram de madera que estimula el pensamiento espacial y la resolución de problemas. Ideal para introducir conceptos de geometría de forma lúdica.","precio":54999},{"id":39,"nombre":"Figuras Geométricas 4 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1VKyTO7mjGi4QQ99ci2m-eMNJRvrW4TsW&sz=w1000","emoji":"🔵","desc":"Rompecabezas de madera de 25x25 cm con figuras geométricas que ayuda a identificar colores, formas y tamaños. Excelente recurso para el aprendizaje de conceptos matemáticos básicos.","precio":54999},{"id":40,"nombre":"Mariposa 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=12HL5UqFiZuc06bMjiaQHbbk5VOLMN9_J&sz=w1000","emoji":"🦋","desc":"Rompecabezas de madera de 25x25 cm con la figura de un mariposa, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":54999},{"id":41,"nombre":"Pavo Real 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1uojFX7Msj8bNxdv1P6FX-mrW-u4f_DAx&sz=w1000","emoji":"🦚","desc":"Rompecabezas de madera de 25x25 cm con la figura de un pavo real, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":54999},{"id":42,"nombre":"Animales de Mar 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1Rr7wWI1fo1YX9exrVtkXKNUnmJOEfqn8&sz=w1000","emoji":"🐠","desc":"Rompecabezas de madera de 25x25 cm con animales que estimula el vocabulario y el reconocimiento del mundo natural. Favorece la concentración y la motricidad fina.","precio":54999},{"id":43,"nombre":"Foca 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1tfpKuLa-dNd1eo0kVtppXYV-mb136izV&sz=w1000","emoji":"🦭","desc":"Rompecabezas de madera de 25x25 cm con la figura de un foca, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":54999},{"id":44,"nombre":"Pez 2 25x25","categoria":"Rompecabezas","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1yGGaT-odNyqNsJHlHidLeX_3FRY5kCZk&sz=w1000","emoji":"🐡","desc":"Rompecabezas de madera de 25x25 cm con la figura de un pez, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":54999},{"id":46,"nombre":"Apilable 3 Colores Cuadrado","categoria":"Apilables","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1xveKisvYMho8sLYKuQRhJBIMy7uiT1M-&sz=w1000","emoji":"🟦","desc":"Juguete apilable de madera que estimula la motricidad fina, el reconocimiento de colores y la seriación por tamaño. Elaborado artesanalmente en Tucumán.","precio":69999},{"id":47,"nombre":"Torre 5 Niveles Circular","categoria":"Apilables","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1CFLucGrU_AvNxNSp9E9MSLjmPgE81_y2&sz=w1000","emoji":"⭕","desc":"Torre apilable de 5 niveles de madera que trabaja la seriación por tamaño, el reconocimiento de colores y la coordinación. Desarrolla la paciencia y la motricidad fina.","precio":64999},{"id":48,"nombre":"Torre 5 Niveles Cuadrada","categoria":"Apilables","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1NDzPkwAgYLG5TrVYA3xKkoqGdJUsamS-&sz=w1000","emoji":"🟥","desc":"Torre apilable de 5 niveles de madera que trabaja la seriación por tamaño, el reconocimiento de colores y la coordinación. Desarrolla la paciencia y la motricidad fina.","precio":64999},{"id":49,"nombre":"Apilable del 1 al 10 XL","categoria":"Apilables","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=1wqFXKnCUU_SpADfjbuVXK_Yix88iht72&sz=w1000","emoji":"🔢","desc":"Torre apilable de madera que trabaja la seriación por tamaño, el reconocimiento de colores y la coordinación. Desarrolla la paciencia y la motricidad fina.","precio":119999},{"id":50,"nombre":"Ábaco","categoria":"Apilables","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=1Dp74vTxT-PRU3sFpYkK_ECzqmRFq-C64&sz=w1000","emoji":"🧮","desc":"Ábaco de madera para iniciarse en nociones de cantidad, conteo y correspondencia. Herramienta clásica y fundamental para el aprendizaje matemático temprano.","precio":89999},{"id":51,"nombre":"Figuras Geométricas con Palito","categoria":"Encastres","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1SctQh9jvAnojtyuk3Z0de8JmadVhV6Ut&sz=w1000","emoji":"🔺","desc":"Encastre de madera elaborado artesanalmente que estimula la concentración, la motricidad fina y el reconocimiento de formas. Ideal para trabajo en sala y en el hogar.","precio":44999},{"id":52,"nombre":"Figuras Geométricas Planas","categoria":"Encastres","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1tdCeBYjEtGH3ZlO0zqXj1eufC8AvFLen&sz=w1000","emoji":"🔷","desc":"Encastre de madera elaborado artesanalmente que estimula la concentración, la motricidad fina y el reconocimiento de formas. Ideal para trabajo en sala y en el hogar.","precio":44999},{"id":53,"nombre":"Vaca con Figuras Geométricas XL","categoria":"Encastres","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1ECaVElu3iX4mQxENwIgttQFiZoKePr8c&sz=w1000","emoji":"🐄","desc":"Encastre XL de madera de gran tamaño, perfecto para que los más chicos trabajen con piezas fáciles de manipular. Estimula el reconocimiento de formas y la concentración.","precio":79999},{"id":54,"nombre":"Herramientas Encastrables","categoria":"Encastres","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1WGc4vjtH7QwIbeyZ5M7dubvIwOodK0MN&sz=w1000","emoji":"🔧","desc":"Encastre de herramientas en madera que introduce el mundo del trabajo de forma lúdica. Desarrolla el juego simbólico y la motricidad fina.","precio":49999},{"id":55,"nombre":"Tortuga con Figuras Geométricas XL","categoria":"Encastres","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1s8RwT4UMXT1oiNKURrXm9-eyAzYTkw6l&sz=w1000","emoji":"🐢","desc":"Encastre XL de madera de gran tamaño, perfecto para que los más chicos trabajen con piezas fáciles de manipular. Estimula el reconocimiento de formas y la concentración.","precio":79999},{"id":56,"nombre":"Ballena con Figuras Geométricas XL","categoria":"Encastres","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1KOX04bzESnK_C-8765YaEFWUhC8Mijhq&sz=w1000","emoji":"🐋","desc":"Encastre XL de madera de gran tamaño, perfecto para que los más chicos trabajen con piezas fáciles de manipular. Estimula el reconocimiento de formas y la concentración.","precio":79999},{"id":58,"nombre":"Nena para Vestir 30x30","categoria":"Encastres","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=1k2PYjhHsM6QHNZQ3mnel6nN5l1z_AYil&sz=w1000","emoji":"👧","desc":"Encastre de madera de 30x30 cm para vestir y cambiar la figura, estimulando la autonomía y el juego simbólico. Ideal para trabajar motricidad fina y hábitos cotidianos.","precio":89999},{"id":59,"nombre":"Nene para Cambiar 30x30","categoria":"Encastres","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=1Yhhgv6fIrtRt5FpDQ6OOa_RYvj8xe9co&sz=w1000","emoji":"👦","desc":"Encastre de madera de 30x30 cm para vestir y cambiar la figura, estimulando la autonomía y el juego simbólico. Ideal para trabajar motricidad fina y hábitos cotidianos.","precio":89999},{"id":60,"nombre":"Dinos Encastrables 17x17","categoria":"Encastres","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1NkpQ2nCFyEeyu0geXAz1cud9ww0I5LGN&sz=w1000","emoji":"🦕","desc":"Encastre de dinosaurios en madera que combina el juego con el aprendizaje de estas criaturas prehistóricas. Desarrolla la concentración y el reconocimiento de formas irregulares.","precio":54999},{"id":61,"nombre":"Animales Selva Encastrables 17x17","categoria":"Encastres","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1EtvsPRK8yQPlITz20xAwjMlVewZSj6J9&sz=w1000","emoji":"🦁","desc":"Encastre de animales de la selva en madera que favorece el vocabulario, el reconocimiento de formas y la motricidad fina. Ideal para sala de 3, 4 y 5 años.","precio":54999},{"id":62,"nombre":"Encastrable Animales de Mar 20x20","categoria":"Encastres","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=1obRBqSm-4g59d91ewcBPgbyZCqF9LcF_&sz=w1000","emoji":"🐠","desc":"Encastre de animales marinos en madera que introduce el mundo acuático de forma lúdica. Trabaja la coordinación y el reconocimiento de formas irregulares.","precio":69999},{"id":63,"nombre":"Encastrable de Comidas 20x20","categoria":"Encastres","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=16iDc_JEtPnuAuD_U_X1dfWcTA0PWfbAz&sz=w1000","emoji":"🍕","desc":"Encastre de alimentos en madera ideal para trabajar hábitos alimentarios y vocabulario en sala de 4 a 6 años. Estimula la motricidad fina y el juego simbólico.","precio":69999},{"id":64,"nombre":"Mapa de Tucumán","categoria":"Mapas","edades":["5 años","6 años","7 años o más"],"img":"https://drive.google.com/thumbnail?id=1l3mTzq1LYDE45jzazi7Yp78FUGwchCWU&sz=w1000","emoji":"🗺️","desc":"Mapa de la provincia de Tucumán en madera con sus departamentos encastrables. Ideal para iniciarse en el conocimiento del entorno local y las ciencias sociales.","precio":54999},{"id":65,"nombre":"Tetris","categoria":"Lúdicos","edades":["5 años","6 años","7 años o más"],"img":"https://drive.google.com/thumbnail?id=1DUScyhd1YiWhKpbv2xAh6TAVXL4NN1cw&sz=w1000","emoji":"🟦","desc":"Tetris de madera que estimula el pensamiento espacial, la concentración y la resolución de problemas. Clásico juego adaptado al aula con materiales naturales.","precio":54999},{"id":70,"nombre":"Seriación Flor","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1qadIvlAz0QU9ik1TqFA55-9WVJPQJ9FX&sz=w1000","emoji":"🌸","desc":"Seriación de flor en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":71,"nombre":"Seriación Manzanas","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1bq_q0I_WjQEcUZ-O2-zefeFEESZOwQxt&sz=w1000","emoji":"🍎","desc":"Seriación de manzanas en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":72,"nombre":"Seriación Triángulos","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1Wval1CjR2Nk0N9oXd8elAQPWxVu-gfIR&sz=w1000","emoji":"🔺","desc":"Seriación de triángulos en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":73,"nombre":"Seriación Pajaritos","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1BkWM5ev9PUSXNADM4fXvuZ9u08wb0xS0&sz=w1000","emoji":"🐦","desc":"Seriación de pajaritos en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":74,"nombre":"Seriación Casitas","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1AceZ6ojEvm4aebAeudCFABRSM12tBzMd&sz=w1000","emoji":"🏠","desc":"Seriación de casitas en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":75,"nombre":"Seriación Corazones","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1K35DMcJdQ8Nkh--2SfXVG2u2YyAy8BUX&sz=w1000","emoji":"❤️","desc":"Seriación de corazones en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":76,"nombre":"Seriación Dinos","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1zeOMQ1ZKVBEpVcxWfIyNkeBZkZh5JNH5&sz=w1000","emoji":"🦕","desc":"Seriación de dinos en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":77,"nombre":"Seriación Círculos","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1u_azxVSqKZE22LVk0sJWh0TgYVVhrVqq&sz=w1000","emoji":"⭕","desc":"Seriación de círculos en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":78,"nombre":"Seriación Conejos","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1fBRvWoedp4ZHqZnCyyyKlme6W_2asxjA&sz=w1000","emoji":"🐰","desc":"Seriación de conejos en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":79,"nombre":"Seriación Cuadrados","categoria":"Seriaciones","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1xXmA2c5MZFaoiA0g-obRQslBcpZ3oQ81&sz=w1000","emoji":"🟦","desc":"Seriación de cuadrados en madera para trabajar el ordenamiento por tamaño de menor a mayor. Desarrolla el pensamiento lógico-matemático y la comparación de magnitudes.","precio":59999},{"id":80,"nombre":"Apilable del 1 al 5","categoria":"Apilables","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=17IxQkayWLIIuVfQ9dQ0t9fj2g9Jw4MbA&sz=w1000","emoji":"🔢","desc":"Torre apilable de madera que trabaja la seriación por tamaño, el reconocimiento de colores y la coordinación. Desarrolla la paciencia y la motricidad fina.","precio":74999},{"id":81,"nombre":"Apilable de Figuras Geométricas","categoria":"Apilables","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1dUAVzqxyfujnj2qSKAQcSgbDPBUUZQw5&sz=w1000","emoji":"🔺","desc":"Apilable de figuras geométricas que trabaja el reconocimiento de formas, colores y tamaños de forma concreta. Recurso ideal para iniciar el aprendizaje matemático.","precio":79999},{"id":82,"nombre":"Bloques Escalonados","categoria":"Apilables","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=108mKj3xRsp9_2c8BUMyIEwsF5SNbY01a&sz=w1000","emoji":"🪜","desc":"Bloques escalonados de madera para trabajar conceptos de tamaño, orden y seriación. Estimulan la construcción libre y el pensamiento lógico-matemático.","precio":119999},{"id":91,"nombre":"Gato 3 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1hy7WOtnmp9ZK2JpcqdfKE--mtEgoFeJa&sz=w1000","emoji":"🐱","desc":"Rompecabezas de madera de 15x15 cm con la figura de un gato, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":92,"nombre":"Leoncito 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1GShDiWXkDeNkrmONjsp0vcXycTb2dS-k&sz=w1000","emoji":"🦁","desc":"Rompecabezas de madera de 15x15 cm con la figura de un leoncito, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":93,"nombre":"Libélula 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1d0rY-5Vb1woJWmpMy21ibv-FLxWdQYve&sz=w1000","emoji":"🦋","desc":"Rompecabezas de madera de 15x15 cm con la figura de un libélula, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":94,"nombre":"Mariquita de San Antonio 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1c2paj3F51iwKs6l1VkgqGl6O4KC1rQE2&sz=w1000","emoji":"🐞","desc":"Rompecabezas de madera de 15x15 cm con la figura de un mariquita, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":95,"nombre":"Perrito 15x15","categoria":"Rompecabezas","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1K4DNd6GzYJ1kAChW2WOJjYpzk_NlVsIe&sz=w1000","emoji":"🐶","desc":"Rompecabezas de madera de 15x15 cm con la figura de un perrito, ideal para que los más chicos reconozcan formas y desarrollen la motricidad fina. Perfecto para trabajar concentración y coordinación ojo-mano.","precio":29999},{"id":96,"nombre":"Tetris de Profesiones","categoria":"Lúdicos","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1PmxW3JI3HEc1tFlVCKtzSw3NrpY6xgIs&sz=w1000","emoji":"🎭","desc":"Tetris de profesiones en madera que combina el pensamiento espacial con el conocimiento del mundo laboral. Ideal para trabajar concentración y reconocimiento de figuras.","precio":59999},{"id":97,"nombre":"Dino XL Encastrable","categoria":"Encastres","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1_P3vVTnQeByoGc2p6bpKEPz-t9JtG9tr&sz=w1000","emoji":"🦕","desc":"Encastre de dinosaurios en madera que combina el juego con el aprendizaje de estas criaturas prehistóricas. Desarrolla la concentración y el reconocimiento de formas irregulares.","precio":99999},{"id":98,"nombre":"Encastre de Dinos 25x25","categoria":"Encastres","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1NVqsK9s3d-qg_MSslQ-9lrf6Xp87vndj&sz=w1000","emoji":"🦖","desc":"Encastre de dinosaurios en madera que combina el juego con el aprendizaje de estas criaturas prehistóricas. Desarrolla la concentración y el reconocimiento de formas irregulares.","precio":54999},{"id":99,"nombre":"Encastre Animales de la Granja","categoria":"Encastres","edades":["3 años","4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1f4IC4ZOmPo8ZNrs9h_85EEieUEOvY1cg&sz=w1000","emoji":"🐄","desc":"Encastre de madera elaborado artesanalmente que estimula la concentración, la motricidad fina y el reconocimiento de formas. Ideal para trabajo en sala y en el hogar.","precio":49999},{"id":100,"nombre":"Abecedario Grande","categoria":"Educativos","edades":["4 años","5 años","6 años","7 años o más"],"img":"https://drive.google.com/thumbnail?id=1mG4_jMDUMKHAEkxbtUZHtFbial84vKxz&sz=w1000","emoji":"🔤","desc":"Abecedario grande en madera con letras manipulables para trabajar el reconocimiento de letras y el inicio de la lectoescritura. Recurso fundamental para sala de 5 y primer grado.","precio":99999},{"id":101,"nombre":"Mapa Argentina","categoria":"Mapas","edades":["3 años","4 años","5 años","6 años","7 años o más"],"img":"https://drive.google.com/thumbnail?id=1ZMsi4lm_sT2JiHLfOt6D-mQHBRkV8v7G&sz=w1000","emoji":"🗺️","desc":"Mapa de Argentina en madera con sus provincias encastrables. Recurso fundamental para las ciencias sociales, trabajando ubicación espacial y reconocimiento del territorio.","precio":54999},{"id":118,"nombre":"Pez con Números","categoria":"Encastres","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=18SAsIxmzlSjdqz_WKbbLDR6rJP236rBN&sz=w1000","emoji":"🐟","desc":"Encastre de pez con números que trabaja el reconocimiento numérico y la motricidad fina.","precio":54999},{"id":119,"nombre":"Números más Vocales","categoria":"Educativos","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1P3FzvT-WYOezSu6NAs37oJM1p-b7s1jY&sz=w1000","emoji":"🔤","desc":"Combina números y vocales para iniciarse en la lectoescritura y el conteo de forma manipulativa.","precio":49999},{"id":120,"nombre":"Números Medianos","categoria":"Educativos","edades":["4 años","5 años"],"img":"https://drive.google.com/thumbnail?id=1q-jK1ee8cbF3ETaX8EFiWVjfXcNhMedX&sz=w1000","emoji":"🔢","desc":"Set de números medianos en madera para el reconocimiento numérico y la correspondencia número-cantidad.","precio":29999},{"id":121,"nombre":"Búho con Números y Vocales","categoria":"Educativos","edades":["4 años","5 años","6 años"],"img":"https://drive.google.com/thumbnail?id=16TSPjWEdcfF7qXbK5YgcfE3RXLAWAjkx&sz=w1000","emoji":"🦉","desc":"Búho didáctico que estimula el aprendizaje de números y vocales de forma lúdica y atractiva.","precio":54999},{"id":123,"nombre":"Enhebrador Doble","categoria":"Enhebradores","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=19KEFAJ0s9wcxnZOaMw4Dm1ZrjB-IcGl4&sz=w1000","emoji":"🧵","desc":"Enhebrador doble que trabaja la motricidad fina y la coordinación ojo-mano como preparación para la escritura.","precio":34999},{"id":125,"nombre":"Patito 25x25","categoria":"Rompecabezas","edades":["3 años","4 años"],"img":"https://drive.google.com/thumbnail?id=1Q6oviAakCLv9WDHxz0uXTEPtZPJ7FBE_&sz=w1000","emoji":"🐥","desc":"Rompecabezas de madera de 25x25 cm con la figura de un patito. Desarrolla concentración y motricidad fina.","precio":54999}];
+
+let db = null;
+try{
+  firebase.initializeApp({
+    apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+    authDomain: "taller-artesanal-902ac.firebaseapp.com",
+    projectId: "taller-artesanal-902ac",
+    storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+    messagingSenderId: "783225891542",
+    appId: "1:783225891542:web:82490ed46b64b186d0f777"
+  });
+  db = firebase.firestore();
+}catch(e){ console.warn('Firebase no disponible', e); }
+
+/* Pixel de Meta (solo si hay ID) */
+function pixel(ev, data){ try{ if(window.fbq) fbq('track', ev, data || {}); }catch(e){} }
+if(TIENDA.metaPixelId){
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', TIENDA.metaPixelId); fbq('track', 'PageView');
+}
+
+/* =========================================================
+   ESTADO
+   ========================================================= */
+let PRODUCTOS = [];
+let lineas = [];        // [{id, qty}] en orden de carga
+let otroModo = false, catSel = 'Todas', busq = '', modalId = null, modalQty = 1, vista = 'carrito';
+let workerOk = false;
+const N = CONFIG.cantidad;
+const LS = 'elcoco_pack_v1', LS_DATOS = 'elcoco_datos', LS_PEND = 'elcoco_pago_pendiente';
+
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byId = id => PRODUCTOS.find(p => p.id === id);
+/* Fotos de Drive: se prueba primero el link directo de Google (más estable fuera de Drive)
+   y si falla, el mismo link que usa el catálogo. */
+const driveId = p => { const m = (p.img || '').match(/[?&]id=([\w-]+)/) || (p.img || '').match(/\/d\/([\w-]+)/); return m ? m[1] : ''; };
+const imgUrls = (p, w) => { const id = driveId(p); return id
+  ? [`https://lh3.googleusercontent.com/d/${id}=w${w}`, `https://drive.google.com/thumbnail?id=${id}&sz=w${Math.max(w,1000)}`]
+  : (p.img ? [p.img] : []); };
+const imgUrl = (p, w) => imgUrls(p, w)[0] || '';
+// Si una foto falla, prueba la siguiente URL; si no queda ninguna, ejecuta alFallar
+function probarSiguiente(el, alFallar){
+  const resto = (el.dataset.alt || '').split('|').filter(Boolean);
+  if(resto.length){ el.dataset.alt = resto.slice(1).join('|'); el.src = resto[0]; return true; }
+  alFallar && alFallar(); return false;
+}
+const imgTag = (p, w, extra='', alFallarJs='this.remove()') => { const u = imgUrls(p, w);
+  return `<img src="${esc(u[0]||'')}" data-alt="${esc(u.slice(1).join('|'))}" ${extra} onerror="probarSiguiente(this,()=>{${alFallarJs}})">`; };
+const waLink = txt => `https://wa.me/${TIENDA.whatsapp}${txt ? '?text=' + encodeURIComponent(txt) : ''}`;
+
+function guardar(){ try{ localStorage.setItem(LS, JSON.stringify(lineas)); }catch(e){} }
+function cargar(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS) || '[]');
+    lineas = (Array.isArray(s) ? s : []).filter(l => byId(l.id) && l.qty > 0);
+  }catch(e){ lineas = []; }
+}
+
+/* =========================================================
+   CÁLCULO
+   ========================================================= */
+function unidades(){ const u = []; lineas.forEach(l => { const p = byId(l.id); for(let i=0;i<l.qty;i++) u.push({id:l.id, precio:p.precio}); }); return u; }
+function calcular(provincia){
+  const u = unidades();
+  const r = armarPacks(u);
+  r.cantidad = u.length;
+  r.envio = provincia ? costoEnvio(provincia, r.totalProductos) : null;
+  r.envioGratis = tieneEnvioGratis(r.totalProductos);
+  r.faltaEnvio = faltaParaEnvioGratis(r.totalProductos);
+  return r;
+}
+const enPack = id => lineas.filter(l => l.id === id).reduce((a,l) => a + l.qty, 0);
+
+/* =========================================================
+   CARGA
+   ========================================================= */
+async function cargarCatalogo(){
+  try{
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 8000);
+    const r = await fetch(TIENDA.workerUrl + '/catalogo', { signal: ctrl.signal });
+    clearTimeout(t);
+    if(!r.ok) throw 0;
+    const d = await r.json();
+    if(!d.productos || !d.productos.length) throw 0;
+    Object.assign(CONFIG, d.config || {});
+    workerOk = true;
+    return d.productos;
+  }catch(e){
+    console.warn('Worker no disponible, uso el respaldo');
+    return RESPALDO;
+  }
+}
+
+/* Imágenes: máx 6 descargas a la vez (Drive corta si pedís muchas juntas) */
+const colaImg = []; let activas = 0;
+const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => {
+  es.forEach(e => { if(e.isIntersecting){ io.unobserve(e.target); colaImg.push(e.target); bombear(); } });
+}, {rootMargin:'300px'}) : null;
+function bombear(){
+  while(activas < 6 && colaImg.length){
+    const el = colaImg.shift(); activas++;
+    const fin = () => { activas--; bombear(); };
+    el.onload = () => { el.classList.add('ok'); fin(); };
+    el.onerror = () => { if(!probarSiguiente(el)){ el.remove(); fin(); } };
+    el.src = el.dataset.src;
+  }
+}
+function observarImgs(root){ root.querySelectorAll('img[data-src]:not([src])').forEach(el => io ? io.observe(el) : (colaImg.push(el), bombear())); }
+function thumb(p){ return p ? imgTag(p, 160, 'alt=""', `this.replaceWith(document.createTextNode('${p.emoji||'🧸'}'))`) : ''; }
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+const CAT_BADGE = {
+  'Rompecabezas':['🧩','o'], 'Encastres':['🔷',''], 'Apilables':['🗼','y'], 'Seriaciones':['📏',''],
+  'Mapas':['🗺️',''], 'Lúdicos':['🎲','y'], 'Educativos':['🔤','o'], 'Enhebradores':['🧵',''],
+};
+function textosDinamicos(){
+  const c = CONFIG, gratis = fmt(c.envioGratisDesde);
+  const cuotas = c.cuotasSinInteres > 1 ? `Hasta ${c.cuotasSinInteres} cuotas sin interés` : '';
+  const t = [`🧩 COMBINÁ 5 JUEGOS DISTINTOS`, cuotas && `💳 ${cuotas.toUpperCase()}`, `🚚 ENVÍO GRATIS DESDE ${gratis}`,
+             `📦 CORREO ARGENTINO A TODO EL PAÍS`, `🪵 JUEGOS DIDÁCTICOS DE MADERA`].filter(Boolean);
+  const h = t.map(x => `<span>${x}</span>`).join('');
+  $('ticker').innerHTML = h + h;
+  $('pills').innerHTML =
+    `<span class="pill">🪵 Juegos de <span class="tag">madera</span></span>` +
+    `<span class="pill">🎒 Para <span class="tag y">nivel inicial</span></span>` +
+    `<span class="pill">🧩 ${Math.floor(PRODUCTOS.length/10)*10}+ juegos <span class="tag o">en 5x1</span></span>` +
+    `<span class="pill">📦 Envíos a <span class="tag">todo el país</span></span>`;
+  $('mini').innerHTML = (cuotas ? `<span>${cuotas}</span>` : '') + `<span>Envío gratis desde ${gratis}</span>`;
+  if(cuotas) $('sb-cuotas').textContent = cuotas;
+  const zonas = {}; Object.entries(c.envioPorProvincia).forEach(([p,v]) => (zonas[v] = zonas[v] || []).push(p));
+  $('faq-envio').textContent = `Es gratis en compras desde ${gratis}. Debajo de ese monto depende de tu provincia: ` +
+    Object.entries(zonas).sort((a,b) => a[0]-b[0]).map(([v,ps]) => `${fmt(v)} (${ps.length > 8 ? 'resto del país' : ps.join(', ')})`).join('; ') +
+    '. Lo ves calculado antes de pagar.';
+  if(cuotas) $('faq-pago').textContent = `Con Mercado Pago: tarjeta de crédito (${cuotas.toLowerCase()}), débito o dinero en cuenta. Es un pago seguro y no guardamos los datos de tu tarjeta.`;
+  $('m-tags').innerHTML = `<span>🪵 Madera</span>${cuotas ? `<span>💳 ${cuotas}</span>` : ''}<span>🚚 Gratis desde ${gratis}</span>`;
+  ['hd-help','nav-ayuda','trust-wa'].forEach(id => $(id).href = waLink('Hola! Tengo una consulta sobre la promo 5x1 de El Coco Didácticos'));
+}
+function renderChips(){
+  const cats = {};
+  PRODUCTOS.forEach(p => cats[p.categoria] = (cats[p.categoria]||0) + 1);
+  const orden = Object.keys(cats).sort((a,b) => cats[b]-cats[a]);
+  $('chips').innerHTML = [['Todas', PRODUCTOS.length, '']].concat(orden.map(c => [c, cats[c], (CAT_BADGE[c]||['🎁'])[0]]))
+    .map(([c,n,e]) => `<button class="chip ${c===catSel?'on':''}" data-c="${esc(c)}">${e?e+' ':''}${esc(c)} <small>${n}</small></button>`).join('');
+}
+function cardHTML(p){
+  const [e, cl] = CAT_BADGE[p.categoria] || ['🎁',''];
+  const q = enPack(p.id);
+  const edades = (p.edades||[]).map(x => `<i>${esc(String(x).replace(' años',''))}</i>`).join('');
+  return `<article class="card ${q?'sel':''}" data-id="${p.id}">
+    <div class="ph">
+      <div class="badges"><span class="bdg ${cl}">${e} ${esc(p.categoria)}</span></div>
+      <img data-src="${esc(imgUrl(p,500))}" data-alt="${esc(imgUrls(p,500).slice(1).join('|'))}" alt="${esc(p.nombre)}"><span class="emo">${p.emoji||'🧸'}</span>
+    </div>
+    <div class="info">
+      <div class="nm">${esc(p.nombre)}</div>
+      <div class="price"><b>${fmt(p.precio)}</b><span class="p5">5x1</span></div>
+      <div class="meta"><span class="ages">${edades}</span><span class="cu">= ${fmt(p.precio/N)} c/u</span></div>
+      <div class="inpack"><span>${q} en tu pack</span><button data-add="${p.id}">Sumar otro</button></div>
+    </div>
+  </article>`;
+}
+function filtrados(){
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const b = norm(busq.trim());
+  return PRODUCTOS.filter(p => (catSel==='Todas' || p.categoria===catSel) && (!b || norm(p.nombre).includes(b)));
+}
+function renderGrid(){
+  const list = filtrados();
+  $('grid').innerHTML = list.length ? list.map(cardHTML).join('') : `<div class="empty">No encontramos juegos con “${esc(busq)}”.</div>`;
+  observarImgs($('grid'));
+}
+function refrescarCard(id){
+  const el = document.querySelector(`.card[data-id="${id}"]`); if(!el) return;
+  const q = enPack(id);
+  el.classList.toggle('sel', q > 0);
+  el.querySelector('.inpack span').textContent = `${q} en tu pack`;
+}
+
+function renderDock(){
+  const c = calcular();
+  const total = c.cantidad, llenos = c.packs.length, enCurso = total % N;
+  const mostrandoLleno = total > 0 && enCurso === 0 && !otroModo;
+  const nroPack = mostrandoLleno ? llenos : llenos + 1;
+  const orden = lineas.flatMap(l => Array(l.qty).fill(l.id));
+  const ocup = mostrandoLleno ? orden.slice(-N) : orden.slice(llenos*N);
+  let s = '';
+  for(let i=0;i<N;i++){ const p = byId(ocup[i]); s += `<div class="slot ${p?'full':''}" data-i="${i}">${p?thumb(p):''}</div>`; }
+  $('slots').innerHTML = s;
+  $('hd-n').textContent = total;
+  $('verpack').classList.toggle('on', total > 0);
+  $('packlbl').textContent = nroPack > 1 ? `Pack ${nroPack}` : '';
+  $('packlbl').classList.toggle('on', nroPack > 1);
+
+  const el = $('envio-line');
+  el.classList.toggle('on', llenos > 0);
+  el.classList.toggle('ok', c.envioGratis);
+  el.textContent = c.envioGratis ? '🚚 ¡Tenés envío gratis!' : `🚚 Te faltan ${fmt(c.faltaEnvio)} para el envío gratis`;
+
+  const go = $('go'); go.classList.remove('mid','done');
+  $('otro').classList.toggle('on', mostrandoLleno);
+  const chico = innerWidth < 640;
+  if(mostrandoLleno){
+    go.classList.add('done');
+    $('go-t').textContent = chico ? 'Ir a pagar' : (llenos > 1 ? `Ir a pagar mis ${llenos} packs` : 'Ir a pagar mi pack');
+    $('go-c').textContent = `${N} de ${N} ✓`;
+    $('fill').style.width = '100%';
+  } else {
+    const n = ocup.length;
+    $('fill').style.width = (n / N * 100) + '%';
+    if(n) go.classList.add('mid');
+    $('go-t').textContent = n === 0 ? (llenos ? 'Elegí el primero del próximo 👆' : 'Elegí el primero 👆') : `Te faltan ${N - n}`;
+    $('go-c').textContent = `${n} de ${N}`;
+  }
+}
+
+/* =========================================================
+   ACCIONES
+   ========================================================= */
+function agregar(id, qty=1){
+  const p = byId(id); if(!p) return;
+  const antes = lineas.reduce((a,l) => a + l.qty, 0);
+  const ult = lineas[lineas.length-1];
+  if(ult && ult.id === id) ult.qty += qty; else lineas.push({id, qty});
+  otroModo = false;
+  guardar(); refrescarCard(id); renderDock(); if(vista==='carrito') renderDrawer();
+  const total = antes + qty, pos = total % N || N;
+  const c = calcular();
+  const sub = total % N === 0 ? (c.envioGratis ? '¡Pack completo! Envío gratis 🚚' : '¡Pack completo! 🎉') : p.categoria;
+  mostrarToast(p, sub, `${pos} de ${N}`);
+  const slot = document.querySelector(`.slot[data-i="${pos-1}"]`);
+  if(slot){ slot.classList.remove('pop'); void slot.offsetWidth; slot.classList.add('pop'); }
+  pixel('AddToCart', { content_ids:[String(id)], content_name:p.nombre, content_type:'product', currency:'ARS', value: p.precio/N });
+}
+function cambiarLinea(i, d){ const l = lineas[i]; if(!l) return; l.qty += d; if(l.qty <= 0) lineas.splice(i,1); guardar(); refrescarCard(l.id); renderDock(); renderDrawer(); }
+function quitarLinea(i){ const l = lineas[i]; lineas.splice(i,1); guardar(); if(l) refrescarCard(l.id); renderDock(); renderDrawer(); }
+function otroPack(){ otroModo = true; renderDock(); $('juegos').scrollIntoView({behavior:'smooth'}); }
+function clickGo(){ if(!lineas.length){ $('juegos').scrollIntoView({behavior:'smooth'}); return; } abrirDrawer(); }
+
+let tTimer;
+function mostrarToast(p, sub, k){
+  $('t-th').innerHTML = thumb(p) || (p.emoji||'🧸');
+  $('t-n').textContent = p.nombre; $('t-s').textContent = sub; $('t-k').textContent = k;
+  $('toast').classList.add('on'); clearTimeout(tTimer);
+  tTimer = setTimeout(() => $('toast').classList.remove('on'), 2300);
+}
+
+function abrirModal(id){
+  const p = byId(id); if(!p) return;
+  modalId = id; modalQty = 1;
+  $('m-img').innerHTML = `<span class="emo">${p.emoji||'🧸'}</span>${imgTag(p, 1000, `alt="${esc(p.nombre)}"`)}`;
+  $('m-n').textContent = p.nombre;
+  $('m-e').innerHTML = `Edades: <b>${esc((p.edades||[]).join(' · ') || 'Nivel inicial')}</b>`;
+  $('m-p').innerHTML = `<b>${fmt(p.precio)}</b><span class="p5">5x1</span>`;
+  $('m-d').textContent = p.desc || '';
+  actualizarModal();
+  $('ov').classList.add('on'); document.body.style.overflow = 'hidden';
+  pixel('ViewContent', { content_ids:[String(id)], content_name:p.nombre, content_type:'product', currency:'ARS', value:p.precio/N });
+}
+function mq(d){ modalQty = Math.max(1, Math.min(50, modalQty + d)); actualizarModal(); }
+function actualizarModal(){
+  const p = byId(modalId);
+  $('m-q').textContent = modalQty;
+  $('m-add').textContent = modalQty > 1 ? `Sumar ${modalQty} al pack` : 'Sumar al pack';
+  const q = enPack(modalId);
+  $('m-note').textContent = q ? `✔ Ya tenés ${q} en tu pack.` : `🔥 Llevando 5, pagás ${fmt(p.precio)}: ${fmt(p.precio/N)} cada uno.`;
+}
+function cerrarModal(){ $('ov').classList.remove('on'); document.body.style.overflow = ''; }
+function agregarDesdeModal(){ agregar(modalId, modalQty); cerrarModal(); }
+
+/* =========================================================
+   CARRITO
+   ========================================================= */
+function abrirDrawer(){ vista = 'carrito'; renderDrawer(); $('drawer').classList.add('on'); $('dr-ov').classList.add('on'); document.body.style.overflow = 'hidden'; }
+function cerrarDrawer(){ $('drawer').classList.remove('on'); $('dr-ov').classList.remove('on'); document.body.style.overflow = ''; }
+
+function envioBox(c){
+  if(!c.packs.length) return '';
+  const pct = Math.min(100, c.totalProductos / CONFIG.envioGratisDesde * 100);
+  return c.envioGratis
+    ? `<div class="envio-box ok">🚚 ¡Tenés envío gratis a todo el país!</div>`
+    : `<div class="envio-box">🚚 Te faltan ${fmt(c.faltaEnvio)} para el envío gratis<div class="bar"><i style="width:${pct}%"></i></div></div>`;
+}
+
+function renderDrawer(){
+  if(vista === 'form') return renderForm();
+  const c = calcular(), body = $('dr-body'), foot = $('dr-foot');
+  $('dr-title').textContent = 'Carrito de compras';
+  if(!c.cantidad){
+    body.innerHTML = `<div class="empty-cart"><span class="ico">🥥</span>Tu pack está vacío.<br>Elegí 5 juegos y pagás el precio de 1.</div>`;
+    foot.innerHTML = `<button class="btn-o" onclick="cerrarDrawer()">Elegir juegos</button>`;
+    return;
+  }
+  const llenos = c.packs.length, completo = c.faltan === 0, enCurso = c.cantidad % N;
+  const orden = lineas.flatMap(l => Array(l.qty).fill(l.id));
+  const ultimos = completo ? orden.slice(-N) : orden.slice(llenos*N);
+  let slots = ''; for(let i=0;i<N;i++){ const p = byId(ultimos[i]); slots += `<div class="slot ${p?'full':''}">${p?thumb(p):''}</div>`; }
+  let h = `<div class="hero-pack">
+    <span class="hp-tag">${completo ? (llenos > 1 ? `${llenos} PACKS 5x1 COMPLETOS` : `PACK 5x1 COMPLETO · ${N}/${N}`) : `PACK ${llenos+1} · ${enCurso}/${N}`}</span>
+    <h4>${completo ? (llenos > 1 ? `Tus ${llenos} packs están listos.` : `Tus ${N} están listos.`) : `Te faltan ${c.faltan}.`}</h4>
+    <p>${completo ? 'Revisá los juegos. Tu selección ya quedó cargada en el carrito.' : `Sumá ${c.faltan} más para completar el pack y activar el 5x1.`}</p>
+    <div class="hp-big"><div><b>${c.cantidad}</b><span>JUEGOS</span></div></div>
+    <div class="hp-slots">${slots}</div>
+    <div class="hp-bar"><i style="width:${completo ? 100 : enCurso/N*100}%"></i></div>
+    <div class="hp-meta"><span>${completo ? 'Selección completa' : 'Pack en curso'}</span><b>${completo ? `${N} de ${N} ✓` : `${enCurso} de ${N}`}</b></div>
+    <div class="hp-feats"><div>${CONFIG.cuotasSinInteres > 1 ? `Hasta ${CONFIG.cuotasSinInteres} cuotas` : 'Pago seguro'}<span>${CONFIG.cuotasSinInteres > 1 ? 'sin interés' : 'Mercado Pago'}</span></div><div>Envío gratis<span>desde ${fmt(CONFIG.envioGratisDesde)}</span></div><div>Correo<span>Argentino</span></div></div>
+  </div>`;
+  h += lineas.map((l,i) => { const p = byId(l.id); return `<div class="line">
+      <div class="th">${thumb(p)}</div>
+      <div><b class="nm">${esc(p.nombre)}</b><span class="cat">${esc(p.categoria)}</span>
+        <div class="qty"><button onclick="cambiarLinea(${i},-1)" aria-label="Menos">−</button><b>${l.qty}</b><button onclick="cambiarLinea(${i},1)" aria-label="Más">+</button></div></div>
+      <div class="rt"><button class="rm" onclick="quitarLinea(${i})" aria-label="Quitar">✕</button><span class="pr">${fmt(p.precio*l.qty)}</span></div>
+    </div>`; }).join('');
+  h += `<div class="tot"><div class="r"><span>Subtotal</span><span>${fmt(c.subtotal)}</span></div></div>`;
+  if(completo) h += `<div class="promo-row"><span>5x1 en ${llenos > 1 ? `tus ${llenos} packs` : 'tu pack'}</span><span>−${fmt(c.promo)}</span></div>`;
+  else h += `<div class="warn">El 5x1 se activa al completar el pack: te faltan ${c.faltan} juego${c.faltan>1?'s':''}.</div>`;
+  if(completo){
+    h += envioBox(c);
+    h += `<div class="big-tot"><span>Total:</span><b>${fmt(c.totalProductos)}</b></div>`;
+    h += `<div class="sub-note">${c.envioGratis ? 'Envío gratis incluido' : '+ envío según tu provincia'}${CONFIG.cuotasSinInteres > 1 ? ` · ${CONFIG.cuotasSinInteres} cuotas de ${fmt(c.totalProductos/CONFIG.cuotasSinInteres)}` : ''}</div>`;
+  }
+  h += `<div class="safe">🔒<div>Pago 100% seguro<span>Pagás con Mercado Pago. No guardamos los datos de tu tarjeta.</span></div></div>`;
+  body.innerHTML = h;
+  foot.innerHTML = completo
+    ? `<button class="btn-o" onclick="irAForm()">🔒 Iniciar compra segura</button><a class="link" href="#" onclick="cerrarDrawer();return false">Seguir eligiendo</a>`
+    : `<button class="btn-o" onclick="cerrarDrawer();document.getElementById('juegos').scrollIntoView({behavior:'smooth'})">Elegir ${c.faltan} más</button>`;
+}
+
+const PROVINCIAS = () => Object.keys(CONFIG.envioPorProvincia).sort((a,b) => a.localeCompare(b,'es'));
+function irAForm(){ vista = 'form'; renderDrawer(); $('dr-body').scrollTop = 0; pixel('InitiateCheckout', { currency:'ARS', value: calcular().totalProductos, num_items: calcular().cantidad }); }
+function volverCarrito(){ vista = 'carrito'; renderDrawer(); }
+
+function renderForm(){
+  $('dr-title').textContent = 'Datos de envío';
+  let d = {}; try{ d = JSON.parse(localStorage.getItem(LS_DATOS)||'{}'); }catch(e){}
+  const f = (id, label, attrs='', val='') => `<label for="${id}">${label}</label><input id="${id}" ${attrs} value="${esc(val)}">`;
+  $('dr-body').innerHTML = `<button class="back" onclick="volverCarrito()">← Volver al carrito</button>
+    <div class="form">
+      <div class="sec">Contacto</div>
+      ${f('f-nombre','Nombre y apellido','autocomplete="name"',d.nombre)}
+      ${f('f-email','Email','type="email" autocomplete="email" inputmode="email"',d.email)}
+      ${f('f-tel','WhatsApp','type="tel" autocomplete="tel" inputmode="tel" placeholder="Ej: 11 5555 5555"',d.tel)}
+      <div class="sec">Dirección de entrega</div>
+      <label for="f-prov">Provincia</label><select id="f-prov" onchange="actualizarTotales()"><option value="">Elegí tu provincia</option>${PROVINCIAS().map(p => `<option ${d.provincia===p?'selected':''}>${p}</option>`).join('')}</select>
+      <div class="dos"><div>${f('f-loc','Localidad','autocomplete="address-level2"',d.localidad)}</div><div>${f('f-cp','Código postal','inputmode="numeric" autocomplete="postal-code"',d.cp)}</div></div>
+      ${f('f-dir','Calle y número','autocomplete="street-address"',d.direccion)}
+      ${f('f-depto','Piso / depto <small>(opcional)</small>','',d.depto)}
+      ${f('f-esc','Jardín o escuela <small>(opcional)</small>','',d.escuela)}
+      <label for="f-obs">Notas para el envío <small>(opcional)</small></label><textarea id="f-obs" placeholder="Entre calles, horario, lo que necesites"></textarea>
+    </div>
+    <div class="tot" style="margin-top:14px" id="f-tot"></div>`;
+  $('dr-foot').innerHTML = `<button class="btn-o" id="f-pay" onclick="pagar()">💳 Pagar con Mercado Pago</button><div class="err" id="f-err"></div>`;
+  actualizarTotales();
+}
+function actualizarTotales(){
+  const pv = $('f-prov')?.value || '';
+  const c = calcular(pv);
+  const envTxt = c.envioGratis ? '<b style="color:var(--verde)">Gratis</b>' : pv ? fmt(c.envio) : 'Elegí tu provincia';
+  const total = c.totalProductos + (c.envio || 0);
+  $('f-tot').innerHTML = `
+    ${c.packs.map((p,i) => `<div class="r"><span>Pack 5x1${c.packs.length>1?' #'+(i+1):''}</span><span>${fmt(p.cobro)}</span></div>`).join('')}
+    <div class="r"><span>Envío Correo Argentino</span><span>${envTxt}</span></div>
+    ${!c.envioGratis ? `<div class="r" style="font-size:11px"><span>Sumando ${fmt(c.faltaEnvio)} más, el envío es gratis</span><span></span></div>` : ''}
+    <div class="big-tot"><span>Total:</span><b>${fmt(total)}</b></div>
+    ${CONFIG.cuotasSinInteres > 1 ? `<div class="sub-note">o ${CONFIG.cuotasSinInteres} cuotas sin interés de ${fmt(total/CONFIG.cuotasSinInteres)}</div>` : ''}`;
+}
+
+async function pagar(){
+  const v = id => ($(id)?.value || '').trim();
+  const datos = { nombre:v('f-nombre'), email:v('f-email'), tel:v('f-tel'), provincia:v('f-prov'), localidad:v('f-loc'),
+                  cp:v('f-cp'), direccion:v('f-dir'), depto:v('f-depto'), escuela:v('f-esc') };
+  const obs = v('f-obs');
+  const falta = !datos.nombre ? 'tu nombre' : !/^\S+@\S+\.\S+$/.test(datos.email) ? 'un email válido'
+    : datos.tel.replace(/\D/g,'').length < 8 ? 'un WhatsApp válido' : !datos.provincia ? 'tu provincia'
+    : !datos.localidad ? 'tu localidad' : !/^[A-Za-z]?\d{4}[A-Za-z]{0,3}$/.test(datos.cp.replace(/\s/g,'')) ? 'un código postal válido'
+    : !/\d/.test(datos.direccion) ? 'calle y número' : '';
+  if(falta){ $('f-err').textContent = 'Completá ' + falta; return; }
+  $('f-err').textContent = '';
+  try{ localStorage.setItem(LS_DATOS, JSON.stringify(datos)); }catch(e){}
+  if(!workerOk){ $('f-err').textContent = 'El pago no está disponible en este momento. Escribinos por WhatsApp.'; return; }
+
+  const c = calcular(datos.provincia);
+  if(c.faltan){ volverCarrito(); return; }
+  const btn = $('f-pay'); btn.disabled = true; btn.textContent = '⏳ Preparando el pago...';
+
+  const agrupar = ids => { const m = {}; ids.forEach(id => m[id] = (m[id]||0)+1); return Object.entries(m).map(([id,q]) => `${q} ${byId(+id).nombre}`).join(', '); };
+  const productosTxt = c.packs.map((p,i) => `[Pack 5x1 #${i+1} ${fmt(p.cobro)}] ${agrupar(p.ids)}`).join(' | ');
+  const direccionTxt = `${datos.direccion}${datos.depto ? ' ' + datos.depto : ''}, ${datos.localidad} (CP ${datos.cp})`;
+  const ahora = new Date();
+  const pedido = {
+    nombre: datos.nombre, escuela: datos.escuela || '—', tel: datos.tel, email: datos.email,
+    productos: productosTxt, total: c.totalProductos, envio: c.envio || 0,
+    obs: `EL COCO 5x1 · Correo Argentino a ${direccionTxt}${obs ? ' · ' + obs : ''}`,
+    provincia: datos.provincia, ciudad: datos.localidad, direccion: direccionTxt, cp: datos.cp,
+    estado: 'confirmado', fechaPedido: ahora.toLocaleDateString('en-CA',{timeZone:'America/Argentina/Buenos_Aires'}), fechaEntrega: '',
+    pago: 'Mercado Pago (total) — pendiente', metodoPago: 'total', senia: 0, logistica: 'Correo Argentino', turno: '',
+    cuit: '', razon: '', factura: false, facturaEmitida: false,
+    createdAt: ahora.toISOString(), updatedAt: ahora.toISOString(), origen: 'elcoco-5x1', marca: 'El Coco Didácticos'
+  };
+  try{
+    if(!db) throw new Error('No se pudo registrar el pedido');
+    const ref = await db.collection('pedidos').add(pedido);
+    const r = await fetch(TIENDA.workerUrl + '/crear-pago', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ pedidoId: ref.id, items: lineas.map(l => ({id:l.id, qty:l.qty})), provincia: datos.provincia,
+        nombre: datos.nombre, email: datos.email, tel: datos.tel, cp: datos.cp, direccion: datos.direccion,
+        localidad: datos.localidad, returnUrl: location.origin + location.pathname })
+    });
+    const data = await r.json();
+    if(!r.ok || !data.url) throw new Error(data.error || 'No se pudo generar el pago');
+    try{ localStorage.setItem(LS_PEND, JSON.stringify({ pedidoId: ref.id, monto: data.monto, nombre: datos.nombre, resumen: productosTxt })); }catch(e){}
+    location.href = data.url;
+  }catch(e){
+    $('f-err').textContent = '⚠️ ' + e.message;
+    btn.disabled = false; btn.textContent = '💳 Pagar con Mercado Pago';
+  }
+}
+
+/* Vuelta desde Mercado Pago */
+function revisarVueltaMP(){
+  const q = new URLSearchParams(location.search);
+  const estado = q.get('pago'); if(!estado) return;
+  let pend = null; try{ pend = JSON.parse(localStorage.getItem(LS_PEND)||'null'); }catch(e){}
+  const op = String(q.get('payment_id') || q.get('collection_id') || '').replace(/\D/g,'').slice(0,20);
+  history.replaceState(null, '', location.pathname);
+  const ok = estado === 'aprobado' && q.get('status') === 'approved';
+  vista = 'fin';
+  $('drawer').classList.add('on'); $('dr-ov').classList.add('on');
+  if(ok){
+    lineas = []; guardar(); try{ localStorage.removeItem(LS_PEND); }catch(e){}
+    renderGrid(); renderDock();
+    pixel('Purchase', { currency:'ARS', value: pend?.monto || 0 });
+    $('dr-title').textContent = '¡Compra confirmada!';
+    $('dr-body').innerHTML = `<div class="empty-cart"><span class="ico">🎉</span>¡Gracias${pend?.nombre ? ', ' + esc(pend.nombre.split(' ')[0]) : ''}!<br>Recibimos tu pago${op ? ` (operación N° <b>${op}</b>)` : ''}.<br>Te escribimos por WhatsApp con el seguimiento del envío.</div>`;
+    const msg = `Hola! Hice una compra en El Coco Didácticos 🥥\nPedido: ${pend?.pedidoId ? pend.pedidoId.slice(0,8).toUpperCase() : '-'}\nOperación MP: ${op}\n${pend?.resumen || ''}`;
+    $('dr-foot').innerHTML = `<a class="btn-o" style="display:grid;place-items:center;text-decoration:none" href="${waLink(msg)}" target="_blank" rel="noopener">Avisar por WhatsApp</a><a class="link" href="#" onclick="cerrarDrawer();vista='carrito';return false">Volver a la tienda</a>`;
+  } else if(estado === 'pendiente'){
+    $('dr-title').textContent = 'Pago en revisión';
+    $('dr-body').innerHTML = `<div class="empty-cart"><span class="ico">⏳</span>Mercado Pago está procesando tu pago.<br>Apenas se acredite, preparamos tu envío.</div>`;
+    $('dr-foot').innerHTML = `<button class="btn-o" onclick="cerrarDrawer();vista='carrito'">Volver a la tienda</button>`;
+  } else {
+    $('dr-title').textContent = 'El pago no se completó';
+    $('dr-body').innerHTML = `<div class="empty-cart"><span class="ico">⚠️</span>No se cobró nada.<br>Tu pack sigue guardado: podés intentarlo de nuevo.</div>`;
+    $('dr-foot').innerHTML = `<button class="btn-o" onclick="abrirDrawer()">Volver a intentar</button>`;
+  }
+}
+
+function tickCountdown(){
+  const d = new Date(CONFIG.fin).getTime() - Date.now();
+  if(!(d > 0)){ const el = $('cd'); if(el) el.outerHTML = `<div class="fin">🥥 La promo 5x1 terminó. ¡Pronto volvemos!</div>`; return false; }
+  const s = Math.floor(d/1000), dd = Math.floor(s/86400), hh = Math.floor(s%86400/3600), mm = Math.floor(s%3600/60), ss = s%60;
+  const b = (v,l) => `<div class="cd-b"><b>${String(v).padStart(2,'0')}</b><span>${l}</span></div>`;
+  $('cd-boxes').innerHTML = (dd ? b(dd,'DÍAS') : '') + b(hh,'HS') + b(mm,'MIN') + b(ss,'SEG');
+  return true;
+}
+
+$('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if(!b) return; catSel = b.dataset.c; renderChips(); renderGrid(); });
+$('q').addEventListener('input', e => { busq = e.target.value; renderGrid(); });
+$('grid').addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  if(add){ e.stopPropagation(); agregar(+add.dataset.add); return; }
+  const card = e.target.closest('.card'); if(card) abrirModal(+card.dataset.id);
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ cerrarModal(); cerrarDrawer(); } });
+addEventListener('resize', () => renderDock());
+
+(async function init(){
+  $('grid').innerHTML = Array(8).fill('<div class="skel"></div>').join('');
+  PRODUCTOS = await cargarCatalogo();
+  cargar();
+  textosDinamicos(); renderChips(); renderGrid(); renderDock();
+  if(tickCountdown()){ const iv = setInterval(() => { if(!tickCountdown()) clearInterval(iv); }, 1000); }
+  revisarVueltaMP();
+})();
+</script>
+</body>
+</html>
