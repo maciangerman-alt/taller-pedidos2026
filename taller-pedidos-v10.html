@@ -92,7 +92,15 @@
   .imp-item-nom { font-size:11px; font-weight:600; color:var(--texto); line-height:1.2; }
   .imp-item input { width:52px; text-align:center; font-size:13px; font-weight:800; border:1.5px solid var(--borde); border-radius:6px; padding:3px; font-family:'DM Sans',sans-serif; }
   .imp-item input.tiene { border-color:#BE185D; background:#FDF2F8; color:#BE185D; }
-  .imp-tot { font-size:12px; font-weight:700; color:#BE185D; text-align:right; margin-top:6px; }
+  .imp-tot { font-size:12px; font-weight:700; color:#BE185D; }
+  .imp-pie { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; flex-wrap:wrap; border-top:1px dashed var(--borde); padding-top:8px; }
+  .imp-total-box { display:flex; align-items:center; gap:6px; }
+  .imp-total-box label { font-size:11px; color:var(--gris); font-weight:700; }
+  .imp-total-box input { width:96px; text-align:right; font-size:13px; font-weight:800; border:1.5px solid var(--borde); border-radius:7px; padding:4px 8px; font-family:'DM Sans',sans-serif; }
+  .imp-total-box input.cambiado { border-color:#BE185D; background:#FDF2F8; color:#BE185D; }
+  .imp-btn-usar { font-size:11px; font-weight:700; background:#FCE7F3; color:#BE185D; border:1.5px solid #F9A8D4; border-radius:100px; padding:5px 11px; cursor:pointer; font-family:'DM Sans',sans-serif; white-space:nowrap; }
+  .imp-btn-usar:hover { background:#BE185D; color:white; }
+  .imp-btn-usar.oculto { display:none; }
   .pedido-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
   .pedido-dinero { display:flex; gap:12px; flex-wrap:wrap; }
   .dinero-item { text-align:center; }
@@ -1046,7 +1054,13 @@
         Leí los pedidos comunes y traté de reconocer los productos del Día de la Madre.
         <b>Revisá y corregí</b> lo que haga falta. Nada se guarda hasta que toques Confirmar.
       </div>
-      <div id="imp-resumen" style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;"></div>
+      <div id="imp-resumen" style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;"></div>
+      <div id="imp-acciones" style="display:none;margin-bottom:12px;">
+        <button onclick="corregirCentavos()" style="background:#FEF3C7;color:#B45309;border:1.5px solid #FCD34D;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          \u{1FA84} Corregir de una los que difieren por menos de $100
+        </button>
+        <span style="font-size:11px;color:var(--gris);margin-left:8px">son errores de tipeo, no descuentos</span>
+      </div>
       <div id="imp-lista" style="max-height:48vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div style="display:flex;gap:10px">
         <button onclick="cerrarImportador()" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
@@ -4218,6 +4232,7 @@ window.abrirImportador = function(){
        <span style="color:#B45309;font-weight:700">\u{26A0}\u{FE0F} ${nPar} a revisar</span> ·
        <span style="color:#B91C1C;font-weight:700">\u{274C} ${nNada} sin reconocer</span>`;
 
+  document.getElementById('imp-acciones').style.display = nPar>0 ? 'block' : 'none';
   renderImportador();
   document.getElementById('overlay-importador').classList.add('show');
 }
@@ -4258,7 +4273,14 @@ function renderImportador(){
       <div class="imp-texto">"${esc(p.productos)}"</div>
       ${aviso}
       <div class="imp-items">${campos}</div>
-      <div class="imp-tot" id="imp-tot-${idx}">Detalle: $${fmt(f.calc)}</div>
+      <div class="imp-pie">
+        <span class="imp-tot" id="imp-tot-${idx}">Detalle: $${fmt(f.calc)}</span>
+        <div class="imp-total-box">
+          <label>Total a guardar</label>
+          <input type="number" id="imp-total-${idx}" value="${Number(p.total)||0}" oninput="marcarTotalImp(${idx})">
+          <button class="imp-btn-usar ${f.calc===(Number(p.total)||0)?'oculto':''}" id="imp-usar-${idx}" onclick="usarDetalleImp(${idx})">usar $${fmt(f.calc)}</button>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -4272,11 +4294,65 @@ window.recalcImpFila = function(idx){
     total += v * pr.precio;
   });
   const t = document.getElementById(`imp-tot-${idx}`);
-  const orig = Number(impFilas[idx]?.pedido.total)||0;
+  const inpT = document.getElementById(`imp-total-${idx}`);
+  const guardado = Number(inpT?.value)||0;
   if(t){
-    t.textContent = 'Detalle: $'+fmt(total) + (total===orig ? '  \u{2713} coincide' : '  (cargado: $'+fmt(orig)+')');
-    t.style.color = total===orig ? '#15803D' : '#B45309';
+    t.textContent = 'Detalle: $'+fmt(total) + (total===guardado ? '  \u{2713} coincide con el total' : '');
+    t.style.color = total===guardado ? '#15803D' : '#B45309';
   }
+  // boton "usar $X": solo si difiere
+  const btn = document.getElementById(`imp-usar-${idx}`);
+  if(btn){
+    btn.classList.toggle('oculto', total===guardado);
+    btn.textContent = 'usar $'+fmt(total);
+    btn.dataset.val = total;
+  }
+  // pintar la fila segun si cuadra
+  const fila = document.getElementById(`imp-fila-${idx}`);
+  if(fila){
+    const hay = total>0;
+    fila.className = 'imp-fila ' + (!hay ? 'nada' : (total===guardado ? 'ok' : 'parcial'));
+  }
+}
+
+// Pone en el total el valor que suma el detalle
+window.usarDetalleImp = function(idx){
+  const btn = document.getElementById(`imp-usar-${idx}`);
+  const inpT = document.getElementById(`imp-total-${idx}`);
+  if(!btn||!inpT) return;
+  inpT.value = Number(btn.dataset.val)||0;
+  inpT.classList.add('cambiado');
+  recalcImpFila(idx);
+}
+
+// Iguala el total al detalle en los casos con diferencia minima (tipeos)
+window.corregirCentavos = function(){
+  let n = 0;
+  impFilas.forEach((f,idx)=>{
+    const inpT = document.getElementById(`imp-total-${idx}`);
+    if(!inpT) return;
+    let det = 0;
+    PRODUCTOS_MADRE.forEach(pr=>{
+      det += (parseInt(document.getElementById(`imp-${idx}-${pr.id}`)?.value)||0) * pr.precio;
+    });
+    const act = Number(inpT.value)||0;
+    const dif = Math.abs(det - act);
+    if(det > 0 && dif > 0 && dif < 100){
+      inpT.value = det;
+      inpT.classList.add('cambiado');
+      recalcImpFila(idx);
+      n++;
+    }
+  });
+  toast(n ? `\u{1FA84} ${n} totales corregidos` : 'No habia diferencias chicas');
+}
+
+// Marca el total si fue editado a mano
+window.marcarTotalImp = function(idx){
+  const inpT = document.getElementById(`imp-total-${idx}`);
+  const orig = Number(impFilas[idx]?.pedido.total)||0;
+  if(inpT) inpT.classList.toggle('cambiado', (Number(inpT.value)||0)!==orig);
+  recalcImpFila(idx);
 }
 
 window.cerrarImportador = function(){
@@ -4285,6 +4361,7 @@ window.cerrarImportador = function(){
 
 window.confirmarImportacion = async function(){
   const aGuardar = [];
+  let totalesCorregidos = 0;
   impFilas.forEach((f,idx)=>{
     const items = {};
     const textos = [];
@@ -4292,7 +4369,11 @@ window.confirmarImportacion = async function(){
       const v = parseInt(document.getElementById(`imp-${idx}-${pr.id}`)?.value)||0;
       if(v>0){ items[pr.id]=v; textos.push(`${v} ${pr.nombre}`); }
     });
-    if(Object.keys(items).length) aGuardar.push({id:f.pedido.id, items, textos});
+    if(!Object.keys(items).length) return;
+    const origT = Number(f.pedido.total)||0;
+    const nuevoT = Number(document.getElementById(`imp-total-${idx}`)?.value)||0;
+    if(nuevoT !== origT) totalesCorregidos++;
+    aGuardar.push({id:f.pedido.id, items, textos, total:nuevoT, senia:Number(f.pedido.senia)||0});
   });
 
   if(!aGuardar.length){ toast('No hay nada para importar'); return; }
@@ -4306,6 +4387,8 @@ window.confirmarImportacion = async function(){
         evento: 'madre2026',
         itemsMadre: it.items,
         productos: it.textos.join(', '),
+        total: it.total,
+        saldo: Math.max(0, it.total - it.senia),
         updatedAt: new Date().toISOString()
       });
       ok++;
@@ -4313,7 +4396,8 @@ window.confirmarImportacion = async function(){
   }
   btn.disabled = false; btn.textContent = '\u{2705} Confirmar e importar';
   cerrarImportador();
-  toast(err ? `\u{26A0}\u{FE0F} ${ok} importados, ${err} con error` : `\u{2705} ${ok} pedidos importados al Día de la Madre`);
+  const extra = totalesCorregidos ? ` (${totalesCorregidos} con el total corregido)` : '';
+  toast(err ? `\u{26A0}\u{FE0F} ${ok} importados, ${err} con error` : `\u{2705} ${ok} pedidos importados${extra}`);
 }
 // ==================== FIN DÍA DE LA MADRE ====================
 
