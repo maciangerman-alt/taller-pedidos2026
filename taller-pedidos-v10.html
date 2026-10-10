@@ -1494,10 +1494,8 @@ window.hacerLogin = async function(){
 
 let pedidos = [], filtroActual = 'todos', editandoId = null, periodoActual = 'semana', facturaOn = false, facturaEmitidaOn = false, jardinOn = false, padreOn = false, estudianteOn = false, madreOn = false;
 
-escucharMetas();
-
 db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
-  pedidos = []; snap.forEach(d => pedidos.push({id:d.id,...d.data()}));
+  pedidos = []; snap.forEach(d => { if(d.id===DOC_METAS) return; pedidos.push({id:d.id,...d.data()}); });
   renderPedidos(); renderCaja(); actualizarHeader();
   if(document.getElementById('tab-analytics').classList.contains('active')) renderAnalytics();
   // Actualizar badge y contenido de hoy siempre
@@ -1517,7 +1515,7 @@ db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
   if(document.getElementById('tab-estudiante').classList.contains('active')) renderEstudiante();
 }, () => {
   db.collection("pedidos").onSnapshot(snap => {
-    pedidos = []; snap.forEach(d => pedidos.push({id:d.id,...d.data()}));
+    pedidos = []; snap.forEach(d => { if(d.id===DOC_METAS) return; pedidos.push({id:d.id,...d.data()}); });
     pedidos.sort((a,b)=>(b.fechaPedido||'').localeCompare(a.fechaPedido||''));
     renderPedidos(); renderCaja(); actualizarHeader();
     if(document.getElementById('tab-analytics').classList.contains('active')) renderAnalytics();
@@ -1801,21 +1799,32 @@ function renderAnalytics() {
 
   // Alertas: solo lo que requiere que Germán haga algo
   const alertas=[];
-  if(vencidos>0) alertas.push({c:'rojo', t:`Hay <b>${vencidos} pedidos con fecha de entrega pasada</b> sin entregar ni cobrar. Revisalos en 📅 Hoy.`});
-  if(tS>0) alertas.push({c:'amar', t:`Te deben <b>$${fmt(tS)}</b>. Son ${sub.filter(p=>saldoReal(p)>0).length} pedidos con saldo.`});
+  const plural=(n,s,p)=> n===1 ? s : p;
+  if(vencidos>0) alertas.push({c:'rojo', t:`Hay <b>${vencidos} ${plural(vencidos,'pedido','pedidos')} con la fecha de entrega pasada</b> sin entregar ni cobrar. ${plural(vencidos,'Revisalo','Revisalos')} en 📅 Hoy.`});
+  if(tS>0){
+    const nDeudores = sub.filter(p=>saldoReal(p)>0).length;
+    alertas.push({c:'amar', t:`Te deben <b>$${fmt(tS)}</b>, repartidos en ${nDeudores} ${plural(nDeudores,'pedido','pedidos')} con saldo.`});
+  }
   if(pctConc>60) alertas.push({c:'amar', t:`El <b>${pctConc}%</b> de la facturación viene de 10 maestras. Si una se va, se siente. Conviene ampliar la base.`});
   if(facturaPendiente>0) alertas.push({c:'amar', t:`Quedan <b>${facturaPendiente} facturas por emitir</b>.`});
-  if(metaObj){
-    // Proyeccion de cierre de mes al ritmo actual
+  if(metaObj && facturadoMes<metaObj){
     const diaHoy=ahora.getDate();
     const diasMes=new Date(ahora.getFullYear(),ahora.getMonth()+1,0).getDate();
-    const proy=Math.round(facturadoMes/Math.max(1,diaHoy)*diasMes);
-    if(facturadoMes<metaObj){
-      const llega = proy>=metaObj;
+    const avance=diaHoy/diasMes;
+    const falta=metaObj-facturadoMes;
+    const porDia=Math.ceil(falta/Math.max(1,diasMes-diaHoy));
+    if(avance < 0.4){
+      // Muy temprano para proyectar: los pedidos de fecha especial entran en bloque,
+      // una regla de tres acá miente feo. Mejor decir cuanto falta por dia.
+      alertas.push({c:'amar',
+        t:`Vas <b>$${fmtK(facturadoMes)}</b> de la meta de $${fmtK(metaObj)}, con ${diaHoy} de ${diasMes} días. Para llegar necesitás <b>$${fmtK(porDia)} por día</b> en lo que queda.`});
+    } else {
+      const proy=Math.round(facturadoMes/diaHoy*diasMes);
+      const llega=proy>=metaObj;
       alertas.push({c: llega?'verde':'amar',
         t: llega
-          ? `Al ritmo de este mes cerrás en <b>~$${fmtK(proy)}</b> — la meta de $${fmtK(metaObj)} la pasás. 🎯`
-          : `Al ritmo de este mes cerrás en <b>~$${fmtK(proy)}</b> y la meta es $${fmtK(metaObj)}. Faltan <b>$${fmtK(metaObj-proy)}</b> de ritmo extra.`});
+          ? `Si el mes sigue a este ritmo cerrás cerca de <b>$${fmtK(proy)}</b> y pasás la meta de $${fmtK(metaObj)}. 🎯`
+          : `Si el mes sigue a este ritmo cerrás cerca de <b>$${fmtK(proy)}</b>, contra una meta de $${fmtK(metaObj)}. Hacen falta <b>$${fmtK(porDia)} por día</b> para alcanzarla.`});
     }
   }
   const cols={rojo:{bd:'#FCA5A5',bg:'#FEF2F2'},amar:{bd:'#FCD34D',bg:'#FFFBEB'},verde:{bd:'#86EFAC',bg:'#F0FDF4'}};
@@ -1884,13 +1893,27 @@ let maestrasRanking = [];
 const METAS_DEFAULT = {'2026-04':7000000,'2026-05':12000000,'2026-06':12000000,'2026-07':12000000,'2026-08':12000000,'2026-09':12000000,'2026-10':12000000,'2026-11':12000000,'2026-12':15000000};
 let metasGuardadas = null; // lo que vino de Firebase
 
+// Las metas viven DENTRO de la coleccion pedidos: las reglas de Firestore solo
+// permiten escribir ahi. Se filtra este doc al armar la lista de pedidos.
+const DOC_METAS = '_config_metas';
+
 function metasActuales(){ return Object.assign({}, METAS_DEFAULT, metasGuardadas||{}); }
+
+// Respaldo local por si la nube falla
+function metasLocales(){
+  try{ return JSON.parse(localStorage.getItem('metasTaller')||'null'); }catch(e){ return null; }
+}
 
 // Escucha la config de metas en vivo
 function escucharMetas(){
+  const local = metasLocales();
+  if(local) metasGuardadas = local;   // arranca con lo ultimo que vio este celu
   try{
-    db.collection('config').doc('metas').onSnapshot(s=>{
-      metasGuardadas = s.exists ? (s.data().valores||{}) : {};
+    db.collection('pedidos').doc(DOC_METAS).onSnapshot(s=>{
+      if(s.exists && s.data().valores){
+        metasGuardadas = s.data().valores;
+        try{ localStorage.setItem('metasTaller', JSON.stringify(metasGuardadas)); }catch(e){}
+      }
       if(document.getElementById('tab-analytics')?.classList.contains('active')) renderAnalytics();
     }, e=>console.warn('metas', e));
   }catch(e){ console.warn('metas', e); }
@@ -2019,14 +2042,25 @@ window.guardarMetas = async function(){
     const v=parseInt(inp.value);
     if(v>0) valores[k]=v;
   });
+  // Guardo primero local, asi nunca se pierde lo que acabás de escribir
+  metasGuardadas = valores;
+  try{ localStorage.setItem('metasTaller', JSON.stringify(valores)); }catch(e){}
+  document.getElementById('overlay-metas').classList.remove('show');
+  renderAnalytics();
+
   try{
-    await db.collection('config').doc('metas').set({valores, updatedAt:new Date().toISOString()});
-    metasGuardadas=valores;
-    document.getElementById('overlay-metas').classList.remove('show');
-    renderAnalytics();
+    await db.collection('pedidos').doc(DOC_METAS).set({
+      esConfig:true, valores, updatedAt:new Date().toISOString()
+    });
     toast('\u{1F3AF} Metas guardadas');
-  }catch(e){ console.error(e); toast('\u{274C} No se pudieron guardar las metas'); }
+  }catch(e){
+    console.error('guardarMetas', e);
+    const cod = (e && (e.code||e.message)) ? ' ('+(e.code||e.message)+')' : '';
+    toast('\u{26A0}\u{FE0F} Guardadas en este celular, no en la nube'+cod);
+  }
 }
+// Se engancha acá abajo, despues de declarar DOC_METAS
+escucharMetas();
 // ==================== FIN METAS ====================
 
 // --- IDENTIDAD DE MAESTRA ---
