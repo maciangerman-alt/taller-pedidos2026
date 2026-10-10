@@ -93,6 +93,8 @@
   .imp-item input { width:52px; text-align:center; font-size:13px; font-weight:800; border:1.5px solid var(--borde); border-radius:6px; padding:3px; font-family:'DM Sans',sans-serif; }
   .imp-item input.tiene { border-color:#BE185D; background:#FDF2F8; color:#BE185D; }
   .imp-tot { font-size:12px; font-weight:700; color:#BE185D; }
+  .imp-mas { margin-top:7px; font-size:11px; font-weight:700; background:white; color:var(--gris); border:1.5px dashed var(--borde); border-radius:100px; padding:5px 13px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .imp-mas:hover { border-color:#F9A8D4; color:#BE185D; background:#FDF2F8; }
   .imp-pie { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; flex-wrap:wrap; border-top:1px dashed var(--borde); padding-top:8px; }
   .imp-total-box { display:flex; align-items:center; gap:6px; }
   .imp-total-box label { font-size:11px; color:var(--gris); font-weight:700; }
@@ -1054,13 +1056,22 @@
         Leí los pedidos comunes y traté de reconocer los productos del Día de la Madre.
         <b>Revisá y corregí</b> lo que haga falta. Nada se guarda hasta que toques Confirmar.
       </div>
+      <div style="background:#FDF2F8;border:1.5px solid #F9A8D4;border-radius:10px;padding:10px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:700;color:#BE185D">Pedidos desde</span>
+        <input type="date" id="imp-desde" onchange="abrirImportador(true)" style="border:1.5px solid #F9A8D4;border-radius:8px;padding:5px 8px;font-size:13px;font-family:'DM Sans',sans-serif;">
+        <span style="font-size:11px;color:var(--gris)">para no mezclar pedidos viejos</span>
+      </div>
       <div id="imp-resumen" style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;"></div>
       <div id="imp-acciones" style="display:none;margin-bottom:12px;">
         <button onclick="corregirCentavos()" style="background:#FEF3C7;color:#B45309;border:1.5px solid #FCD34D;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">
-          \u{1FA84} Corregir de una los que difieren por menos de $100
+          🪄 Corregir los que difieren por menos de $100
         </button>
         <span style="font-size:11px;color:var(--gris);margin-left:8px">son errores de tipeo, no descuentos</span>
       </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gris);margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="imp-ver-nada" onchange="renderImportador()" style="width:16px;height:16px;cursor:pointer;">
+        <span>Mostrar también los que no reconocí <b id="imp-n-nada">0</b> (suelen ser de otro rubro: puf, átomos, títeres)</span>
+      </label>
       <div id="imp-lista" style="max-height:48vh;overflow-y:auto;margin-bottom:14px;"></div>
       <div style="display:flex;gap:10px">
         <button onclick="cerrarImportador()" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
@@ -4211,14 +4222,32 @@ function parsearProductosMadre(texto){
 
 let impFilas = [];
 
-window.abrirImportador = function(){
-  // Solo pedidos comunes (sin evento) que tengan texto en productos
-  const candidatos = pedidos.filter(p => !p.evento && String(p.productos||'').trim());
+window.abrirImportador = function(reabrir){
+  const inpDesde = document.getElementById('imp-desde');
+  // Primera vez: arranca mirando los ultimos 45 dias
+  if(!reabrir && !inpDesde.value){
+    const d = new Date(); d.setDate(d.getDate()-45);
+    inpDesde.value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  const desde = inpDesde.value || '';
+
+  // Pedidos comunes (sin evento), con texto, dentro del periodo
+  const candidatos = pedidos.filter(p =>
+    !p.evento &&
+    String(p.productos||'').trim() &&
+    (!desde || (p.fechaPedido||'') >= desde)
+  );
+
   impFilas = candidatos.map(p=>{
     const r = parsearProductosMadre(p.productos);
     const calc = PRODUCTOS_MADRE.reduce((a,pr)=> a + (r.items[pr.id]||0)*pr.precio, 0);
     const estado = r.hits===0 ? 'nada' : (calc === (Number(p.total)||0) ? 'ok' : 'parcial');
     return {pedido:p, items:r.items, hits:r.hits, calc, estado};
+  });
+  // Los reconocidos primero
+  impFilas.sort((a,b)=>{
+    const o={ok:0,parcial:1,nada:2};
+    return (o[a.estado]-o[b.estado]) || (a.pedido.nombre||'').localeCompare(b.pedido.nombre||'');
   });
 
   const nOk = impFilas.filter(f=>f.estado==='ok').length;
@@ -4226,53 +4255,67 @@ window.abrirImportador = function(){
   const nNada = impFilas.filter(f=>f.estado==='nada').length;
 
   document.getElementById('imp-resumen').innerHTML = !impFilas.length
-    ? '<b>No encontré pedidos comunes con productos cargados.</b> Si ya los convertiste, van a estar en la lista de abajo del panel.'
-    : `Encontré <b>${impFilas.length} pedidos</b> cargados a mano:<br>
-       <span style="color:#15803D;font-weight:700">\u{2705} ${nOk} calzan perfecto</span> (el detalle suma igual que el total cargado) ·
+    ? '<b>No hay pedidos comunes con productos en ese período.</b> Probá con una fecha anterior.'
+    : `De <b>${impFilas.length} pedidos</b> en el período:<br>
+       <span style="color:#15803D;font-weight:700">\u{2705} ${nOk} calzan perfecto</span> ·
        <span style="color:#B45309;font-weight:700">\u{26A0}\u{FE0F} ${nPar} a revisar</span> ·
-       <span style="color:#B91C1C;font-weight:700">\u{274C} ${nNada} sin reconocer</span>`;
+       <span style="color:#6B7280;font-weight:700">${nNada} sin reconocer</span><br>
+       <span style="font-size:11px;color:var(--gris)">Abajo ves los <b>${nOk+nPar}</b> que sí reconocí. Solo esos se importan.</span>`;
 
   document.getElementById('imp-acciones').style.display = nPar>0 ? 'block' : 'none';
+  document.getElementById('imp-n-nada').textContent = '('+nNada+')';
   renderImportador();
   document.getElementById('overlay-importador').classList.add('show');
 }
 
 function renderImportador(){
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  if(!impFilas.length){
-    document.getElementById('imp-lista').innerHTML = '';
+  const verNada = document.getElementById('imp-ver-nada')?.checked;
+  const visibles = impFilas.map((f,i)=>({f,i})).filter(({f})=> verNada || f.estado!=='nada');
+
+  if(!visibles.length){
+    document.getElementById('imp-lista').innerHTML =
+      '<div style="text-align:center;padding:30px;color:var(--gris);font-size:13px">No hay pedidos reconocidos en este período.</div>';
     document.getElementById('imp-btn-confirmar').style.display='none';
     return;
   }
   document.getElementById('imp-btn-confirmar').style.display='block';
-  document.getElementById('imp-lista').innerHTML = impFilas.map((f,idx)=>{
+
+  document.getElementById('imp-lista').innerHTML = visibles.map(({f,i:idx})=>{
     const p = f.pedido;
     const badge = f.estado==='ok' ? '<span class="imp-badge ok">\u{2705} Calza perfecto</span>'
                 : f.estado==='parcial' ? '<span class="imp-badge parcial">\u{26A0}\u{FE0F} Revisar</span>'
-                : '<span class="imp-badge nada">\u{274C} Cargar a mano</span>';
+                : '<span class="imp-badge nada">Sin reconocer</span>';
     const dif = f.calc - (Number(p.total)||0);
     const aviso = (f.estado==='parcial' && f.hits>0)
-      ? `<div style="font-size:11px;color:#B45309;margin-top:4px;font-weight:600">El detalle suma $${fmt(f.calc)} y el pedido dice $${fmt(Number(p.total)||0)} (${dif>0?'+':''}$${fmt(dif)}). Ajustá las cantidades.</div>`
+      ? `<div style="font-size:11px;color:#B45309;margin-top:4px;font-weight:600">Difiere ${dif>0?'+':''}$${fmt(dif)} del total cargado</div>`
       : '';
-    const campos = PRODUCTOS_MADRE.map(pr=>{
+
+    // Solo los productos CON cantidad. El resto se despliega con el boton.
+    const conCant = PRODUCTOS_MADRE.filter(pr => (f.items[pr.id]||0) > 0);
+    const sinCant = PRODUCTOS_MADRE.filter(pr => !(f.items[pr.id]||0));
+    const campo = pr => {
       const v = f.items[pr.id]||0;
       return `<div class="imp-item">
         <span class="imp-item-nom">${pr.nombre}</span>
         <input type="number" min="0" value="${v}" class="${v>0?'tiene':''}"
                id="imp-${idx}-${pr.id}" oninput="recalcImpFila(${idx})">
       </div>`;
-    }).join('');
+    };
+
     return `<div class="imp-fila ${f.estado}" id="imp-fila-${idx}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div>
           <div class="imp-nombre">${esc(p.nombre)}</div>
-          <div class="imp-meta">\u{1F3EB} ${esc(p.escuela)} · Total cargado: <b>$${fmt(Number(p.total)||0)}</b></div>
+          <div class="imp-meta">\u{1F3EB} ${esc(p.escuela)} · ${p.fechaPedido||''} · Cargado: <b>$${fmt(Number(p.total)||0)}</b></div>
         </div>
         ${badge}
       </div>
       <div class="imp-texto">"${esc(p.productos)}"</div>
       ${aviso}
-      <div class="imp-items">${campos}</div>
+      <div class="imp-items">${conCant.map(campo).join('')}</div>
+      <div class="imp-items" id="imp-extra-${idx}" style="display:none">${sinCant.map(campo).join('')}</div>
+      ${sinCant.length ? `<button class="imp-mas" id="imp-mas-${idx}" onclick="verMasProductos(${idx})">+ agregar otro producto (${sinCant.length})</button>` : ''}
       <div class="imp-pie">
         <span class="imp-tot" id="imp-tot-${idx}">Detalle: $${fmt(f.calc)}</span>
         <div class="imp-total-box">
@@ -4283,6 +4326,17 @@ function renderImportador(){
       </div>
     </div>`;
   }).join('');
+}
+
+// Despliega los productos que quedaron en cero
+window.verMasProductos = function(idx){
+  const ex = document.getElementById(`imp-extra-${idx}`);
+  const bt = document.getElementById(`imp-mas-${idx}`);
+  if(!ex) return;
+  const abierto = ex.style.display !== 'none';
+  ex.style.display = abierto ? 'none' : 'grid';
+  const n = ex.querySelectorAll('.imp-item').length;
+  if(bt) bt.textContent = abierto ? `+ agregar otro producto (${n})` : '\u{2212} ocultar los demás';
 }
 
 window.recalcImpFila = function(idx){
