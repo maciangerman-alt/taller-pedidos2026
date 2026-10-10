@@ -1091,7 +1091,8 @@
       <div style="font-size:13px;color:var(--gris);margin-bottom:14px;line-height:1.5">
         Poné la meta de facturación de cada mes. Se guardan en la nube, así que las ves vos y tu mamá.
       </div>
-      <div id="metas-campos" style="max-height:46vh;overflow-y:auto;margin-bottom:14px"></div>
+      <div id="metas-campos" style="max-height:42vh;overflow-y:auto;margin-bottom:10px"></div>
+      <button onclick="restablecerMetas()" style="width:100%;background:white;color:var(--gris);border:1.5px dashed var(--borde);border-radius:10px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:12px">↩️ Volver a las metas sugeridas</button>
       <div style="display:flex;gap:10px">
         <button onclick="document.getElementById('overlay-metas').classList.remove('show')" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>
         <button onclick="guardarMetas()" style="flex:2;background:var(--madera-dark);color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">💾 Guardar metas</button>
@@ -1912,7 +1913,23 @@ let metasGuardadas = null; // lo que vino de Firebase
 // permiten escribir ahi. Se filtra este doc al armar la lista de pedidos.
 const DOC_METAS = '_config_metas';
 
-function metasActuales(){ return Object.assign({}, METAS_DEFAULT, metasGuardadas||{}); }
+// Si una meta guardada tiene ceros de más (5 veces la mediana del resto), la
+// ignoro y uso la sugerida. Un solo numero gigante rompia toda la escala.
+let metasDescartadas = [];
+function metasActuales(){
+  const g = metasGuardadas || {};
+  const vals = Object.values(g).filter(v=>v>0).sort((a,b)=>a-b);
+  metasDescartadas = [];
+  let limpio = g;
+  if(vals.length>=3){
+    const med = vals[Math.floor(vals.length/2)];
+    limpio = {};
+    Object.entries(g).forEach(([k,v])=>{
+      if(v > med*5){ metasDescartadas.push(k); } else { limpio[k]=v; }
+    });
+  }
+  return Object.assign({}, METAS_DEFAULT, limpio);
+}
 
 // Respaldo local por si la nube falla
 function metasLocales(){
@@ -1968,12 +1985,18 @@ function renderMesAMes(){
   if(!datos.length){ cont.innerHTML='<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos</div>'; return; }
 
   const mesHoy=hoy().substring(0,7);
-  const tope=Math.max(...datos.map(r=>Math.max(r.fact,r.meta)),1);
+  // La escala la manda lo que facturaste, no una meta suelta. Si una meta se va
+  // muy arriba, su línea se dibuja al tope con una flechita en vez de achatar todo.
+  const maxFact = Math.max(...datos.map(r=>r.fact), 1);
+  const techo = maxFact*2.5;
+  const metasOk = datos.map(r=>r.meta).filter(m=>m>0 && m<=techo);
+  const tope = Math.max(maxFact, ...(metasOk.length?metasOk:[0])) * 1.08;
   const H=130; // alto del area de barras
 
   const barras = datos.map(r=>{
     const hF=Math.max(2,Math.round(r.fact/tope*H));
-    const hM=r.meta? Math.round(r.meta/tope*H) : 0;
+    const fueraDeEscala = r.meta > tope;
+    const hM=r.meta? Math.min(H, Math.round(r.meta/tope*H)) : 0;
     const esHoy = r.mes===mesHoy;
     const futuro = r.mes > mesHoy;   // todavia no pasó: no es un fracaso
     // color segun cumplimiento
@@ -1993,6 +2016,7 @@ function renderMesAMes(){
     return `<div style="flex:1;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:4px">
       <div style="position:relative;width:100%;height:${H+14}px;display:flex;align-items:flex-end;justify-content:center">
         ${hM?`<div style="position:absolute;left:0;right:0;bottom:${hM}px;border-top:2px dashed #BE185D;opacity:${futuro?'.4':'.75'}"></div>`:''}
+        ${fueraDeEscala?`<div title="la meta de este mes se sale del gráfico" style="position:absolute;left:0;right:0;bottom:${hM}px;text-align:center;font-size:11px;color:#BE185D;font-weight:800">\u{2191}</div>`:''}
         <div style="width:68%;height:${hF}px;background:${col};border-radius:6px 6px 0 0;${esHoy?'outline:2px solid var(--madera-dark);outline-offset:1px':''}"></div>
         ${etiqueta}
       </div>
@@ -2053,6 +2077,17 @@ window.abrirMetas = function(){
   }
   document.getElementById('metas-campos').innerHTML=filas.join('');
   document.getElementById('overlay-metas').classList.add('show');
+}
+
+// Borra lo guardado y deja las metas que vienen de fábrica
+window.restablecerMetas = async function(){
+  if(!confirm('¿Volver a las metas sugeridas?\n\nSe borran las que cargaste vos.')) return;
+  metasGuardadas = {};
+  try{ localStorage.removeItem('metasTaller'); }catch(e){}
+  try{ await db.collection('pedidos').doc(DOC_METAS).set({esConfig:true, valores:{}, updatedAt:new Date().toISOString()}); }catch(e){}
+  abrirMetas();          // recarga el modal con las sugeridas
+  renderAnalytics();
+  toast('\u{21A9}\u{FE0F} Metas restablecidas');
 }
 
 window.guardarMetas = async function(){
