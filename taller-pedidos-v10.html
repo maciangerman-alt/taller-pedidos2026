@@ -1083,6 +1083,22 @@
     </div>
   </div>
 
+  <!-- MODAL EDITAR METAS -->
+  <div class="overlay" id="overlay-metas" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🎯 Metas mensuales</div>
+      <div style="font-size:13px;color:var(--gris);margin-bottom:14px;line-height:1.5">
+        Poné la meta de facturación de cada mes. Se guardan en la nube, así que las ves vos y tu mamá.
+      </div>
+      <div id="metas-campos" style="max-height:46vh;overflow-y:auto;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('overlay-metas').classList.remove('show')" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Cancelar</button>
+        <button onclick="guardarMetas()" style="flex:2;background:var(--madera-dark);color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">💾 Guardar metas</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL DUPLICADOS -->
   <div class="overlay" id="overlay-dups" onclick="if(event.target===this)this.classList.remove('show')">
     <div class="modal" style="max-width:720px">
@@ -1166,6 +1182,15 @@
         <span id="meta-resta">Faltan $0</span>
       </div>
     </div>
+
+    <!-- MES A MES VS OBJETIVO -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 4px">
+      <div class="analytics-title" style="margin:0">📈 Mes a mes vs objetivo</div>
+      <button onclick="abrirMetas()" style="font-size:11px;font-weight:700;background:white;color:var(--madera-dark);border:1.5px solid var(--borde);border-radius:100px;padding:6px 13px;cursor:pointer;font-family:'DM Sans',sans-serif">✏️ Editar metas</button>
+    </div>
+    <div style="font-size:11px;color:var(--gris);margin-bottom:10px">Cada barra es un mes. La línea punteada es la meta.</div>
+    <div id="mes-a-mes"><div class="loading">Calculando...</div></div>
+    <div id="mes-a-mes-resumen" style="margin-top:4px"></div>
 
     <!-- GRÁFICO SEMANAL -->
     <div class="weekly-chart">
@@ -1469,6 +1494,8 @@ window.hacerLogin = async function(){
 
 let pedidos = [], filtroActual = 'todos', editandoId = null, periodoActual = 'semana', facturaOn = false, facturaEmitidaOn = false, jardinOn = false, padreOn = false, estudianteOn = false, madreOn = false;
 
+escucharMetas();
+
 db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
   pedidos = []; snap.forEach(d => pedidos.push({id:d.id,...d.data()}));
   renderPedidos(); renderCaja(); actualizarHeader();
@@ -1640,7 +1667,7 @@ function renderAnalytics() {
   const anFP=document.getElementById('an-factura-pendiente');if(anFP)anFP.textContent=facturaPendiente;
 
   // --- META MENSUAL ---
-  const METAS = {'2026-04':7000000,'2026-05':12000000,'2026-06':12000000,'2026-07':12000000,'2026-08':12000000,'2026-09':12000000,'2026-10':12000000,'2026-11':12000000,'2026-12':15000000};
+  const METAS = metasActuales();
   const mesActual=`${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}`;
   const metaObj=METAS[mesActual]||null;
   const facturadoMes=pedidos.filter(p=>(p.fechaPedido||'').substring(0,7)===mesActual).reduce((a,p)=>a+(Number(p.total)||0),0);
@@ -1737,6 +1764,9 @@ function renderAnalytics() {
   document.getElementById('chart-escuelas').innerHTML=escs.length
     ?escs.map(([n,v])=>`<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxE*100).toFixed(0)}%"></div></div><div class="bar-val">$${fmtK(v)}</div></div>`).join('')
     :'<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos suficientes aún</div>';
+
+  // --- MES A MES VS OBJETIVO ---
+  renderMesAMes();
 
   // --- MAESTRAS PARA PREMIAR ---
   maestrasRanking = rankingMaestras(sub);
@@ -1849,6 +1879,155 @@ function catalogos(){
 }
 
 let maestrasRanking = [];
+
+// ==================== METAS Y MES A MES ====================
+const METAS_DEFAULT = {'2026-04':7000000,'2026-05':12000000,'2026-06':12000000,'2026-07':12000000,'2026-08':12000000,'2026-09':12000000,'2026-10':12000000,'2026-11':12000000,'2026-12':15000000};
+let metasGuardadas = null; // lo que vino de Firebase
+
+function metasActuales(){ return Object.assign({}, METAS_DEFAULT, metasGuardadas||{}); }
+
+// Escucha la config de metas en vivo
+function escucharMetas(){
+  try{
+    db.collection('config').doc('metas').onSnapshot(s=>{
+      metasGuardadas = s.exists ? (s.data().valores||{}) : {};
+      if(document.getElementById('tab-analytics')?.classList.contains('active')) renderAnalytics();
+    }, e=>console.warn('metas', e));
+  }catch(e){ console.warn('metas', e); }
+}
+
+const MESNOM = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function labelMes(k){
+  const [y,m]=k.split('-');
+  return `${MESNOM[parseInt(m)-1]} ${y.slice(2)}`;
+}
+
+// Junta facturado real por mes y lo compara con la meta
+function datosMesAMes(){
+  const METAS = metasActuales();
+  const m={};
+  pedidos.forEach(p=>{
+    const k=String(p.fechaPedido||'').substring(0,7);
+    if(!/^\d{4}-\d{2}$/.test(k)) return;
+    if(!m[k]) m[k]={mes:k, fact:0, cob:0, ped:0};
+    const t=Number(p.total)||0;
+    m[k].fact+=t; m[k].ped++;
+    m[k].cob += p.estado==='cobrado' ? t : (Number(p.senia)||0);
+  });
+  // incluyo meses con meta aunque todavia no tengan pedidos
+  Object.keys(METAS).forEach(k=>{ if(!m[k]) m[k]={mes:k,fact:0,cob:0,ped:0}; });
+  return Object.values(m).sort((a,b)=>a.mes.localeCompare(b.mes)).map(r=>{
+    const meta=METAS[r.mes]||0;
+    return {...r, meta, pct: meta? Math.round(r.fact/meta*100) : null,
+            ticket: r.ped? Math.round(r.fact/r.ped):0};
+  });
+}
+
+function renderMesAMes(){
+  const cont=document.getElementById('mes-a-mes');
+  if(!cont) return;
+  const datos=datosMesAMes();
+  if(!datos.length){ cont.innerHTML='<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos</div>'; return; }
+
+  const mesHoy=hoy().substring(0,7);
+  const tope=Math.max(...datos.map(r=>Math.max(r.fact,r.meta)),1);
+  const H=130; // alto del area de barras
+
+  const barras = datos.map(r=>{
+    const hF=Math.max(2,Math.round(r.fact/tope*H));
+    const hM=r.meta? Math.round(r.meta/tope*H) : 0;
+    const esHoy = r.mes===mesHoy;
+    const futuro = r.mes > mesHoy;   // todavia no pasó: no es un fracaso
+    // color segun cumplimiento
+    const col = futuro || r.pct===null ? '#E2E8F0'
+              : r.pct>=100 ? 'linear-gradient(180deg,#FBBF24,#D97706)'
+              : r.pct>=85  ? 'linear-gradient(180deg,#86EFAC,#15803D)'
+              : r.pct>=50  ? 'linear-gradient(180deg,#FCD34D,#B45309)'
+              : 'linear-gradient(180deg,#FCA5A5,#B91C1C)';
+    const colPct = futuro || r.pct===null ? 'var(--gris)'
+              : r.pct>=100 ? '#D97706' : r.pct>=85 ? 'var(--verde)' : r.pct>=50 ? '#B45309' : 'var(--rojo)';
+    const txtPct = futuro ? (r.meta?'meta $'+fmtK(r.meta):'—') : (r.pct===null?'—':r.pct+'%');
+    return `<div style="flex:1;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="font-size:9.5px;font-weight:800;color:var(--texto);white-space:nowrap">${r.fact?'$'+fmtK(r.fact):''}</div>
+      <div style="position:relative;width:100%;height:${H}px;display:flex;align-items:flex-end;justify-content:center">
+        ${hM?`<div style="position:absolute;left:0;right:0;bottom:${hM}px;border-top:2px dashed #BE185D;opacity:${futuro?'.4':'.75'}"></div>`:''}
+        <div style="width:68%;height:${hF}px;background:${col};border-radius:6px 6px 0 0;${esHoy?'outline:2px solid var(--madera-dark);outline-offset:1px':''}"></div>
+      </div>
+      <div style="font-size:10px;font-weight:${esHoy?'800':'600'};color:${esHoy?'var(--madera-dark)':'var(--gris)'};white-space:nowrap">${labelMes(r.mes)}</div>
+      <div style="font-size:9.5px;font-weight:800;color:${colPct};white-space:nowrap">${txtPct}</div>
+    </div>`;
+  }).join('');
+
+  cont.innerHTML = `<div style="background:white;border:1.5px solid var(--borde);border-radius:14px;padding:14px 12px;overflow-x:auto">
+      <div style="display:flex;gap:7px;align-items:flex-end;min-width:${datos.length*48}px">${barras}</div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--gris);margin-top:7px;padding-left:4px">
+      <span><b style="color:#D97706">■</b> meta cumplida</span>
+      <span><b style="color:var(--verde)">■</b> 85% o más</span>
+      <span><b style="color:#B45309">■</b> 50-84%</span>
+      <span><b style="color:var(--rojo)">■</b> menos de 50%</span>
+      <span><b style="color:#BE185D">╌</b> meta</span>
+    </div>`;
+
+  // Lectura en palabras: lo que importa del cuadro
+  const conMeta = datos.filter(r=>r.meta>0 && r.mes<=mesHoy);
+  const cumplidos = conMeta.filter(r=>r.pct>=100).length;
+  const mejor = conMeta.slice().sort((a,b)=>b.pct-a.pct)[0];
+  const activos = conMeta.filter(r=>r.ped>=10); // meses con actividad real
+  const promMes = activos.length ? Math.round(activos.reduce((a,r)=>a+r.fact,0)/activos.length) : 0;
+  const metaProm = activos.length ? Math.round(activos.reduce((a,r)=>a+r.meta,0)/activos.length) : 0;
+  const esteMes = datos.find(r=>r.mes===mesHoy);
+
+  const lineas=[];
+  if(mejor) lineas.push(`Tu mejor mes fue <b>${labelMes(mejor.mes)}</b> con <b>$${fmtK(mejor.fact)}</b> (${mejor.pct}% de la meta).`);
+  if(activos.length>=3){
+    lineas.push(`Promedio real de los meses con actividad: <b>$${fmtK(promMes)}</b> por mes, contra una meta promedio de <b>$${fmtK(metaProm)}</b>.`);
+    if(metaProm > promMes*1.4) lineas.push(`La meta está <b>${(metaProm/promMes).toFixed(1)}x por encima</b> de lo que facturás normalmente. Tocá <b>Editar metas</b> y ponelas en algo que puedas perseguir de verdad.`);
+  }
+  if(cumplidos===0 && conMeta.length>=3) lineas.push(`Todavía no cerraste ningún mes en el 100%.`);
+  if(esteMes && esteMes.meta){
+    const d=new Date(); const dia=d.getDate();
+    const diasMes=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+    lineas.push(`<b>${labelMes(mesHoy)}</b> va en <b>$${fmtK(esteMes.fact)}</b> (${esteMes.pct}%) con ${dia} de ${diasMes} días cursados.`);
+  }
+  document.getElementById('mes-a-mes-resumen').innerHTML = lineas.length
+    ? `<div style="background:var(--crema);border-radius:10px;padding:11px 13px;font-size:12.5px;line-height:1.65">${lineas.join('<br>')}</div>` : '';
+}
+
+window.abrirMetas = function(){
+  const M=metasActuales();
+  // 12 meses: 6 para atras y 6 para adelante desde hoy
+  const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()-6);
+  const filas=[];
+  for(let i=0;i<13;i++){
+    const k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    filas.push(`<div style="display:flex;align-items:center;gap:9px;margin-bottom:7px">
+      <span style="font-size:12px;font-weight:700;color:var(--texto);min-width:62px">${labelMes(k)}</span>
+      <input type="number" id="meta-${k}" value="${M[k]||''}" placeholder="sin meta"
+             style="flex:1;border:1.5px solid var(--borde);border-radius:8px;padding:7px 10px;font-size:13px;text-align:right;font-family:'DM Sans',sans-serif">
+    </div>`);
+    d.setMonth(d.getMonth()+1);
+  }
+  document.getElementById('metas-campos').innerHTML=filas.join('');
+  document.getElementById('overlay-metas').classList.add('show');
+}
+
+window.guardarMetas = async function(){
+  const valores={};
+  document.querySelectorAll('#metas-campos input').forEach(inp=>{
+    const k=inp.id.replace('meta-','');
+    const v=parseInt(inp.value);
+    if(v>0) valores[k]=v;
+  });
+  try{
+    await db.collection('config').doc('metas').set({valores, updatedAt:new Date().toISOString()});
+    metasGuardadas=valores;
+    document.getElementById('overlay-metas').classList.remove('show');
+    renderAnalytics();
+    toast('\u{1F3AF} Metas guardadas');
+  }catch(e){ console.error(e); toast('\u{274C} No se pudieron guardar las metas'); }
+}
+// ==================== FIN METAS ====================
 
 // --- IDENTIDAD DE MAESTRA ---
 // Hay 13 "Cecilia" distintas en escuelas distintas: con el nombre solo no alcanza.
