@@ -3726,7 +3726,7 @@ const PRODUCTOS_MADRE = [
   { id:'portacelular_madre', nombre:'Portacelular Día de la Madre',  precio:2000 },
   { id:'bandeja_madre',      nombre:'Bandeja Día de la Madre',       precio:2200 },
   { id:'caja_multiusos',     nombre:'Caja Multiusos',                precio:2500 },
-  { id:'cajitas_te',         nombre:'Cajitas de Té',                 precio:2500 },
+  { id:'cajitas_te',         nombre:'Casita de Té',                  precio:2500 },
   { id:'portarrollo',        nombre:'Portarrollo',                   precio:2500 },
   { id:'alhajero',           nombre:'Alhajero',                      precio:2500 },
   { id:'caja_te_madre',      nombre:'Caja de Té Día de la Madre',    precio:2800 },
@@ -4123,10 +4123,14 @@ window.exportarMadre = function(){
 // Alias por producto. Ordenados internamente de mas especifico a menos.
 const ALIAS_MADRE = {
   // Calibrado con el vocabulario real de los pedidos cargados a mano.
-  caja_te_madre:      ['cajas de te dia de la madre','caja de te dia de la madre','cajas de te','caja de te','cajas te','caja te'],
+  // OJO: "cajita de te" ES la de $2800 (la de $2500 se dice "casita de te"). Confirmado por Germán.
+  caja_te_madre:      ['cajitas de te dia de la madre','cajita de te dia de la madre','cajas de te dia de la madre','caja de te dia de la madre',
+                       'cajitas de te','cajita de te','cajas de te','caja de te','cajitas te','cajita te','cajas te','caja te'],
   caja_multiusos:     ['cajas multiusos','caja multiusos','cajas multiuso','caja multiuso','multiusos','multiuso'],
   // "casas de te" / "casitas" es como le dicen a las cajitas de te ($2500, verificado)
-  cajitas_te:         ['cajitas de te','cajita de te','casitas de te','casita de te','casas de te','casa de te','cajitas te','cajita te','casitas te','casita te','casas te','casa te','cajitas','cajita','casitas','casita','casas'],
+  // Solo la familia "casa/casita". NO lleva "cajita" (esa es la de $2800).
+  cajitas_te:         ['casitas de te dia de la madre','casita de te dia de la madre','casitas de te','casita de te','casas de te','casa de te',
+                       'casitas te','casita te','casas te','casa te','casitas','casita','casas'],
   portacelular_madre: ['portacelulares dia de la madre','portacelular dia de la madre','porta celulares','porta celular','porta celus','porta celu','portacelulares','portacelular','portacelus','portacelu','portacels','portacel','porta cels','porta cel','celulares','celular','celus','celu'],
   portarretrato_madre:['portarretratos','portarretrato','porta retratos','porta retrato','portaretratos','portaretrato','porta ret','porta rets','porta tr','porta trs','portarret','portaret','portatr','retratos','retrato'],
   portarrollo:        ['portarrollos','portarrollo','porta rollos','porta rollo','portarroll','rollos','rollo'],
