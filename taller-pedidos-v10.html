@@ -938,7 +938,10 @@
       <button onclick="abrirModalMadre()" style="flex:1;background:#BE185D;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Nuevo pedido</button>
       <button onclick="exportarMadre()" style="flex:1;background:white;color:#BE185D;border:2px solid #BE185D;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">📥 Excel por producto</button>
     </div>
-    <button onclick="abrirImportador()" style="width:100%;background:#FDF2F8;color:#BE185D;border:2px dashed #F9A8D4;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:16px;">🔄 Importar pedidos cargados a mano</button>
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button onclick="abrirImportador()" style="flex:1;background:#FDF2F8;color:#BE185D;border:2px dashed #F9A8D4;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">🔄 Importar cargados a mano</button>
+      <button onclick="abrirDuplicados()" id="btn-dups" style="flex:1;background:white;color:#B45309;border:2px solid #FCD34D;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">🔎 Buscar repetidos</button>
+    </div>
 
     <input type="text" placeholder="🔍  Buscar por nombre o escuela..." oninput="renderMadre()" id="buscador-madre" style="width:100%;background:white;border:2px solid #F9A8D4;border-radius:12px;padding:13px 18px;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box;color:var(--texto);transition:border-color 0.2s;" onfocus="this.style.borderColor='#BE185D'" onblur="this.style.borderColor='#F9A8D4'">
 
@@ -1080,6 +1083,37 @@
     </div>
   </div>
 
+  <!-- MODAL DUPLICADOS -->
+  <div class="overlay" id="overlay-dups" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal" style="max-width:720px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🔎 Pedidos que parecen repetidos</div>
+      <div style="font-size:13px;color:var(--gris);margin-bottom:14px;line-height:1.5">
+        Busco la misma maestra con pedidos parecidos. <b>Revisá antes de borrar</b> — a veces una maestra pide dos veces de verdad.
+      </div>
+      <div id="dups-resumen" style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;"></div>
+      <div id="dups-lista" style="max-height:52vh;overflow-y:auto;margin-bottom:14px"></div>
+      <button onclick="document.getElementById('overlay-dups').classList.remove('show')" style="width:100%;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Cerrar</button>
+    </div>
+  </div>
+
+  <!-- MODAL RESULTADO DE IMPORTACION -->
+  <div class="overlay" id="overlay-impres" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Resultado de la importación</div>
+      <div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px;padding:12px;margin-bottom:12px;font-size:14px;">
+        ✅ Se importaron <b id="impres-ok" style="font-size:18px">0</b> pedidos bien.
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--texto);margin-bottom:8px">Estos no entraron:</div>
+      <div id="impres-detalle" style="max-height:40vh;overflow-y:auto;margin-bottom:12px"></div>
+      <div style="font-size:11px;color:var(--gris);margin-bottom:12px;line-height:1.5">
+        Si dice <b>"ya estaba importado"</b> está todo bien, no se duplicó nada. Si dice <b>"lo borraste"</b>, ese pedido ya no existe.
+      </div>
+      <button onclick="document.getElementById('overlay-impres').classList.remove('show')" style="width:100%;background:#BE185D;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Entendido</button>
+    </div>
+  </div>
+
   <!-- PANEL CLIENTES -->
   <div id="panel-clientes" style="display:none">
     <div style="background:var(--madera-dark);color:white;border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
@@ -1156,12 +1190,36 @@
       <div class="periodo-card"><div class="periodo-val" id="an-factura">0%</div><div class="periodo-label">Con factura</div></div>
       <div class="periodo-card"><div class="periodo-val" id="an-factura-pendiente" style="color:var(--rojo)">0</div><div class="periodo-label">🧾 Fact. pendientes</div></div>
     </div>
+    <div class="analytics-title">❤️‍🩹 Salud del negocio</div>
+    <div class="periodo-cards">
+      <div class="periodo-card"><div class="periodo-val" id="an-cobranza">0%</div><div class="periodo-label">Cobranza</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-vencidos" style="color:var(--rojo)">0</div><div class="periodo-label">⏰ Entregas vencidas</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-recurrentes">0%</div><div class="periodo-label">Maestras que repiten</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-concentracion">0%</div><div class="periodo-label">Top 10 = % ventas</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-nuevas">0</div><div class="periodo-label">Maestras nuevas</div></div>
+      <div class="periodo-card"><div class="periodo-val" id="an-unidades">0</div><div class="periodo-label">Unidades producidas</div></div>
+    </div>
+    <div id="an-alertas" style="margin-top:10px"></div>
+
     <div class="analytics-title">🏆 Productos más vendidos</div>
+    <div style="font-size:11px;color:var(--gris);margin:-8px 0 8px">Unidades reales, contadas de los pedidos por producto</div>
     <div class="bar-chart" id="chart-productos"><div class="loading">Calculando...</div></div>
+
+    <div class="analytics-title">🎁 Maestras para premiar</div>
+    <div style="font-size:11px;color:var(--gris);margin:-8px 0 8px">Ordenadas por lo que te compraron en total. El puntaje mezcla plata y cantidad de pedidos.</div>
+    <div id="lista-maestras"><div class="loading">Calculando...</div></div>
+
     <div class="analytics-title">🏫 Escuelas top</div>
     <div class="bar-chart" id="chart-escuelas"><div class="loading">Calculando...</div></div>
+
+    <div class="analytics-title">📆 Cómo fue cada fecha especial</div>
+    <div id="tabla-eventos"><div class="loading">Calculando...</div></div>
+
     <div class="export-row" style="margin-top:16px">
       <button class="btn-export" onclick="exportarAnalytics()">📥 Reporte completo Excel</button>
+    </div>
+    <div class="export-row" style="margin-top:8px">
+      <button class="btn-export" onclick="exportarMaestras()" style="background:#FDF2F8;color:#BE185D;border:2px solid #F9A8D4">🎁 Excel de maestras para premiar</button>
     </div>
   </div>
 
@@ -1628,30 +1686,49 @@ function renderAnalytics() {
     </div>`;
   }).join('');
 
-  const prodCount={};
-  const IGNORAR=['mil','pesos','combo','unidad','unidades','set','kit','por','para','con','sin','mas','de','la','el','los','las','un','una','del','al','en','y','o','que','se','su','total','precio','valor'];
+  // --- PRODUCTOS MAS VENDIDOS (unidades reales) ---
+  // Primero los pedidos con detalle por producto. Para los de texto libre, fallback al regex.
+  const prodCount={}, prodPlata={};
+  let unidades=0, conDetalle=0;
   sub.forEach(p=>{
+    const cat = catalogos()[p.evento];
+    const mapa = cat ? (p[cat.campo]||null) : null;
+    if(mapa && Object.keys(mapa).length){
+      conDetalle++;
+      cat.lista.forEach(pr=>{
+        const q = Number(mapa[pr.id])||0;
+        if(q>0){
+          prodCount[pr.nombre]=(prodCount[pr.nombre]||0)+q;
+          prodPlata[pr.nombre]=(prodPlata[pr.nombre]||0)+q*pr.precio;
+          unidades+=q;
+        }
+      });
+      return;
+    }
+    // Texto libre: estimacion
     if(!p.productos)return;
-    // Buscar patron: numero seguido de nombre de producto
+    const IGNORAR=['mil','pesos','combo','unidad','unidades','set','kit','por','para','con','sin','mas','de','la','el','los','las','un','una','del','al','en','y','o','que','se','su','total','precio','valor'];
     const rx=/(\d+)\s+([a-záéíóúüñ][a-záéíóúüñ\s]{2,})/gi;
     let m;
     while((m=rx.exec(p.productos))!==null){
       const cant=parseInt(m[1]);
-      // Ignorar cantidades muy grandes (probablemente precios) o muy pequeñas palabras
       if(cant>500)continue;
       const prod=m[2].trim().toLowerCase().replace(/\s+/g,' ');
-      // Ignorar palabras de la blacklist o muy cortas
       if(IGNORAR.includes(prod)||prod.length<4)continue;
-      // Tomar solo las primeras 3 palabras del nombre del producto
       const prodCorto=prod.split(' ').slice(0,3).join(' ');
       prodCount[prodCorto]=(prodCount[prodCorto]||0)+cant;
+      unidades+=cant;
     }
   });
-  const prods=Object.entries(prodCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const prods=Object.entries(prodCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
   const maxP=prods[0]?.[1]||1;
   document.getElementById('chart-productos').innerHTML=prods.length
-    ?prods.map(([n,c])=>`<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill verde" style="width:${(c/maxP*100).toFixed(0)}%"></div></div><div class="bar-val">${c} u.</div></div>`).join('')
+    ?prods.map(([n,c])=>{
+      const pl = prodPlata[n] ? ` · $${fmtK(prodPlata[n])}` : '';
+      return `<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill verde" style="width:${(c/maxP*100).toFixed(0)}%"></div></div><div class="bar-val">${c} u.${pl}</div></div>`;
+    }).join('')
     :'<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos suficientes aún</div>';
+  const anU=document.getElementById('an-unidades'); if(anU) anU.textContent=fmtK(unidades);
 
   const escCount={};
   sub.forEach(p=>{const e=p.escuela||'Sin escuela';escCount[e]=(escCount[e]||0)+(Number(p.total)||0);});
@@ -1660,6 +1737,268 @@ function renderAnalytics() {
   document.getElementById('chart-escuelas').innerHTML=escs.length
     ?escs.map(([n,v])=>`<div class="bar-row"><div class="bar-label" title="${n}">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxE*100).toFixed(0)}%"></div></div><div class="bar-val">$${fmtK(v)}</div></div>`).join('')
     :'<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos suficientes aún</div>';
+
+  // --- MAESTRAS PARA PREMIAR ---
+  maestrasRanking = rankingMaestras(sub);
+  renderMaestras(maestrasRanking);
+
+  // --- SALUD DEL NEGOCIO ---
+  const esc2 = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const pctCob = tF>0 ? Math.round(tC/tF*100) : 0;
+  const hoyS = hoy();
+  const vencidos = sub.filter(p=> p.estado!=='cobrado' && p.estado!=='entregado' && (p.fechaEntrega||'') && p.fechaEntrega < hoyS).length;
+  const repiten = maestrasRanking.filter(m=>m.pedidos>1).length;
+  const pctRep = maestrasRanking.length ? Math.round(repiten/maestrasRanking.length*100) : 0;
+  const top10 = maestrasRanking.slice(0,10).reduce((a,m)=>a+m.plata,0);
+  const pctConc = tF>0 ? Math.round(top10/tF*100) : 0;
+  // Nuevas = su primer pedido de la historia cae dentro del periodo
+  const primerPedido = {};
+  pedidos.forEach(p=>{
+    const k=claveMaestra(p); if(!k) return;
+    const f=p.fechaPedido||'9999';
+    if(!primerPedido[k] || f<primerPedido[k]) primerPedido[k]=f;
+  });
+  const enPeriodo = new Set(sub.map(p=>claveMaestra(p)).filter(Boolean));
+  const minF = sub.reduce((a,p)=> !a || (p.fechaPedido||'9999')<a ? (p.fechaPedido||a) : a, null);
+  const nuevas = [...enPeriodo].filter(k=> minF && primerPedido[k] >= minF).length;
+
+  const set = (id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  set('an-cobranza', pctCob+'%');
+  set('an-vencidos', vencidos);
+  set('an-recurrentes', pctRep+'%');
+  set('an-concentracion', pctConc+'%');
+  set('an-nuevas', nuevas);
+
+  // Alertas: solo lo que requiere que Germán haga algo
+  const alertas=[];
+  if(vencidos>0) alertas.push({c:'rojo', t:`Hay <b>${vencidos} pedidos con fecha de entrega pasada</b> sin entregar ni cobrar. Revisalos en 📅 Hoy.`});
+  if(tS>0) alertas.push({c:'amar', t:`Te deben <b>$${fmt(tS)}</b>. Son ${sub.filter(p=>saldoReal(p)>0).length} pedidos con saldo.`});
+  if(pctConc>60) alertas.push({c:'amar', t:`El <b>${pctConc}%</b> de la facturación viene de 10 maestras. Si una se va, se siente. Conviene ampliar la base.`});
+  if(facturaPendiente>0) alertas.push({c:'amar', t:`Quedan <b>${facturaPendiente} facturas por emitir</b>.`});
+  if(metaObj){
+    // Proyeccion de cierre de mes al ritmo actual
+    const diaHoy=ahora.getDate();
+    const diasMes=new Date(ahora.getFullYear(),ahora.getMonth()+1,0).getDate();
+    const proy=Math.round(facturadoMes/Math.max(1,diaHoy)*diasMes);
+    if(facturadoMes<metaObj){
+      const llega = proy>=metaObj;
+      alertas.push({c: llega?'verde':'amar',
+        t: llega
+          ? `Al ritmo de este mes cerrás en <b>~$${fmtK(proy)}</b> — la meta de $${fmtK(metaObj)} la pasás. 🎯`
+          : `Al ritmo de este mes cerrás en <b>~$${fmtK(proy)}</b> y la meta es $${fmtK(metaObj)}. Faltan <b>$${fmtK(metaObj-proy)}</b> de ritmo extra.`});
+    }
+  }
+  const cols={rojo:{bd:'#FCA5A5',bg:'#FEF2F2'},amar:{bd:'#FCD34D',bg:'#FFFBEB'},verde:{bd:'#86EFAC',bg:'#F0FDF4'}};
+  document.getElementById('an-alertas').innerHTML = alertas.map(a=>
+    `<div style="border:1.5px solid ${cols[a.c].bd};background:${cols[a.c].bg};border-radius:10px;padding:10px 12px;margin-bottom:7px;font-size:12.5px;line-height:1.5">${a.t}</div>`
+  ).join('');
+
+  // --- COMO FUE CADA FECHA ESPECIAL (siempre historico completo, no por periodo) ---
+  const evs=[
+    {k:'jardin2026',     n:'🎨 Día de los Jardines'},
+    {k:'padre2026',      n:'👔 Día del Padre'},
+    {k:'estudiante2026', n:'🎓 Día del Estudiante'},
+    {k:'madre2026',      n:'🌸 Día de la Madre'},
+    {k:null,             n:'🧸 Pedidos comunes'},
+  ].map(e=>{
+    const g = pedidos.filter(p=> e.k ? p.evento===e.k : !p.evento);
+    const plata = g.reduce((a,p)=>a+(Number(p.total)||0),0);
+    const cob = g.reduce((a,p)=> p.estado==='cobrado' ? a+(Number(p.total)||0) : a+(Number(p.senia)||0), 0);
+    const cat = e.k ? catalogos()[e.k] : null;
+    let uds=0;
+    if(cat) g.forEach(p=>{ const m=p[cat.campo]||{}; cat.lista.forEach(pr=> uds+=Number(m[pr.id])||0); });
+    const maestras = Object.keys(agruparMaestras(g)).length;
+    return {...e, n_ped:g.length, plata, cob, uds, maestras, ticket: g.length?Math.round(plata/g.length):0};
+  }).filter(e=>e.n_ped>0).sort((a,b)=>b.plata-a.plata);
+
+  const maxEv=Math.max(...evs.map(e=>e.plata),1);
+  document.getElementById('tabla-eventos').innerHTML = evs.map(e=>{
+    const pctC = e.plata>0 ? Math.round(e.cob/e.plata*100) : 0;
+    return `<div style="background:white;border:1.5px solid var(--borde);border-radius:12px;padding:12px 14px;margin-bottom:9px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="font-size:14px;font-weight:800;color:var(--texto)">${e.n}</div>
+        <div style="font-size:15px;font-weight:800;color:var(--madera-dark)">$${fmtK(e.plata)}</div>
+      </div>
+      <div style="height:7px;background:var(--crema-dark);border-radius:100px;overflow:hidden;margin-bottom:8px">
+        <div style="height:100%;width:${(e.plata/maxEv*100).toFixed(0)}%;background:linear-gradient(90deg,#BE185D,#F9A8D4);border-radius:100px"></div>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--gris)">
+        <span><b style="color:var(--texto)">${e.n_ped}</b> pedidos</span>
+        <span><b style="color:var(--texto)">${e.maestras}</b> maestras</span>
+        ${e.uds?`<span><b style="color:var(--texto)">${fmtK(e.uds)}</b> unidades</span>`:''}
+        <span>ticket <b style="color:var(--texto)">$${fmtK(e.ticket)}</b></span>
+        <span>cobrado <b style="color:${pctC>=90?'var(--verde)':pctC>=60?'#B45309':'var(--rojo)'}">${pctC}%</b></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Catalogo por evento, para contar unidades reales.
+// Se arma la primera vez que se usa: los PRODUCTOS_* se declaran mas abajo en el script.
+let _CATALOGOS = null;
+function catalogos(){
+  if(_CATALOGOS) return _CATALOGOS;
+  const safe = f => { try { return f() || []; } catch(e){ return []; } };
+  _CATALOGOS = {
+    jardin2026:     {campo:'itemsJardin',     lista: safe(()=>PRODUCTOS_JARDIN)},
+    padre2026:      {campo:'itemsPadre',      lista: safe(()=>PRODUCTOS_PADRE)},
+    estudiante2026: {campo:'itemsEstudiante', lista: safe(()=>PRODUCTOS_ESTUDIANTE)},
+    madre2026:      {campo:'itemsMadre',      lista: safe(()=>PRODUCTOS_MADRE)},
+  };
+  return _CATALOGOS;
+}
+
+let maestrasRanking = [];
+
+// --- IDENTIDAD DE MAESTRA ---
+// Hay 13 "Cecilia" distintas en escuelas distintas: con el nombre solo no alcanza.
+// Clave = nombre + escuela normalizada, y despues uno los grupos que comparten telefono.
+function normEscuela(s){
+  let t = normalizarTxt(s);
+  t = t.replace(/\b(escuela|esc|colegio|col|jardin|jard|instituto|inst|eni|barrio|ba|bo|nro|numero|num)\b/g,' ');
+  t = t.replace(/\b(tm|tt|turno manana|turno tarde)\b/g,' ');
+  return t.replace(/\s+/g,' ').trim();
+}
+function claveMaestra(p){
+  const n = normalizarTxt(p.nombre);
+  if(!n) return '';
+  return n+'|'+normEscuela(p.escuela);
+}
+function tel8(p){ const t=String(p.tel||'').replace(/\D/g,''); return t.length>=8 ? t.slice(-8) : ''; }
+
+// Devuelve { clave: [pedidos...] } con los grupos ya unidos por telefono
+function agruparMaestras(lista){
+  const g={};
+  lista.forEach(p=>{ const k=claveMaestra(p); if(!k) return; (g[k]=g[k]||[]).push(p); });
+  // union-find para unir por telefono repetido
+  const porTel={};
+  Object.keys(g).forEach(k=> g[k].forEach(p=>{ const t=tel8(p); if(t) (porTel[t]=porTel[t]||new Set()).add(k); }));
+  const padre={}; Object.keys(g).forEach(k=>padre[k]=k);
+  const find=k=>{ while(padre[k]!==k) k=padre[k]; return k; };
+  Object.values(porTel).forEach(set=>{ const a=[...set]; for(let i=1;i<a.length;i++) padre[find(a[i])]=find(a[0]); });
+  const fin={};
+  Object.keys(g).forEach(k=>{ const r=find(k); (fin[r]=fin[r]||[]).push(...g[k]); });
+  return fin;
+}
+
+// Agrupa por maestra y arma el puntaje para premiar
+function rankingMaestras(sub){
+  const m={};
+  Object.entries(agruparMaestras(sub)).forEach(([k,grupo])=>{
+  grupo.forEach(p=>{
+    if(!m[k]) m[k]={nombre:p.nombre, escuela:p.escuela||'', tel:p.tel||'', pedidos:0, plata:0, uds:0, deuda:0, ultima:'', eventos:new Set()};
+    const r=m[k];
+    r.pedidos++;
+    r.plata += Number(p.total)||0;
+    r.deuda += saldoReal(p);
+    if((p.fechaPedido||'') > r.ultima) r.ultima = p.fechaPedido||'';
+    if(p.escuela && !r.escuela) r.escuela = p.escuela;
+    if(p.tel && !r.tel) r.tel = p.tel;
+    r.eventos.add(p.evento||'comun');
+    const cat=catalogos()[p.evento];
+    if(cat){ const mp=p[cat.campo]||{}; cat.lista.forEach(pr=> r.uds += Number(mp[pr.id])||0); }
+  });
+  });
+  const arr=Object.values(m).map(r=>({...r, eventos:r.eventos.size}));
+  // Puntaje: 70% plata + 30% frecuencia, normalizado
+  const maxPl=Math.max(...arr.map(r=>r.plata),1);
+  const maxPe=Math.max(...arr.map(r=>r.pedidos),1);
+  arr.forEach(r=> r.score = Math.round((r.plata/maxPl*70) + (r.pedidos/maxPe*30)));
+  return arr.sort((a,b)=> b.score-a.score || b.plata-a.plata);
+}
+
+function renderMaestras(arr){
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const cont=document.getElementById('lista-maestras');
+  if(!cont) return;
+  if(!arr.length){ cont.innerHTML='<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos todavía</div>'; return; }
+  const medalla = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+  const tier = r => r.score>=55 ? {n:'ORO',bg:'#FEF3C7',tx:'#B45309',bd:'#FCD34D'}
+                  : r.score>=30 ? {n:'PLATA',bg:'#F1F5F9',tx:'#475569',bd:'#CBD5E1'}
+                  : {n:'BRONCE',bg:'#FFF7ED',tx:'#9A3412',bd:'#FDBA74'};
+  cont.innerHTML = arr.slice(0,15).map((r,i)=>{
+    const t=tier(r);
+    const wa = r.tel ? `<button onclick="waMaestra('${esc(r.tel)}','${esc(r.nombre).replace(/'/g,'')}')" style="font-size:10px;font-weight:700;background:#DCFCE7;color:#15803D;border:1px solid #86EFAC;border-radius:100px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">WhatsApp</button>` : '';
+    return `<div style="background:white;border:1.5px solid ${i<3?t.bd:'var(--borde)'};border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;gap:11px;align-items:center">
+      <div style="font-size:${i<3?'22px':'14px'};font-weight:800;color:var(--gris);min-width:30px;text-align:center">${medalla(i)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          <span style="font-size:14px;font-weight:800;color:var(--texto)">${esc(r.nombre)}</span>
+          <span style="font-size:9px;font-weight:800;background:${t.bg};color:${t.tx};border:1px solid ${t.bd};border-radius:100px;padding:2px 8px">${t.n}</span>
+        </div>
+        <div style="font-size:11px;color:var(--gris);margin-top:2px">🏫 ${esc(r.escuela)||'sin escuela'} · último ${r.ultima||'—'}</div>
+        <div style="font-size:11px;color:var(--gris);margin-top:3px">
+          <b style="color:#BE185D">$${fmt(r.plata)}</b> en <b style="color:var(--texto)">${r.pedidos}</b> pedido${r.pedidos>1?'s':''}
+          ${r.uds?` · ${r.uds} unidades`:''}
+          ${r.eventos>1?` · compró en ${r.eventos} fechas`:''}
+          ${r.deuda>0?` · <b style="color:var(--rojo)">debe $${fmt(r.deuda)}</b>`:''}
+        </div>
+      </div>
+      <div style="text-align:right">${wa}</div>
+    </div>`;
+  }).join('');
+}
+
+// Mensaje de agradecimiento listo para mandar
+window.waMaestra = function(tel, nombre){
+  const n = String(nombre||'').split(' ')[0] || '';
+  const msg = `Hola ${n}! Soy Germán del Taller Artesanal. Te escribo para agradecerte: sos una de nuestras maestras que más nos eligió este año. Tenemos un regalito preparado para vos, avisame cuando puedas pasar a buscarlo o si querés que te lo llevemos con el próximo pedido. Gracias de verdad!`;
+  const t = (typeof formatTelWA === 'function') ? formatTelWA(tel) : String(tel||'').replace(/\D/g,'');
+  if(!t){ toast('Esa maestra no tiene teléfono cargado'); return; }
+  window.open(`https://wa.me/${t}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// Excel con el ranking completo de maestras, para repartir premios
+window.exportarMaestras = function(){
+  if(!maestrasRanking.length){ toast('No hay datos para exportar'); return; }
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const periodoLabel={'semana':'Esta semana','mes':'Este mes','anio':'Este año','todo':'Historial completo'};
+  const tier = r => r.score>=55 ? ['ORO','#FEF3C7','#B45309'] : r.score>=30 ? ['PLATA','#F1F5F9','#475569'] : ['BRONCE','#FFF7ED','#9A3412'];
+
+  let h=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <head><meta charset="utf-8"><style>
+    table{border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:11pt}
+    th{background:#BE185D;color:#fff;font-weight:bold;padding:9px 11px;border:1px solid #9D174D;text-align:left}
+    td{padding:7px 11px;border:1px solid #E5E7EB}
+    .tit{font-size:17pt;font-weight:bold;color:#BE185D}
+    .sub{font-size:10pt;color:#6B7280}
+    .num{text-align:right;mso-number-format:"\\#\\,\\#\\#0"}
+    .ctr{text-align:center}
+    .par{background:#FDF2F8}
+    .tot{background:#BE185D;color:#fff;font-weight:bold}
+  </style></head><body>
+  <table><tr><td colspan="9" class="tit">🎁 Maestras para premiar — Taller Artesanal</td></tr>
+  <tr><td colspan="9" class="sub">Período: ${periodoLabel[periodoActual]||'Todo'} · Generado ${hoy()} · Puntaje = 70% facturación + 30% cantidad de pedidos</td></tr>
+  <tr><td colspan="9"></td></tr>
+  <tr><th>#</th><th>Nivel</th><th>Maestra</th><th>Escuela</th><th>Teléfono</th><th>Pedidos</th><th>Facturado</th><th>Unidades</th><th>Debe</th></tr>`;
+
+  let tPl=0, tPe=0, tUd=0, tDe=0;
+  maestrasRanking.forEach((r,i)=>{
+    const [tn,tbg,ttx]=tier(r);
+    tPl+=r.plata; tPe+=r.pedidos; tUd+=r.uds; tDe+=r.deuda;
+    h+=`<tr class="${i%2?'par':''}">
+      <td class="ctr">${i+1}</td>
+      <td class="ctr" style="background:${tbg};color:${ttx};font-weight:bold">${tn}</td>
+      <td style="font-weight:bold">${esc(r.nombre)}</td>
+      <td>${esc(r.escuela)}</td>
+      <td>${esc(r.tel)}</td>
+      <td class="ctr">${r.pedidos}</td>
+      <td class="num">${r.plata}</td>
+      <td class="ctr">${r.uds||''}</td>
+      <td class="num" style="color:${r.deuda>0?'#B91C1C':'#6B7280'}">${r.deuda||''}</td>
+    </tr>`;
+  });
+  h+=`<tr class="tot"><td colspan="5">TOTALES (${maestrasRanking.length} maestras)</td>
+      <td class="ctr">${tPe}</td><td class="num">${tPl}</td><td class="ctr">${tUd}</td><td class="num">${tDe}</td></tr>`;
+  h+=`</table></body></html>`;
+
+  const blob=new Blob([h],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='maestras-premios-'+hoy()+'.xls';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('\u{1F381} Excel de maestras descargado');
 }
 
 window.setPeriodo=function(p,el){periodoActual=p;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderAnalytics();}
@@ -4431,16 +4770,27 @@ window.confirmarImportacion = async function(){
     const origT = Number(f.pedido.total)||0;
     const nuevoT = Number(document.getElementById(`imp-total-${idx}`)?.value)||0;
     if(nuevoT !== origT) totalesCorregidos++;
-    aGuardar.push({id:f.pedido.id, items, textos, total:nuevoT, senia:Number(f.pedido.senia)||0});
+    aGuardar.push({id:f.pedido.id, nombre:f.pedido.nombre, items, textos, total:nuevoT, senia:Number(f.pedido.senia)||0});
   });
 
   if(!aGuardar.length){ toast('No hay nada para importar'); return; }
 
   const btn = document.getElementById('imp-btn-confirmar');
   btn.disabled = true; btn.textContent = 'Importando...';
-  let ok = 0, err = 0;
+  let ok = 0; const fallaron = [];
   for(const it of aGuardar){
     try{
+      // Si el pedido fue borrado mientras el importador estaba abierto, no existe mas.
+      const snap = await db.collection('pedidos').doc(it.id).get();
+      if(!snap.exists){
+        fallaron.push({nombre: it.nombre, motivo: 'lo borraste mientras el importador estaba abierto'});
+        continue;
+      }
+      // Si ya lo habiamos importado antes, no lo tocamos de nuevo.
+      if(snap.data().evento === 'madre2026' && !it.forzar){
+        fallaron.push({nombre: it.nombre, motivo: 'ya estaba importado, lo saltié para no duplicarlo'});
+        continue;
+      }
       await db.collection('pedidos').doc(it.id).update({
         evento: 'madre2026',
         itemsMadre: it.items,
@@ -4450,18 +4800,104 @@ window.confirmarImportacion = async function(){
         updatedAt: new Date().toISOString()
       });
       ok++;
-    }catch(e){ err++; console.error('Error importando', it.id, e); }
+    }catch(e){
+      fallaron.push({nombre: it.nombre, motivo: (e && e.message) ? e.message : 'error de conexión'});
+      console.error('Error importando', it.id, e);
+    }
   }
   btn.disabled = false; btn.textContent = '\u{2705} Confirmar e importar';
   cerrarImportador();
-  const extra = totalesCorregidos ? ` (${totalesCorregidos} con el total corregido)` : '';
-  toast(err ? `\u{26A0}\u{FE0F} ${ok} importados, ${err} con error` : `\u{2705} ${ok} pedidos importados${extra}`);
+
+  if(fallaron.length){
+    // Cartel con el detalle, no un toast que se va en 2 segundos.
+    document.getElementById('impres-ok').textContent = ok;
+    document.getElementById('impres-detalle').innerHTML = fallaron.map(f=>
+      `<div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">
+         <b>${String(f.nombre||'(sin nombre)').replace(/</g,'&lt;')}</b><br>
+         <span style="color:#B91C1C">${String(f.motivo).replace(/</g,'&lt;')}</span>
+       </div>`).join('');
+    document.getElementById('overlay-impres').classList.add('show');
+  } else {
+    const extra = totalesCorregidos ? ` (${totalesCorregidos} con el total corregido)` : '';
+    toast(`\u{2705} ${ok} pedidos importados${extra}`);
+  }
+}
+// ==================== DETECTOR DE REPETIDOS ====================
+// Agrupa por maestra normalizada y marca los sospechosos.
+window.abrirDuplicados = function(){
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const delMadre = pedidos.filter(p=>p.evento==='madre2026');
+
+  // Agrupo por maestra REAL (nombre + escuela + teléfono), no solo por nombre
+  const grupos = agruparMaestras(delMadre);
+
+  const firma = p => {
+    const it = p.itemsMadre || {};
+    return PRODUCTOS_MADRE.map(pr=> (it[pr.id]||0)).join('-');
+  };
+
+  const sospechosos = [];
+  Object.values(grupos).forEach(g=>{
+    if(g.length < 2) return;
+    // ¿Hay al menos dos con la misma firma de productos o el mismo total?
+    const porFirma = {}, porTotal = {};
+    g.forEach(p=>{
+      (porFirma[firma(p)] = porFirma[firma(p)]||[]).push(p);
+      (porTotal[Number(p.total)||0] = porTotal[Number(p.total)||0]||[]).push(p);
+    });
+    let motivo = null;
+    if(Object.values(porFirma).some(a=>a.length>1)) motivo = 'mismos productos y mismas cantidades';
+    else if(Object.values(porTotal).some(a=>a.length>1)) motivo = 'mismo total';
+    else motivo = 'misma maestra, pedidos distintos';
+    sospechosos.push({grupo:g, motivo, fuerte: motivo !== 'misma maestra, pedidos distintos'});
+  });
+
+  // Los casos fuertes primero
+  sospechosos.sort((a,b)=> (b.fuerte?1:0)-(a.fuerte?1:0));
+
+  const nFuertes = sospechosos.filter(s=>s.fuerte).length;
+  document.getElementById('dups-resumen').innerHTML = !sospechosos.length
+    ? `<b style="color:var(--verde)">\u{2705} Todo limpio.</b> Revisé los ${delMadre.length} pedidos del Día de la Madre y ninguna maestra aparece repetida.`
+    : `Revisé <b>${delMadre.length} pedidos</b>. Encontré <b>${sospechosos.length} maestras</b> con más de un pedido`
+      + (nFuertes ? `, de las cuales <b style="color:#B91C1C">${nFuertes} son muy probablemente repetidos</b>.` : '. Ninguna parece un repetido real.');
+
+  document.getElementById('dups-lista').innerHTML = sospechosos.map(s=>{
+    const filas = s.grupo.map(p=>{
+      const it = p.itemsMadre || {};
+      const det = PRODUCTOS_MADRE.filter(pr=>(it[pr.id]||0)>0).map(pr=>`${it[pr.id]} ${pr.nombre}`).join(', ') || esc(p.productos||'(sin detalle)');
+      return `<div style="background:white;border:1px solid var(--borde);border-radius:8px;padding:9px 11px;margin-top:6px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+        <div style="min-width:0">
+          <div style="font-size:12px;color:var(--gris)">\u{1F3EB} ${esc(p.escuela)} · ${p.fechaPedido||'sin fecha'} · ${esc(p.estado||'')}</div>
+          <div style="font-size:12px;margin-top:3px">${esc(det)}</div>
+        </div>
+        <div style="text-align:right;white-space:nowrap">
+          <div style="font-size:13px;font-weight:800;color:#BE185D">$${fmt(Number(p.total)||0)}</div>
+          <button onclick="document.getElementById('overlay-dups').classList.remove('show');abrirEditarMadre('${p.id}')"
+                  style="margin-top:5px;font-size:10px;font-weight:700;background:#FDF2F8;color:#BE185D;border:1px solid #F9A8D4;border-radius:100px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">abrir</button>
+        </div>
+      </div>`;
+    }).join('');
+    const col = s.fuerte ? {bd:'#FCA5A5',bg:'#FEF2F2',tx:'#B91C1C'} : {bd:'var(--borde)',bg:'white',tx:'var(--gris)'};
+    return `<div style="border:1.5px solid ${col.bd};background:${col.bg};border-radius:12px;padding:11px 13px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="font-size:14px;font-weight:800;color:var(--texto)">${esc(s.grupo[0].nombre)}</div>
+        <div style="font-size:10px;font-weight:800;color:${col.tx};background:white;border:1px solid ${col.bd};border-radius:100px;padding:2px 9px">${s.grupo.length} pedidos · ${s.motivo}</div>
+      </div>
+      ${filas}
+    </div>`;
+  }).join('');
+
+  document.getElementById('overlay-dups').classList.add('show');
 }
 // ==================== FIN DÍA DE LA MADRE ====================
 
 
 function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':fmt(n);}
-function hoy(){return new Date().toISOString().split('T')[0];}
+// Fecha local de Tucumán. Con toISOString() daba MAÑANA despues de las 21hs.
+function hoy(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
