@@ -93,6 +93,8 @@
   .imp-item input { width:52px; text-align:center; font-size:13px; font-weight:800; border:1.5px solid var(--borde); border-radius:6px; padding:3px; font-family:'DM Sans',sans-serif; }
   .imp-item input.tiene { border-color:#BE185D; background:#FDF2F8; color:#BE185D; }
   .imp-tot { font-size:12px; font-weight:700; color:#BE185D; }
+  .mscope-btn { font-size:11.5px; font-weight:700; background:white; color:var(--gris); border:1.5px solid var(--borde); border-radius:100px; padding:6px 13px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .mscope-btn.active { background:var(--madera-dark); color:white; border-color:var(--madera-dark); }
   .imp-mas { margin-top:7px; font-size:11px; font-weight:700; background:white; color:var(--gris); border:1.5px dashed var(--borde); border-radius:100px; padding:5px 13px; cursor:pointer; font-family:'DM Sans',sans-serif; }
   .imp-mas:hover { border-color:#F9A8D4; color:#BE185D; background:#FDF2F8; }
   .imp-pie { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; flex-wrap:wrap; border-top:1px dashed var(--borde); padding-top:8px; }
@@ -1083,6 +1085,20 @@
     </div>
   </div>
 
+  <!-- MODAL UNIR MAESTRAS -->
+  <div class="overlay" id="overlay-unir" onclick="if(event.target===this)this.classList.remove('show')">
+    <div class="modal" style="max-width:640px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🔗 Unir maestras repetidas</div>
+      <div id="unir-resumen" style="font-size:13px;color:var(--gris);margin-bottom:12px;line-height:1.55"></div>
+      <div id="unir-lista" style="max-height:52vh;overflow-y:auto;margin-bottom:12px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="deshacerUniones()" style="flex:1;background:white;color:var(--gris);border:1.5px dashed var(--borde);border-radius:12px;padding:12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Deshacer todo</button>
+        <button onclick="document.getElementById('overlay-unir').classList.remove('show')" style="flex:2;background:var(--madera-dark);color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Listo</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL EDITAR METAS -->
   <div class="overlay" id="overlay-metas" onclick="if(event.target===this)this.classList.remove('show')">
     <div class="modal" style="max-width:460px">
@@ -1232,7 +1248,16 @@
     <div class="bar-chart" id="chart-productos"><div class="loading">Calculando...</div></div>
 
     <div class="analytics-title">🎁 Maestras para premiar</div>
-    <div style="font-size:11px;color:var(--gris);margin:-8px 0 8px">Ordenadas por lo que te compraron en total. El puntaje mezcla plata y cantidad de pedidos.</div>
+    <div style="display:flex;gap:7px;margin:-6px 0 8px;flex-wrap:wrap">
+      <button class="mscope-btn active" id="mscope-todo" onclick="setScopeMaestras('todo',this)">🏅 Todo el historial</button>
+      <button class="mscope-btn" id="mscope-periodo" onclick="setScopeMaestras('periodo',this)">Solo el período de arriba</button>
+      <button class="mscope-btn" onclick="abrirUnir()" style="margin-left:auto">🔗 Unir repetidas</button>
+    </div>
+    <div style="font-size:11px;color:var(--gris);margin-bottom:6px" id="maestras-nota">Desde el primer pedido hasta hoy. El puntaje mezcla plata y cantidad de pedidos.</div>
+    <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gris);margin-bottom:10px;cursor:pointer">
+      <input type="checkbox" id="maestras-repiten" onchange="renderAnalytics()" style="width:16px;height:16px;cursor:pointer">
+      <span>🔁 Mostrar solo las que compraron más de una vez <b id="maestras-n-unica"></b></span>
+    </label>
     <div id="lista-maestras"><div class="loading">Calculando...</div></div>
 
     <div class="analytics-title">🏫 Escuelas top</div>
@@ -1768,17 +1793,29 @@ function renderAnalytics() {
   renderMesAMes();
 
   // --- MAESTRAS PARA PREMIAR ---
-  maestrasRanking = rankingMaestras(sub);
+  // Los premios son por fidelidad, así que por defecto miran TODO el historial,
+  // no el período de arriba. Las métricas de salud sí usan el período.
+  const rankPeriodo = rankingMaestras(sub);
+  const rankBase = scopeMaestras==='todo' ? rankingMaestras(pedidos) : rankPeriodo;
+  const soloRepiten = document.getElementById('maestras-repiten')?.checked;
+  const unaVez = rankBase.filter(m=>m.pedidos===1).length;
+  maestrasRanking = soloRepiten ? rankBase.filter(m=>m.pedidos>1) : rankBase;
   renderMaestras(maestrasRanking);
+  const notaM = document.getElementById('maestras-nota');
+  if(notaM) notaM.textContent = scopeMaestras==='todo'
+    ? `Desde el primer pedido hasta hoy: ${rankBase.length} maestras, ${rankBase.length-unaVez} compraron más de una vez.`
+    : `Solo el período elegido arriba: ${rankBase.length} maestras.`;
+  const nUni = document.getElementById('maestras-n-unica');
+  if(nUni) nUni.textContent = unaVez ? `(deja afuera ${unaVez})` : '';
 
   // --- SALUD DEL NEGOCIO ---
   const esc2 = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
   const pctCob = tF>0 ? Math.round(tC/tF*100) : 0;
   const hoyS = hoy();
   const vencidos = sub.filter(p=> p.estado!=='cobrado' && p.estado!=='entregado' && (p.fechaEntrega||'') && p.fechaEntrega < hoyS).length;
-  const repiten = maestrasRanking.filter(m=>m.pedidos>1).length;
-  const pctRep = maestrasRanking.length ? Math.round(repiten/maestrasRanking.length*100) : 0;
-  const top10 = maestrasRanking.slice(0,10).reduce((a,m)=>a+m.plata,0);
+  const repiten = rankPeriodo.filter(m=>m.pedidos>1).length;
+  const pctRep = rankPeriodo.length ? Math.round(repiten/rankPeriodo.length*100) : 0;
+  const top10 = rankPeriodo.slice(0,10).reduce((a,m)=>a+m.plata,0);
   const pctConc = tF>0 ? Math.round(top10/tF*100) : 0;
   // Nuevas = su primer pedido de la historia cae dentro del periodo
   const primerPedido = {};
@@ -1889,6 +1926,99 @@ function catalogos(){
 }
 
 let maestrasRanking = [];
+let scopeMaestras = 'todo';   // 'todo' = historial completo, 'periodo' = el de arriba
+let unionesManuales = [];     // [[clave,clave,...], ...] lo que Germán unió a mano
+
+// ---- UNIR MAESTRAS A MANO ----
+// Cuando no hay teléfono, ninguna regla puede saber si dos "Cecilia" de escuelas
+// distintas son la misma. Esto se lo pregunta a Germán y guarda la respuesta.
+window.abrirUnir = function(){
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const grupos = agruparMaestras(pedidos);
+
+  // Candidatas: mismo primer nombre, grupos distintos
+  const porNombre = {};
+  Object.entries(grupos).forEach(([k,ped])=>{
+    const pila = k.split('|')[0].split(' ')[0];
+    if(!pila || pila.length<3) return;
+    const plata = ped.reduce((a,p)=>a+(Number(p.total)||0),0);
+    (porNombre[pila] = porNombre[pila]||[]).push({
+      clave:k, n:ped.length, plata,
+      nombre:ped[0].nombre, escuela:ped[0].escuela,
+      tel: ped.map(p=>tel8(p)).find(Boolean) || '',
+      ultima: ped.reduce((a,p)=> (p.fechaPedido||'')>a ? p.fechaPedido : a, '')
+    });
+  });
+
+  const candidatos = Object.entries(porNombre)
+    .filter(([,v])=>v.length>1)
+    .map(([pila,v])=>({pila, v:v.sort((a,b)=>b.plata-a.plata), plata:v.reduce((a,x)=>a+x.plata,0)}))
+    .sort((a,b)=>b.plata-a.plata);
+
+  const yaUnidas = (unionesManuales||[]).length;
+  document.getElementById('unir-resumen').innerHTML =
+    `Estas maestras tienen el mismo nombre pero figuran en escuelas distintas. <b>Vos sabés si son la misma persona.</b> `
+    + `Marcá las que sean la misma y tocá unir.`
+    + (yaUnidas ? `<br><span style="font-size:11px;color:var(--gris)">Ya uniste ${yaUnidas} ${yaUnidas===1?'grupo':'grupos'}.</span>` : '');
+
+  document.getElementById('unir-lista').innerHTML = candidatos.slice(0,40).map((c,gi)=>`
+    <div style="background:white;border:1.5px solid var(--borde);border-radius:12px;padding:11px 13px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px">
+        <div style="font-size:14px;font-weight:800;text-transform:capitalize">${esc(c.pila)}</div>
+        <div style="font-size:11px;color:var(--gris)">${c.v.length} versiones · $${fmt(c.plata)}</div>
+      </div>
+      ${c.v.map((x,xi)=>`
+        <label style="display:flex;align-items:center;gap:9px;padding:6px 0;cursor:pointer;border-top:1px solid var(--borde)">
+          <input type="checkbox" class="unir-chk" data-g="${gi}" data-k="${esc(x.clave)}" style="width:17px;height:17px;flex:none;cursor:pointer">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12.5px;font-weight:700">${esc(x.nombre)}</div>
+            <div style="font-size:11px;color:var(--gris)">🏫 ${esc(x.escuela)||'sin escuela'} ${x.tel?'· 📱 '+esc(x.tel):'· sin teléfono'} · último ${x.ultima||'—'}</div>
+          </div>
+          <div style="text-align:right;white-space:nowrap">
+            <div style="font-size:12px;font-weight:800;color:#BE185D">$${fmt(x.plata)}</div>
+            <div style="font-size:10px;color:var(--gris)">${x.n} ped</div>
+          </div>
+        </label>`).join('')}
+      <button onclick="unirGrupo(${gi})" style="width:100%;margin-top:8px;background:var(--madera-dark);color:white;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">🔗 Unir las marcadas</button>
+    </div>`).join('') || '<div style="text-align:center;padding:24px;color:var(--gris);font-size:13px">No hay nombres repetidos para revisar.</div>';
+
+  document.getElementById('overlay-unir').classList.add('show');
+}
+
+window.unirGrupo = async function(gi){
+  const chks=[...document.querySelectorAll(`.unir-chk[data-g="${gi}"]:checked`)].map(c=>c.dataset.k);
+  if(chks.length<2){ toast('Marcá al menos dos para unir'); return; }
+  unionesManuales.push(chks);
+  await guardarUniones();
+  abrirUnir();
+  renderAnalytics();
+  toast(`\u{1F517} Unidas ${chks.length} en una sola maestra`);
+}
+
+window.deshacerUniones = async function(){
+  if(!unionesManuales.length){ toast('No hay uniones para deshacer'); return; }
+  if(!confirm('¿Deshacer TODAS las uniones que hiciste a mano?')) return;
+  unionesManuales=[];
+  await guardarUniones();
+  abrirUnir();
+  renderAnalytics();
+  toast('Uniones deshechas');
+}
+
+async function guardarUniones(){
+  try{ localStorage.setItem('unionesTaller', JSON.stringify(unionesManuales)); }catch(e){}
+  try{
+    await db.collection('pedidos').doc(DOC_METAS).set(
+      {esConfig:true, uniones:unionesManuales, updatedAt:new Date().toISOString()}, {merge:true});
+  }catch(e){ console.warn('uniones', e); }
+}
+
+window.setScopeMaestras = function(s, el){
+  scopeMaestras = s;
+  document.querySelectorAll('.mscope-btn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderAnalytics();
+}
 
 // ==================== METAS Y MES A MES ====================
 // Metas que puso Germán el 10/10/2026. Vienen cargadas de fábrica: no hace falta
@@ -1940,11 +2070,16 @@ function metasLocales(){
 function escucharMetas(){
   const local = metasLocales();
   if(local) metasGuardadas = local;   // arranca con lo ultimo que vio este celu
+  try{ unionesManuales = JSON.parse(localStorage.getItem('unionesTaller')||'[]'); }catch(e){ unionesManuales=[]; }
   try{
     db.collection('pedidos').doc(DOC_METAS).onSnapshot(s=>{
       if(s.exists && s.data().valores){
         metasGuardadas = s.data().valores;
         try{ localStorage.setItem('metasTaller', JSON.stringify(metasGuardadas)); }catch(e){}
+      }
+      if(s.exists && Array.isArray(s.data().uniones)){
+        unionesManuales = s.data().uniones;
+        try{ localStorage.setItem('unionesTaller', JSON.stringify(unionesManuales)); }catch(e){}
       }
       if(document.getElementById('tab-analytics')?.classList.contains('active')) renderAnalytics();
     }, e=>console.warn('metas', e));
@@ -2084,7 +2219,7 @@ window.restablecerMetas = async function(){
   if(!confirm('¿Volver a las metas sugeridas?\n\nSe borran las que cargaste vos.')) return;
   metasGuardadas = {};
   try{ localStorage.removeItem('metasTaller'); }catch(e){}
-  try{ await db.collection('pedidos').doc(DOC_METAS).set({esConfig:true, valores:{}, updatedAt:new Date().toISOString()}); }catch(e){}
+  try{ await db.collection('pedidos').doc(DOC_METAS).set({esConfig:true, valores:{}, updatedAt:new Date().toISOString()}, {merge:true}); }catch(e){}
   abrirMetas();          // recarga el modal con las sugeridas
   renderAnalytics();
   toast('\u{21A9}\u{FE0F} Metas restablecidas');
@@ -2122,7 +2257,7 @@ window.guardarMetas = async function(){
   try{
     await db.collection('pedidos').doc(DOC_METAS).set({
       esConfig:true, valores, updatedAt:new Date().toISOString()
-    });
+    }, {merge:true});
     toast('\u{1F3AF} Metas guardadas');
   }catch(e){
     console.error('guardarMetas', e);
@@ -2137,31 +2272,95 @@ escucharMetas();
 // --- IDENTIDAD DE MAESTRA ---
 // Hay 13 "Cecilia" distintas en escuelas distintas: con el nombre solo no alcanza.
 // Clave = nombre + escuela normalizada, y despues uno los grupos que comparten telefono.
+// Palabras de relleno que la gente le agrega a la escuela y no identifican nada
+const RELLENO_ESC = /\b(escuela|esc|colegio|col|jardin|jard|instituto|inst|eni|nivel|inicial|barrio|ba|bo|nro|numero|num|tm|tt|turno|manana|tarde|vive|en|capital|de|del|la|el|los|las|y|prov|provincia|sala|anos)\b/g;
 function normEscuela(s){
-  let t = normalizarTxt(s);
-  t = t.replace(/\b(escuela|esc|colegio|col|jardin|jard|instituto|inst|eni|barrio|ba|bo|nro|numero|num)\b/g,' ');
-  t = t.replace(/\b(tm|tt|turno manana|turno tarde)\b/g,' ');
-  return t.replace(/\s+/g,' ').trim();
-}
-function claveMaestra(p){
-  const n = normalizarTxt(p.nombre);
-  if(!n) return '';
-  return n+'|'+normEscuela(p.escuela);
+  return normalizarTxt(s).replace(RELLENO_ESC,' ').replace(/\s+/g,' ').trim();
 }
 function tel8(p){ const t=String(p.tel||'').replace(/\D/g,''); return t.length>=8 ? t.slice(-8) : ''; }
 
-// Devuelve { clave: [pedidos...] } con los grupos ya unidos por telefono
+// Distancia de edición, para los errores de tipeo en las escuelas
+function distancia(a,b){
+  if(a===b) return 0;
+  const m=a.length,n=b.length; if(!m||!n) return Math.max(m,n);
+  let prev=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[n];
+}
+
+// "mitre", "ESC MITRE" y "mitre tt" son la misma escuela. Devuelve la canónica.
+function hacerCanonEscuelas(lista){
+  const vistas=[...new Set(lista.map(p=>normEscuela(p.escuela)).filter(Boolean))].sort((a,b)=>a.length-b.length);
+  const mapa={}; const canonicas=[];
+  vistas.forEach(e=>{
+    let destino=e;
+    for(const c of canonicas){
+      const corta = c.length<=e.length ? c : e, larga = c.length<=e.length ? e : c;
+      if(corta.length>=4 && larga.includes(corta)){ destino=c; break; }
+      if(Math.abs(c.length-e.length)<=2 && c.length>=5 && distancia(c,e)<=2){ destino=c; break; }
+    }
+    if(destino===e) canonicas.push(e);
+    mapa[e]=destino;
+  });
+  return esc => mapa[normEscuela(esc)] || normEscuela(esc);
+}
+
+// A veces el nombre trae la escuela adentro: "CECILIA TRANCAS" en la escuela TRANCAS
+function limpiarNombre(nombre, escCanon){
+  const n=normalizarTxt(nombre);
+  const toks=new Set(String(escCanon||'').split(' ').filter(t=>t.length>=4));
+  if(!toks.size) return n;
+  const fuera=n.split(' ').filter(w=>!toks.has(w));
+  return fuera.length ? fuera.join(' ') : n;
+}
+
+function claveMaestra(p){
+  const ec = (_canonEsc ? _canonEsc(p.escuela) : normEscuela(p.escuela));
+  const n = limpiarNombre(p.nombre, ec);
+  if(!n) return '';
+  return n+'|'+ec;
+}
+let _canonEsc = null;
+
+// Devuelve { clave: [pedidos...] }, uniendo por teléfono, por apellido y por lo
+// que Germán haya unido a mano.
 function agruparMaestras(lista){
+  _canonEsc = hacerCanonEscuelas(lista);
   const g={};
   lista.forEach(p=>{ const k=claveMaestra(p); if(!k) return; (g[k]=g[k]||[]).push(p); });
-  // union-find para unir por telefono repetido
+
+  const claves=Object.keys(g);
+  const padre={}; claves.forEach(k=>padre[k]=k);
+  const find=k=>{ while(padre[k] && padre[k]!==k) k=padre[k]; return k; };
+  const unir=(a,b)=>{ if(!padre[a]||!padre[b]) return; const ra=find(a),rb=find(b); if(ra!==rb) padre[rb]=ra; };
+
+  // 1) mismo teléfono = misma persona, aunque cambie la escuela
   const porTel={};
-  Object.keys(g).forEach(k=> g[k].forEach(p=>{ const t=tel8(p); if(t) (porTel[t]=porTel[t]||new Set()).add(k); }));
-  const padre={}; Object.keys(g).forEach(k=>padre[k]=k);
-  const find=k=>{ while(padre[k]!==k) k=padre[k]; return k; };
-  Object.values(porTel).forEach(set=>{ const a=[...set]; for(let i=1;i<a.length;i++) padre[find(a[i])]=find(a[0]); });
+  claves.forEach(k=> g[k].forEach(p=>{ const t=tel8(p); if(t) (porTel[t]=porTel[t]||new Set()).add(k); }));
+  Object.values(porTel).forEach(s=>{ const a=[...s]; for(let i=1;i<a.length;i++) unir(a[0],a[i]); });
+
+  // 2) misma escuela y uno es el nombre completo del otro: "Romina" y "Romina Plaza"
+  const porEsc={};
+  claves.forEach(k=>{ const e=k.split('|')[1]; (porEsc[e]=porEsc[e]||[]).push(k); });
+  Object.values(porEsc).forEach(ks=>{
+    for(let i=0;i<ks.length;i++) for(let j=i+1;j<ks.length;j++){
+      const a=ks[i].split('|')[0], b=ks[j].split('|')[0];
+      if(a.startsWith(b+' ') || b.startsWith(a+' ')) unir(ks[i],ks[j]);
+    }
+  });
+
+  // 3) las que unió Germán a mano
+  (unionesManuales||[]).forEach(grupo=>{
+    const presentes=grupo.filter(k=>padre[k]);
+    for(let i=1;i<presentes.length;i++) unir(presentes[0],presentes[i]);
+  });
+
   const fin={};
-  Object.keys(g).forEach(k=>{ const r=find(k); (fin[r]=fin[r]||[]).push(...g[k]); });
+  claves.forEach(k=>{ const r=find(k); (fin[r]=fin[r]||[]).push(...g[k]); });
   return fin;
 }
 
@@ -2170,8 +2369,11 @@ function rankingMaestras(sub){
   const m={};
   Object.entries(agruparMaestras(sub)).forEach(([k,grupo])=>{
   grupo.forEach(p=>{
-    if(!m[k]) m[k]={nombre:p.nombre, escuela:p.escuela||'', tel:p.tel||'', pedidos:0, plata:0, uds:0, deuda:0, ultima:'', eventos:new Set()};
+    if(!m[k]) m[k]={nombre:p.nombre, escuela:p.escuela||'', tel:p.tel||'', pedidos:0, plata:0, uds:0, deuda:0, ultima:'', eventos:new Set(), _nom:{}, _esc:{}};
     const r=m[k];
+    // Me quedo con la forma de escribir el nombre y la escuela que más se repite
+    if(p.nombre) r._nom[p.nombre]=(r._nom[p.nombre]||0)+1;
+    if(p.escuela) r._esc[p.escuela]=(r._esc[p.escuela]||0)+1;
     r.pedidos++;
     r.plata += Number(p.total)||0;
     r.deuda += saldoReal(p);
@@ -2183,12 +2385,21 @@ function rankingMaestras(sub){
     if(cat){ const mp=p[cat.campo]||{}; cat.lista.forEach(pr=> r.uds += Number(mp[pr.id])||0); }
   });
   });
-  const arr=Object.values(m).map(r=>({...r, eventos:r.eventos.size}));
+  const masComun = o => Object.entries(o||{}).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+  const arr=Object.values(m).map(r=>({
+    ...r, eventos:r.eventos.size,
+    nombre: masComun(r._nom) || r.nombre,
+    escuela: masComun(r._esc) || r.escuela,
+  }));
+  arr.forEach(r=>{ delete r._nom; delete r._esc; });
   // Puntaje: 70% plata + 30% frecuencia, normalizado
   const maxPl=Math.max(...arr.map(r=>r.plata),1);
   const maxPe=Math.max(...arr.map(r=>r.pedidos),1);
   arr.forEach(r=> r.score = Math.round((r.plata/maxPl*70) + (r.pedidos/maxPe*30)));
-  return arr.sort((a,b)=> b.score-a.score || b.plata-a.plata);
+  arr.sort((a,b)=> b.score-a.score || b.plata-a.plata);
+  // El nivel va por puesto, no por puntaje: así una clienta gigante no degrada al resto
+  arr.forEach((r,i)=> r.nivel = i<10 ? 'ORO' : i<30 ? 'PLATA' : 'BRONCE');
+  return arr;
 }
 
 function renderMaestras(arr){
@@ -2197,9 +2408,8 @@ function renderMaestras(arr){
   if(!cont) return;
   if(!arr.length){ cont.innerHTML='<div style="color:var(--gris);font-size:13px;text-align:center;padding:20px">Sin datos todavía</div>'; return; }
   const medalla = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
-  const tier = r => r.score>=55 ? {n:'ORO',bg:'#FEF3C7',tx:'#B45309',bd:'#FCD34D'}
-                  : r.score>=30 ? {n:'PLATA',bg:'#F1F5F9',tx:'#475569',bd:'#CBD5E1'}
-                  : {n:'BRONCE',bg:'#FFF7ED',tx:'#9A3412',bd:'#FDBA74'};
+  const ESTILO = {ORO:{bg:'#FEF3C7',tx:'#B45309',bd:'#FCD34D'},PLATA:{bg:'#F1F5F9',tx:'#475569',bd:'#CBD5E1'},BRONCE:{bg:'#FFF7ED',tx:'#9A3412',bd:'#FDBA74'}};
+  const tier = r => Object.assign({n:r.nivel||'BRONCE'}, ESTILO[r.nivel||'BRONCE']);
   cont.innerHTML = arr.slice(0,15).map((r,i)=>{
     const t=tier(r);
     const wa = r.tel ? `<button onclick="waMaestra('${esc(r.tel)}','${esc(r.nombre).replace(/'/g,'')}')" style="font-size:10px;font-weight:700;background:#DCFCE7;color:#15803D;border:1px solid #86EFAC;border-radius:100px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">WhatsApp</button>` : '';
@@ -2237,7 +2447,8 @@ window.exportarMaestras = function(){
   if(!maestrasRanking.length){ toast('No hay datos para exportar'); return; }
   const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const periodoLabel={'semana':'Esta semana','mes':'Este mes','anio':'Este año','todo':'Historial completo'};
-  const tier = r => r.score>=55 ? ['ORO','#FEF3C7','#B45309'] : r.score>=30 ? ['PLATA','#F1F5F9','#475569'] : ['BRONCE','#FFF7ED','#9A3412'];
+  const EST = {ORO:['ORO','#FEF3C7','#B45309'],PLATA:['PLATA','#F1F5F9','#475569'],BRONCE:['BRONCE','#FFF7ED','#9A3412']};
+  const tier = r => EST[r.nivel||'BRONCE'];
 
   let h=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
   <head><meta charset="utf-8"><style>
@@ -2252,7 +2463,7 @@ window.exportarMaestras = function(){
     .tot{background:#BE185D;color:#fff;font-weight:bold}
   </style></head><body>
   <table><tr><td colspan="9" class="tit">🎁 Maestras para premiar — Taller Artesanal</td></tr>
-  <tr><td colspan="9" class="sub">Período: ${periodoLabel[periodoActual]||'Todo'} · Generado ${hoy()} · Puntaje = 70% facturación + 30% cantidad de pedidos</td></tr>
+  <tr><td colspan="9" class="sub">${scopeMaestras==='todo' ? 'Todo el historial' : 'Período: '+(periodoLabel[periodoActual]||'Todo')} · Generado ${hoy()} · Puntaje = 70% facturación + 30% cantidad de pedidos</td></tr>
   <tr><td colspan="9"></td></tr>
   <tr><th>#</th><th>Nivel</th><th>Maestra</th><th>Escuela</th><th>Teléfono</th><th>Pedidos</th><th>Facturado</th><th>Unidades</th><th>Debe</th></tr>`;
 
