@@ -73,6 +73,26 @@
   .pedido-card.padre-card::before { background:#1D4ED8; }
   .pedido-card.estudiante-card { background:linear-gradient(135deg,#F0FDFA 0%,#CCFBF1 100%); border-color:#5EEAD4; }
   .pedido-card.estudiante-card::before { background:#0F766E; }
+  .pedido-card.madre-card { background:linear-gradient(135deg,#FDF2F8 0%,#FCE7F3 100%); border-color:#F9A8D4; }
+  .pedido-card.madre-card::before { background:#BE185D; }
+  /* IMPORTADOR */
+  .imp-fila { background:white; border:1.5px solid var(--borde); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
+  .imp-fila.ok { border-color:#86EFAC; background:#F0FDF4; }
+  .imp-fila.parcial { border-color:#FCD34D; background:#FFFBEB; }
+  .imp-fila.nada { border-color:#FCA5A5; background:#FEF2F2; }
+  .imp-nombre { font-size:14px; font-weight:700; color:var(--texto); }
+  .imp-meta { font-size:11px; color:var(--gris); margin-top:2px; }
+  .imp-texto { font-size:12px; background:var(--crema); border-radius:6px; padding:6px 9px; margin:8px 0; font-style:italic; color:var(--madera-dark); }
+  .imp-badge { font-size:10px; font-weight:800; padding:2px 9px; border-radius:100px; }
+  .imp-badge.ok { background:#DCFCE7; color:#15803D; }
+  .imp-badge.parcial { background:#FEF3C7; color:#B45309; }
+  .imp-badge.nada { background:#FEE2E2; color:#B91C1C; }
+  .imp-items { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:6px; margin-top:8px; }
+  .imp-item { display:flex; align-items:center; justify-content:space-between; gap:6px; background:white; border:1px solid var(--borde); border-radius:7px; padding:4px 8px; }
+  .imp-item-nom { font-size:11px; font-weight:600; color:var(--texto); line-height:1.2; }
+  .imp-item input { width:52px; text-align:center; font-size:13px; font-weight:800; border:1.5px solid var(--borde); border-radius:6px; padding:3px; font-family:'DM Sans',sans-serif; }
+  .imp-item input.tiene { border-color:#BE185D; background:#FDF2F8; color:#BE185D; }
+  .imp-tot { font-size:12px; font-weight:700; color:#BE185D; text-align:right; margin-top:6px; }
   .pedido-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
   .pedido-dinero { display:flex; gap:12px; flex-wrap:wrap; }
   .dinero-item { text-align:center; }
@@ -316,7 +336,8 @@
   <div class="tab" onclick="setTab('hoy')" id="tab-hoy">📅 Hoy <span class="tab-badge" id="badge-hoy">0</span></div>
   <div class="tab" onclick="setTab('jardines')" id="tab-jardines" style="display:none">🌸 Día de los Jardines <span class="tab-badge" id="badge-jardines">0</span></div>
   <div class="tab" onclick="setTab('padre')" id="tab-padre" style="display:none">👔 Día del Padre <span class="tab-badge" id="badge-padre">0</span></div>
-  <div class="tab" onclick="setTab('estudiante')" id="tab-estudiante">🎓 Día del Estudiante <span class="tab-badge" id="badge-estudiante">0</span></div>
+  <div class="tab" onclick="setTab('estudiante')" id="tab-estudiante" style="display:none">🎓 Día del Estudiante <span class="tab-badge" id="badge-estudiante">0</span></div>
+  <div class="tab" onclick="setTab('madre')" id="tab-madre">🌷 Día de la Madre <span class="tab-badge" id="badge-madre">0</span></div>
   <div class="tab" onclick="setTab('clientes')" id="tab-clientes">👥 Clientes</div>
   <div class="tab" onclick="setTab('caja')" id="tab-caja">💰 Caja</div>
   <div class="tab" onclick="setTab('analytics')" id="tab-analytics">📊 Analytics</div>
@@ -866,6 +887,174 @@
     </div>
   </div>
 
+  <!-- ========== PANEL DÍA DE LA MADRE ========== -->
+  <div id="panel-madre" style="display:none">
+    <div style="background:linear-gradient(135deg,#BE185D,#EC4899);color:white;border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:1px;">✨ EVENTO ESPECIAL 2026</div>
+        <div style="font-size:20px;font-weight:800;margin-top:4px;">🌷 DÍA DE LA MADRE</div>
+        <div style="font-size:12px;opacity:0.75;margin-top:2px">Pedidos especiales · Venta oficial</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:40px;font-weight:800;color:#FBCFE8" id="madre-count">0</div>
+        <div style="font-size:11px;opacity:0.7">pedidos</div>
+      </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:14px;border:1.5px solid var(--borde);margin-bottom:16px;">
+      <div style="font-weight:700;color:var(--madera-dark);margin-bottom:12px;font-size:14px;">📊 Resumen de unidades</div>
+      <div id="madre-resumen-productos"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:2px solid var(--borde);margin-top:10px;padding-top:10px;">
+        <div style="text-align:center;background:var(--crema);border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Total vendido</div>
+          <div style="font-size:15px;font-weight:800;color:var(--madera-dark)" id="madre-total-general">$0</div>
+        </div>
+        <div style="text-align:center;background:#E8F5EE;border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Ya cobrado</div>
+          <div style="font-size:15px;font-weight:800;color:var(--verde)" id="madre-total-cobrado">$0</div>
+        </div>
+        <div style="text-align:center;background:#FEF2F2;border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Saldo pendiente</div>
+          <div style="font-size:15px;font-weight:800;color:var(--rojo)" id="madre-total-saldo">$0</div>
+        </div>
+        <div style="text-align:center;background:#FDF2F8;border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Pedidos</div>
+          <div style="font-size:15px;font-weight:800;color:#BE185D" id="madre-total-cant">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <button onclick="abrirModalMadre()" style="flex:1;background:#BE185D;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Nuevo pedido</button>
+      <button onclick="exportarMadre()" style="flex:1;background:white;color:#BE185D;border:2px solid #BE185D;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">📥 Excel por producto</button>
+    </div>
+    <button onclick="abrirImportador()" style="width:100%;background:#FDF2F8;color:#BE185D;border:2px dashed #F9A8D4;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:16px;">🔄 Importar pedidos cargados a mano</button>
+
+    <input type="text" placeholder="🔍  Buscar por nombre o escuela..." oninput="renderMadre()" id="buscador-madre" style="width:100%;background:white;border:2px solid #F9A8D4;border-radius:12px;padding:13px 18px;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box;color:var(--texto);transition:border-color 0.2s;" onfocus="this.style.borderColor='#BE185D'" onblur="this.style.borderColor='#F9A8D4'">
+
+    <div class="filtros" id="madre-filtros">
+      <button class="filtro-btn active" onclick="setFiltroMadre('todos',this)">Todos</button>
+      <button class="filtro-btn" onclick="setFiltroMadre('pendiente',this)">⏳ Pendiente</button>
+      <button class="filtro-btn" onclick="setFiltroMadre('produccion',this)">🔧 Producción</button>
+      <button class="filtro-btn" onclick="setFiltroMadre('listo',this)">✅ Listo</button>
+      <button class="filtro-btn" onclick="setFiltroMadre('entregado',this)">🚚 Entregado</button>
+      <button class="filtro-btn" onclick="setFiltroMadre('cobrado',this)">💵 Cobrado</button>
+    </div>
+    <div id="lista-madre"></div>
+  </div>
+
+  <!-- MODAL DÍA DE LA MADRE -->
+  <div class="overlay" id="overlay-madre" onclick="if(event.target===this)cerrarModalMadre()">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-madre-title">🌷 Nuevo Pedido — Día de la Madre</div>
+
+      <div class="form-section">
+        <div class="form-section-title">👤 DATOS DEL CLIENTE</div>
+        <div class="form-group">
+          <label class="form-label">Nombre de la maestra *</label>
+          <input class="form-input" id="mf-nombre" placeholder="Ej: María González">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Escuela *</label>
+            <input class="form-input" id="mf-escuela" placeholder="Nombre de la escuela">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Turno</label>
+            <select class="form-select" id="mf-turno">
+              <option value="">—</option>
+              <option>Mañana</option><option>Tarde</option><option>Todo el día</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="mf-tel" placeholder="381 123 4567" type="tel">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">🌷 PRODUCTOS DEL DÍA DE LA MADRE</div>
+        <div id="madre-items-form"></div>
+        <div style="background:var(--crema);border-radius:10px;padding:12px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;color:var(--madera-dark)">Total del pedido:</span>
+          <span style="font-size:20px;font-weight:800;color:var(--madera-dark)" id="mf-total-display">$0</span>
+        </div>
+        <input type="hidden" id="mf-total">
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">💰 Pago</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Seña recibida</label>
+            <input class="form-input" id="mf-senia" placeholder="$0" type="number" oninput="calcularSaldoMadre()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Saldo</label>
+            <input class="form-input" id="mf-saldo" placeholder="$0" readonly style="background:var(--crema)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Método de pago</label>
+          <select class="form-select" id="mf-pago">
+            <option value="">—</option>
+            <option>Efectivo</option><option>Transferencia</option><option>Mercado Pago</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">📋 Estado y fecha</div>
+        <div class="estado-selector" id="mf-estado-opts">
+          <div class="estado-opt selected" data-val="pendiente" onclick="selEstadoMadre(this)">⏳ Pendiente</div>
+          <div class="estado-opt" data-val="produccion" onclick="selEstadoMadre(this)">🔧 Producción</div>
+          <div class="estado-opt" data-val="listo" onclick="selEstadoMadre(this)">✅ Listo</div>
+          <div class="estado-opt" data-val="entregado" onclick="selEstadoMadre(this)">🚚 Entregado</div>
+          <div class="estado-opt" data-val="cobrado" onclick="selEstadoMadre(this)">💵 Cobrado</div>
+        </div>
+        <div class="form-row" style="margin-top:12px">
+          <div class="form-group">
+            <label class="form-label">Fecha del pedido</label>
+            <input class="form-input" id="mf-fecha-pedido" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de entrega</label>
+            <input class="form-input" id="mf-fecha-entrega" type="date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observaciones</label>
+          <input class="form-input" id="mf-obs" placeholder="Notas adicionales...">
+        </div>
+      </div>
+
+      <div id="mf-eliminar-wrap" style="display:none;margin-bottom:12px">
+        <button onclick="eliminarPedidoMadre()" style="width:100%;background:var(--rojo-light);color:var(--rojo);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">🗑️ Eliminar pedido</button>
+      </div>
+      <button onclick="guardarPedidoMadre()" style="width:100%;background:#BE185D;color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Guardar pedido</button>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORTADOR -->
+  <div class="overlay" id="overlay-importador" onclick="if(event.target===this)cerrarImportador()">
+    <div class="modal" style="max-width:860px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🔄 Importar pedidos cargados a mano</div>
+      <div style="font-size:13px;color:var(--gris);margin-bottom:14px;line-height:1.5">
+        Leí los pedidos comunes y traté de reconocer los productos del Día de la Madre.
+        <b>Revisá y corregí</b> lo que haga falta. Nada se guarda hasta que toques Confirmar.
+      </div>
+      <div id="imp-resumen" style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:14px;font-size:13px;"></div>
+      <div id="imp-lista" style="max-height:48vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="cerrarImportador()" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+        <button onclick="confirmarImportacion()" id="imp-btn-confirmar" style="flex:2;background:#BE185D;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">✅ Confirmar e importar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PANEL CLIENTES -->
   <div id="panel-clientes" style="display:none">
     <div style="background:var(--madera-dark);color:white;border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
@@ -1068,13 +1257,13 @@
       </div>
     </div>
 
-    <div class="form-section" style="background:#F0FDFA;border:1.5px solid #99F6E4;">
+    <div class="form-section" style="background:#FDF2F8;border:1.5px solid #F9A8D4;">
       <div class="toggle-row">
         <div>
-          <div class="toggle-label" style="font-weight:700;color:#0F766E;">🎓 Día del Estudiante 2026</div>
-          <div style="font-size:11px;color:#14B8A6;margin-top:2px;">Mover este pedido a la sección Día del Estudiante</div>
+          <div class="toggle-label" style="font-weight:700;color:#BE185D;">🌷 Día de la Madre 2026</div>
+          <div style="font-size:11px;color:#EC4899;margin-top:2px;">Mover este pedido a la sección Día de la Madre</div>
         </div>
-        <button class="toggle" id="toggle-estudiante" onclick="toggleEstudiante()"></button>
+        <button class="toggle" id="toggle-madre" onclick="toggleMadre()"></button>
       </div>
     </div>
 
@@ -1195,7 +1384,7 @@ window.hacerLogin = async function(){
   }
 }
 
-let pedidos = [], filtroActual = 'todos', editandoId = null, periodoActual = 'semana', facturaOn = false, facturaEmitidaOn = false, jardinOn = false, padreOn = false, estudianteOn = false;
+let pedidos = [], filtroActual = 'todos', editandoId = null, periodoActual = 'semana', facturaOn = false, facturaEmitidaOn = false, jardinOn = false, padreOn = false, estudianteOn = false, madreOn = false;
 
 db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
   pedidos = []; snap.forEach(d => pedidos.push({id:d.id,...d.data()}));
@@ -1210,6 +1399,8 @@ db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
   const dePadre=pedidos.filter(p=>p.evento==='padre2026'&&p.estado!=='cobrado').length;
   document.getElementById('badge-padre').textContent=dePadre;
   document.getElementById('badge-estudiante').textContent=pedidos.filter(p=>p.evento==='estudiante2026'&&p.estado!=='cobrado').length;
+  document.getElementById('badge-madre').textContent=pedidos.filter(p=>p.evento==='madre2026'&&p.estado!=='cobrado').length;
+  if(document.getElementById('tab-madre').classList.contains('active')) renderMadre();
   if(document.getElementById('tab-hoy').classList.contains('active')) renderHoy();
   if(document.getElementById('tab-jardines').classList.contains('active')) renderJardines();
   if(document.getElementById('tab-padre').classList.contains('active')) renderPadre();
@@ -1228,6 +1419,8 @@ db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
     const dePadreFB=pedidos.filter(p=>p.evento==='padre2026'&&p.estado!=='cobrado').length;
     document.getElementById('badge-padre').textContent=dePadreFB;
     document.getElementById('badge-estudiante').textContent=pedidos.filter(p=>p.evento==='estudiante2026'&&p.estado!=='cobrado').length;
+    document.getElementById('badge-madre').textContent=pedidos.filter(p=>p.evento==='madre2026'&&p.estado!=='cobrado').length;
+    if(document.getElementById('tab-madre').classList.contains('active')) renderMadre();
     if(document.getElementById('tab-jardines').classList.contains('active')) renderJardines();
     if(document.getElementById('tab-padre').classList.contains('active')) renderPadre();
     if(document.getElementById('tab-estudiante').classList.contains('active')) renderEstudiante();
@@ -1266,7 +1459,8 @@ window.renderPedidos = function() {
     const esJardin = p.evento==='jardin2026';
     const esPadre = p.evento==='padre2026';
     const esEstudiante = p.evento==='estudiante2026';
-    return `<div class="pedido-card ${p.estado||'pendiente'}${esJardin?' jardin-card':''}${esPadre?' padre-card':''}${esEstudiante?' estudiante-card':''}" onclick="abrirEditar('${p.id}')">
+    const esMadre = p.evento==='madre2026';
+    return `<div class="pedido-card ${p.estado||'pendiente'}${esJardin?' jardin-card':''}${esPadre?' padre-card':''}${esEstudiante?' estudiante-card':''}${esMadre?' madre-card':''}" onclick="abrirEditar('${p.id}')">
       <div class="pedido-top">
         <div>
           <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}${esJardin?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#7C3AED;color:white;margin-left:6px;">🌸 Jardines</span>':''}${esPadre?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#1D4ED8;color:white;margin-left:6px;">👔 Día del Padre</span>':''}</div>
@@ -1521,10 +1715,11 @@ window.abrirEditar=function(id){
   jardinOn=p.evento==='jardin2026';
   padreOn=p.evento==='padre2026';
   estudianteOn=p.evento==='estudiante2026';
+  madreOn=p.evento==='madre2026';
   document.getElementById('toggle-factura').classList.toggle('on',facturaOn);
   document.getElementById('factura-extra').style.display=facturaOn?'block':'none';
   document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);
-  document.getElementById('toggle-estudiante').classList.toggle('on',estudianteOn);
+  document.getElementById('toggle-madre').classList.toggle('on',madreOn);
   document.querySelectorAll('#f-estado-opts .estado-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.estado||'pendiente')));
   document.querySelectorAll('.log-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.logistica||'tucuman')));
   document.getElementById('f-provincia').value=p.provincia||'';
@@ -1550,9 +1745,10 @@ function resetForm(){
   jardinOn=false;
   padreOn=false;
   estudianteOn=false;
+  madreOn=false;
   document.getElementById('toggle-factura').classList.remove('on');
   document.getElementById('toggle-factura-emitida').classList.remove('on');
-  document.getElementById('toggle-estudiante').classList.remove('on');
+  document.getElementById('toggle-madre').classList.remove('on');
   document.getElementById('factura-extra').style.display='none';
   document.getElementById('autocomplete-list').style.display='none';
   calcularSaldo();
@@ -1560,9 +1756,10 @@ function resetForm(){
 
 window.toggleFactura=function(){facturaOn=!facturaOn;document.getElementById('toggle-factura').classList.toggle('on',facturaOn);document.getElementById('factura-extra').style.display=facturaOn?'block':'none';if(!facturaOn){facturaEmitidaOn=false;document.getElementById('toggle-factura-emitida').classList.remove('on');}}
 window.toggleFacturaEmitida=function(){facturaEmitidaOn=!facturaEmitidaOn;document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);}
-window.toggleJardin=function(){jardinOn=!jardinOn;if(jardinOn){padreOn=false;estudianteOn=false;}}
-window.togglePadre=function(){padreOn=!padreOn;if(padreOn){jardinOn=false;estudianteOn=false;}}
-window.toggleEstudiante=function(){estudianteOn=!estudianteOn;if(estudianteOn){jardinOn=false;padreOn=false;}document.getElementById('toggle-estudiante').classList.toggle('on',estudianteOn);}
+window.toggleJardin=function(){jardinOn=!jardinOn;if(jardinOn){padreOn=false;estudianteOn=false;madreOn=false;}}
+window.togglePadre=function(){padreOn=!padreOn;if(padreOn){jardinOn=false;estudianteOn=false;madreOn=false;}}
+window.toggleEstudiante=function(){estudianteOn=!estudianteOn;if(estudianteOn){jardinOn=false;padreOn=false;madreOn=false;}}
+window.toggleMadre=function(){madreOn=!madreOn;if(madreOn){jardinOn=false;padreOn=false;estudianteOn=false;}document.getElementById('toggle-madre').classList.toggle('on',madreOn);}
 window.selEstado=function(el){
   document.querySelectorAll('#f-estado-opts .estado-opt').forEach(e=>e.classList.remove('selected'));
   el.classList.add('selected');
@@ -1597,9 +1794,11 @@ window.guardarPedido=async function(){
   if(jardinOn) eventoFinal = 'jardin2026';
   else if(padreOn) eventoFinal = 'padre2026';
   else if(estudianteOn) eventoFinal = 'estudiante2026';
+  else if(madreOn) eventoFinal = 'madre2026';
   else if(pedidoActual?.evento==='jardin2026' && jardinOn) eventoFinal = 'jardin2026';
   else if(pedidoActual?.evento==='padre2026' && padreOn) eventoFinal = 'padre2026';
   else if(pedidoActual?.evento==='estudiante2026' && estudianteOn) eventoFinal = 'estudiante2026';
+  else if(pedidoActual?.evento==='madre2026' && madreOn) eventoFinal = 'madre2026';
   const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,productos:document.getElementById('f-productos').value,fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
   try{
     if(editandoId){await db.collection("pedidos").doc(editandoId).update(data);toast('✅ Pedido actualizado');}
@@ -1638,7 +1837,7 @@ window.eliminarPedido=async function(){
 }
 
 window.setTab=function(tab){
-  ['pedidos','hoy','jardines','padre','estudiante','clientes','caja','analytics'].forEach(t=>{
+  ['pedidos','hoy','jardines','padre','estudiante','madre','clientes','caja','analytics'].forEach(t=>{
     const p=document.getElementById('panel-'+t); if(p) p.style.display=t===tab?'block':'none';
     const tb=document.getElementById('tab-'+t); if(tb) tb.classList.toggle('active',t===tab);
   });
@@ -1647,6 +1846,7 @@ window.setTab=function(tab){
   if(tab==='jardines')renderJardines();
   if(tab==='padre')renderPadre();
   if(tab==='estudiante')renderEstudiante();
+  if(tab==='madre')renderMadre();
   if(tab==='clientes')renderClientes();
 }
 
@@ -2824,7 +3024,7 @@ window.renderClientes = function(){
     const totalCobrado = c.pedidos.reduce((a,p)=>p.estado==='cobrado'?a+(Number(p.total)||0):a+(Number(p.senia)||0),0);
     const saldo = Math.max(0,totalFacturado-totalCobrado);
     const eventos=[...new Set(c.pedidos.map(p=>p.evento).filter(Boolean))];
-    const badges=eventos.map(e=>e==='jardin2026'?'<span style="font-size:10px;background:#F5F3FF;color:#7C3AED;padding:2px 7px;border-radius:100px;font-weight:700;">🌸 Jardines</span>':e==='padre2026'?'<span style="font-size:10px;background:#EFF6FF;color:#1D4ED8;padding:2px 7px;border-radius:100px;font-weight:700;">👔 Padre</span>':e==='estudiante2026'?'<span style="font-size:10px;background:#F0FDFA;color:#0F766E;padding:2px 7px;border-radius:100px;font-weight:700;">🎓 Estudiante</span>':'').join(' ');
+    const badges=eventos.map(e=>e==='jardin2026'?'<span style="font-size:10px;background:#F5F3FF;color:#7C3AED;padding:2px 7px;border-radius:100px;font-weight:700;">🌸 Jardines</span>':e==='padre2026'?'<span style="font-size:10px;background:#EFF6FF;color:#1D4ED8;padding:2px 7px;border-radius:100px;font-weight:700;">👔 Padre</span>':e==='estudiante2026'?'<span style="font-size:10px;background:#F0FDFA;color:#0F766E;padding:2px 7px;border-radius:100px;font-weight:700;">🎓 Estudiante</span>':e==='madre2026'?'<span style="font-size:10px;background:#FDF2F8;color:#BE185D;padding:2px 7px;border-radius:100px;font-weight:700;">🌷 Madre</span>':'').join(' ');
     const ultimo=c.pedidos.sort((a,b)=>(b.fechaPedido||'').localeCompare(a.fechaPedido||''))[0];
     return `<div class="cliente-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -3493,6 +3693,630 @@ window.exportarEstudiante = function(){
   toast('📥 Excel del Día del Estudiante descargado!');
 }
 // ==================== FIN DÍA DEL ESTUDIANTE ====================
+
+// ==================== DÍA DE LA MADRE ====================
+const PRODUCTOS_MADRE = [
+  { id:'llavero_madre',      nombre:'Llavero Día de la Madre',       precio:1000 },
+  { id:'colgante_madre',     nombre:'Colgante Día de la Madre',      precio:2000 },
+  { id:'portacelular_madre', nombre:'Portacelular Día de la Madre',  precio:2000 },
+  { id:'bandeja_madre',      nombre:'Bandeja Día de la Madre',       precio:2200 },
+  { id:'caja_multiusos',     nombre:'Caja Multiusos',                precio:2500 },
+  { id:'cajitas_te',         nombre:'Cajitas de Té',                 precio:2500 },
+  { id:'portarrollo',        nombre:'Portarrollo',                   precio:2500 },
+  { id:'alhajero',           nombre:'Alhajero',                      precio:2500 },
+  { id:'caja_te_madre',      nombre:'Caja de Té Día de la Madre',    precio:2800 },
+  { id:'portarretrato_madre',nombre:'Portarretrato',                 precio:2800 },
+];
+
+let filtroMadreActual = 'todos';
+let editandoMadreId = null;
+
+function renderItemsFormMadre(){
+  document.getElementById('madre-items-form').innerHTML = PRODUCTOS_MADRE.map(p=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--borde);">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--texto)">${p.nombre}</div>
+        <div style="font-size:11px;color:var(--gris)">$${fmt(p.precio)} c/u</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="cambiarCantMadre('${p.id}',-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">&minus;</button>
+        <input type="number" id="mqty-${p.id}" value="0" min="0" oninput="recalcTotalMadre()" style="width:56px;text-align:center;font-size:15px;font-weight:800;border:1.5px solid var(--borde);border-radius:8px;padding:4px 4px;font-family:DM Sans,sans-serif;">
+        <button onclick="cambiarCantMadre('${p.id}',1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #BE185D;background:#BE185D;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+        <span style="font-size:12px;font-weight:700;color:var(--madera-dark);min-width:70px;text-align:right" id="msub-${p.id}"></span>
+      </div>
+    </div>`).join('');
+  recalcTotalMadre();
+}
+
+function cambiarCantMadre(id, delta){
+  const el = document.getElementById('mqty-'+id);
+  const val = Math.max(0, (parseInt(el.value)||0) + delta);
+  el.value = val;
+  recalcTotalMadre();
+}
+
+function recalcTotalMadre(){
+  let total = 0;
+  PRODUCTOS_MADRE.forEach(p=>{
+    const qty = parseInt(document.getElementById('mqty-'+p.id)?.value)||0;
+    const sub = qty * p.precio;
+    total += sub;
+    const subEl = document.getElementById('msub-'+p.id);
+    if(subEl) subEl.textContent = sub > 0 ? '$'+fmt(sub) : '';
+  });
+  document.getElementById('mf-total').value = total;
+  document.getElementById('mf-total-display').textContent = '$'+fmt(total);
+  calcularSaldoMadre();
+}
+
+function calcularSaldoMadre(){
+  const total = Number(document.getElementById('mf-total').value)||0;
+  const senia = Number(document.getElementById('mf-senia').value)||0;
+  document.getElementById('mf-saldo').value = Math.max(0,total-senia);
+}
+
+function selEstadoMadre(el){
+  document.querySelectorAll('#mf-estado-opts .estado-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  if(el.dataset.val==='cobrado'){
+    const t=Number(document.getElementById('mf-total').value)||0;
+    const s=Number(document.getElementById('mf-senia').value)||0;
+    if(t>0&&s<t){
+      document.getElementById('mf-senia').value=t;
+      calcularSaldoMadre();
+      toast('\u{1F4B5} Seña actualizada al total — pedido cobrado completo');
+    }
+  }
+}
+
+window.abrirModalMadre = function(){
+  editandoMadreId = null;
+  document.getElementById('modal-madre-title').textContent = '\u{1F337} Nuevo Pedido — Día de la Madre';
+  document.getElementById('mf-eliminar-wrap').style.display = 'none';
+  ['mf-nombre','mf-escuela','mf-tel','mf-senia','mf-saldo','mf-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mf-turno').value = '';
+  document.getElementById('mf-pago').value = '';
+  document.getElementById('mf-fecha-pedido').value = hoy();
+  document.getElementById('mf-fecha-entrega').value = '';
+  document.querySelectorAll('#mf-estado-opts .estado-opt').forEach((e,i)=>e.classList.toggle('selected',i===0));
+  renderItemsFormMadre();
+  document.getElementById('overlay-madre').classList.add('show');
+}
+
+window.abrirEditarMadre = function(id){
+  const p = pedidos.find(x=>x.id===id);
+  if(!p) return;
+  editandoMadreId = id;
+  document.getElementById('modal-madre-title').textContent = '\u{270F}\u{FE0F} Editar Pedido Día de la Madre';
+  document.getElementById('mf-eliminar-wrap').style.display = 'block';
+  document.getElementById('mf-nombre').value = p.nombre||'';
+  document.getElementById('mf-escuela').value = p.escuela||'';
+  document.getElementById('mf-turno').value = p.turno||'';
+  document.getElementById('mf-tel').value = p.tel||'';
+  document.getElementById('mf-senia').value = p.senia||'';
+  document.getElementById('mf-pago').value = p.pago||'';
+  document.getElementById('mf-obs').value = p.obs||'';
+  document.getElementById('mf-fecha-pedido').value = p.fechaPedido||hoy();
+  document.getElementById('mf-fecha-entrega').value = p.fechaEntrega||'';
+  renderItemsFormMadre();
+  if(p.itemsMadre){
+    Object.entries(p.itemsMadre).forEach(([k,qty])=>{
+      const el = document.getElementById('mqty-'+k);
+      if(el) el.value = qty;
+    });
+    recalcTotalMadre();
+  }
+  document.querySelectorAll('#mf-estado-opts .estado-opt').forEach(e=>{
+    e.classList.toggle('selected', e.dataset.val===p.estado);
+  });
+  document.getElementById('overlay-madre').classList.add('show');
+}
+
+window.cerrarModalMadre = function(){
+  document.getElementById('overlay-madre').classList.remove('show');
+}
+
+window.guardarPedidoMadre = async function(){
+  const nombre = document.getElementById('mf-nombre').value.trim();
+  const escuela = document.getElementById('mf-escuela').value.trim();
+  if(!nombre||!escuela){ toast('Completá nombre y escuela'); return; }
+  const total = Number(document.getElementById('mf-total').value)||0;
+  const senia = Number(document.getElementById('mf-senia').value)||0;
+  if(senia > total && total > 0){ toast('\u{26A0}\u{FE0F} La seña no puede ser mayor al total'); return; }
+  const fechaPedido = document.getElementById('mf-fecha-pedido').value || hoy();
+  const fechaEntrega = document.getElementById('mf-fecha-entrega').value;
+  if(fechaEntrega && fechaEntrega < fechaPedido){ toast('\u{26A0}\u{FE0F} Fecha de entrega inválida'); return; }
+
+  const itemsMadre = {};
+  const productosTexto = [];
+  PRODUCTOS_MADRE.forEach(p=>{
+    const qty = parseInt(document.getElementById('mqty-'+p.id)?.value)||0;
+    if(qty > 0){ itemsMadre[p.id] = qty; productosTexto.push(`${qty} ${p.nombre}`); }
+  });
+  if(!Object.keys(itemsMadre).length){ toast('Agregá al menos un producto'); return; }
+
+  const estado = document.querySelector('#mf-estado-opts .estado-opt.selected')?.dataset.val||'pendiente';
+  const data = {
+    nombre, escuela,
+    turno: document.getElementById('mf-turno').value,
+    tel: document.getElementById('mf-tel').value,
+    obs: document.getElementById('mf-obs').value,
+    pago: document.getElementById('mf-pago').value,
+    fechaPedido, fechaEntrega,
+    total, senia, saldo: Math.max(0,total-senia),
+    estado, itemsMadre,
+    productos: productosTexto.join(', '),
+    evento: 'madre2026',
+    logistica: 'tucuman',
+    factura: false, facturaEmitida: false,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    if(editandoMadreId){
+      await db.collection('pedidos').doc(editandoMadreId).update(data);
+      toast('\u{2705} Pedido actualizado');
+    } else {
+      data.createdAt = new Date().toISOString();
+      await db.collection('pedidos').add(data);
+      toast('\u{2705} Pedido guardado');
+    }
+    cerrarModalMadre();
+  } catch(e){ toast('\u{274C} Error al guardar'); console.error(e); }
+}
+
+window.eliminarPedidoMadre = async function(){
+  if(!editandoMadreId) return;
+  const p=pedidos.find(x=>x.id===editandoMadreId);
+  mostrarConfirm('¿Eliminar pedido Día de la Madre?',`Se eliminará el pedido de ${p?.nombre||'esta persona'}.`,'\u{1F337}',async()=>{
+    try{await db.collection('pedidos').doc(editandoMadreId).delete();toast('\u{1F5D1}\u{FE0F} Pedido eliminado');cerrarModalMadre();}
+    catch(e){toast('\u{274C} Error al eliminar');}
+  });
+}
+
+window.setFiltroMadre = function(f, el){
+  filtroMadreActual = f;
+  document.querySelectorAll('#madre-filtros .filtro-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderMadre();
+}
+
+window.renderMadre = function(){
+  const busq = (document.getElementById('buscador-madre')?.value||'').toLowerCase();
+  const todos = pedidos.filter(p=>p.evento==='madre2026');
+  const filtrados = todos.filter(p=>{
+    const matchBusq = !busq||(p.nombre||'').toLowerCase().includes(busq)||(p.escuela||'').toLowerCase().includes(busq);
+    const matchEstado = filtroMadreActual==='todos'||p.estado===filtroMadreActual;
+    return matchBusq && matchEstado;
+  });
+
+  document.getElementById('badge-madre').textContent = todos.filter(p=>p.estado!=='cobrado').length;
+  document.getElementById('madre-count').textContent = filtrados.length;
+
+  const totalVendido = todos.reduce((a,p)=>a+(Number(p.total)||0),0);
+  const totalCobrado = todos.reduce((a,p)=>{
+    if(p.estado==='cobrado') return a+(Number(p.total)||0);
+    return a+(Number(p.senia)||0);
+  },0);
+  document.getElementById('madre-total-general').textContent = '$'+fmt(totalVendido);
+  document.getElementById('madre-total-cobrado').textContent = '$'+fmt(totalCobrado);
+  document.getElementById('madre-total-saldo').textContent = '$'+fmt(Math.max(0,totalVendido-totalCobrado));
+  document.getElementById('madre-total-cant').textContent = todos.length;
+
+  const totales = {};
+  PRODUCTOS_MADRE.forEach(p=>totales[p.id]=0);
+  todos.forEach(p=>{ if(p.itemsMadre) Object.entries(p.itemsMadre).forEach(([k,qty])=>{ totales[k]=(totales[k]||0)+Number(qty); }); });
+  document.getElementById('madre-resumen-productos').innerHTML = PRODUCTOS_MADRE
+    .filter(p=>totales[p.id]>0)
+    .map(p=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--borde)">
+      <span style="font-weight:600">${p.nombre}</span>
+      <span style="color:var(--madera-dark);font-weight:700">${totales[p.id]} unidades · $${fmt(totales[p.id]*p.precio)}</span>
+    </div>`).join('') || '<div style="color:var(--gris);font-size:12px">Sin pedidos aún</div>';
+
+  const eL={pendiente:'\u{23F3} Pendiente',produccion:'\u{1F527} Producción',listo:'\u{2705} Listo',entregado:'\u{1F69A} Entregado',cobrado:'\u{1F4B5} Cobrado'};
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  if(!filtrados.length){
+    document.getElementById('lista-madre').innerHTML = `<div style="text-align:center;padding:40px;color:var(--gris)">
+      <div style="font-size:40px;margin-bottom:12px">\u{1F337}</div>
+      <div style="font-weight:700">Sin pedidos${filtroMadreActual!=='todos'?' en este estado':''}</div>
+    </div>`;
+    return;
+  }
+
+  document.getElementById('lista-madre').innerHTML = filtrados.map(p=>{
+    const sal = saldoReal(p);
+    const esBadgeColor={
+      pendiente:'background:var(--amarillo-light);color:var(--amarillo)',
+      produccion:'background:var(--azul-light);color:var(--azul)',
+      listo:'background:var(--verde-light);color:var(--verde)',
+      entregado:'background:var(--crema-dark);color:var(--madera)',
+      cobrado:'background:#F3F4F6;color:#6B7280'
+    }[p.estado]||'';
+    const items = p.itemsMadre ? Object.entries(p.itemsMadre).filter(([,v])=>Number(v)>0).map(([k,qty])=>{
+      const prod = PRODUCTOS_MADRE.find(x=>x.id===k);
+      return prod ? `${qty} ${prod.nombre}` : '';
+    }).filter(Boolean).join(' · ') : p.productos||'';
+    return `<div class="pedido-card madre-card ${p.estado||'pendiente'}" onclick="abrirEditarMadre('${p.id}')">
+      <div class="pedido-top">
+        <div><div class="pedido-nombre">${esc(p.nombre)}</div><div class="pedido-escuela">${esc(p.escuela)}${p.turno?' · '+p.turno:''}</div></div>
+        <span class="estado-badge" style="${esBadgeColor}">${eL[p.estado]||''}</span>
+      </div>
+      <div class="pedido-productos">${items}</div>
+      ${p.obs?`<div style="font-size:12px;font-weight:700;color:#BE185D;background:#FCE7F3;border-radius:8px;padding:6px 10px;margin-bottom:8px;">\u{26A0}\u{FE0F} ${esc(p.obs)}</div>`:''}
+      <div class="pedido-montos">
+        <div class="monto-item"><div class="monto-val">$${fmt(p.total||0)}</div><div class="monto-label">Total</div></div>
+        <div class="monto-item"><div class="monto-val">$${fmt(p.senia||0)}</div><div class="monto-label">Señado</div></div>
+        <div class="monto-item"><div class="monto-val ${sal>0?'saldo':'ok'}">$${fmt(sal)}</div><div class="monto-label">${sal>0?'Saldo':'\u{2713} Pago'}</div></div>
+      </div>
+      <div class="pedido-meta">
+        ${p.fechaEntrega?`<span class="meta-chip">\u{1F4C5} ${p.fechaEntrega}</span>`:''}
+        ${diasChip(p.fechaEntrega,p.estado)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.exportarMadre = function(){
+  const todos = pedidos.filter(p=>p.evento==='madre2026');
+  if(!todos.length){ toast('No hay pedidos del Día de la Madre'); return; }
+
+  const eL={pendiente:'Pendiente',produccion:'En producción',listo:'Listo',entregado:'Entregado',cobrado:'Cobrado'};
+  const ordenados = [...todos].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  const fFecha = f => f ? f.split('-').reverse().join('/') : '';
+  const esc = v => String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  const PALETAS_MADRE=[
+    {id:'llavero_madre',      bg:'BE185D',lt:'FCE7F3',txt:'831843'},
+    {id:'colgante_madre',     bg:'7C3AED',lt:'F5F3FF',txt:'4C1D95'},
+    {id:'portacelular_madre', bg:'0369A1',lt:'E0F2FE',txt:'0C4A6E'},
+    {id:'bandeja_madre',      bg:'C2410C',lt:'FFEDD5',txt:'7C2D12'},
+    {id:'caja_multiusos',     bg:'15803D',lt:'DCFCE7',txt:'14532D'},
+    {id:'cajitas_te',         bg:'B45309',lt:'FEF3C7',txt:'78350F'},
+    {id:'portarrollo',        bg:'0F766E',lt:'CCFBF1',txt:'134E4A'},
+    {id:'alhajero',           bg:'A21CAF',lt:'FDF4FF',txt:'701A75'},
+    {id:'caja_te_madre',      bg:'B91C1C',lt:'FEE2E2',txt:'7F1D1D'},
+    {id:'portarretrato_madre',bg:'4338CA',lt:'EEF2FF',txt:'312E81'},
+  ];
+
+  const estilosMap = {};
+  let estiloIdx = 1;
+  function regEstilo(bg,fg,bold,align,fs,italic){
+    const key=`${bg}|${fg}|${bold?1:0}|${align}|${fs||11}|${italic?1:0}`;
+    if(!estilosMap[key]) estilosMap[key]={id:'s'+estiloIdx++,bg,fg,bold,align,fs:fs||11,italic};
+    return estilosMap[key].id;
+  }
+  const ST={
+    titulo:(bg)=>regEstilo(bg,'FFFFFF',true,'Left',14,false),
+    sub:(bg,fg)=>regEstilo(bg,fg,false,'Left',9,true),
+    sep:()=>regEstilo('FFFFFF','FFFFFF',false,'Left',6,false),
+    th:(bg)=>regEstilo(bg,'FFFFFF',true,'Center',11,false),
+    thL:(bg)=>regEstilo(bg,'FFFFFF',true,'Left',11,false),
+    td:(lt)=>regEstilo(lt,'1C1008',false,'Left',11,false),
+    tdB:(lt)=>regEstilo(lt,'1C1008',true,'Left',11,false),
+    tdC:(lt)=>regEstilo(lt,'6B7280',false,'Center',11,false),
+    tdR:(lt)=>regEstilo(lt,'1C1008',true,'Right',11,false),
+    tdRg:(lt)=>regEstilo(lt,'15803D',true,'Right',11,false),
+    tdRr:(lt)=>regEstilo(lt,'B91C1C',true,'Right',11,false),
+    tdN:(lt,fg)=>regEstilo(lt,fg,true,'Center',15,false),
+    tot:(bg)=>regEstilo(bg,'FFFFFF',true,'Left',11,false),
+    totR:(bg)=>regEstilo(bg,'FFFFFF',true,'Right',11,false),
+    totRr:(bg)=>regEstilo(bg,'FCA5A5',true,'Right',11,false),
+  };
+  function C(styleId,value,type){
+    const t=type||'String';
+    const v=t==='Number'?String(value||0).replace(/[.$]/g,'').replace(/\./g,''):esc(String(value||''));
+    return `<Cell ss:StyleID="${styleId}"><Data ss:Type="${t}">${v}</Data></Cell>`;
+  }
+  function CM(styleId,value,merge){
+    return `<Cell ss:StyleID="${styleId}" ss:MergeAcross="${merge-1}"><Data ss:Type="String">${esc(String(value||''))}</Data></Cell>`;
+  }
+  function CE(styleId){return `<Cell ss:StyleID="${styleId}"><Data ss:Type="String"></Data></Cell>`;}
+
+  const hojas=[];
+
+  // GENERAL
+  {
+    const BG='BE185D',LT='FCE7F3',TXT='831843';
+    const N=12;
+    const gT=ordenados.reduce((a,p)=>a+(Number(p.total)||0),0);
+    const gS=ordenados.reduce((a,p)=>a+(Number(p.senia)||0),0);
+    const gSal=ordenados.reduce((a,p)=>a+saldoReal(p),0);
+    const filas=[];
+    filas.push(`<Row ss:Height="22">${CM(ST.titulo(BG),'\u{1F337}  DIA DE LA MADRE 2026 — LISTADO GENERAL',N)}</Row>`);
+    filas.push(`<Row ss:Height="16">${CM(ST.sub(LT,TXT),ordenados.length+' pedidos · Facturado: $'+fmt(gT)+' · Señado: $'+fmt(gS)+' · Saldo: $'+fmt(gSal)+' · '+new Date().toLocaleString('es-AR'),N)}</Row>`);
+    filas.push(`<Row ss:Height="6">${CM(ST.sep(),'',N)}</Row>`);
+    filas.push(`<Row ss:Height="18">${C(ST.th(BG),'#')}${C(ST.thL(BG),'Nombre')}${C(ST.thL(BG),'Escuela')}${C(ST.th(BG),'Turno')}${C(ST.th(BG),'F.Pedido')}${C(ST.th(BG),'F.Entrega')}${C(ST.thL(BG),'Producto(s)')}${C(ST.th(BG),'Uds')}${C(ST.th(BG),'Total pedido')}${C(ST.th(BG),'Señado')}${C(ST.th(BG),'Saldo')}${C(ST.th(BG),'Estado')}</Row>`);
+    ordenados.forEach((p,i)=>{
+      const t_=Number(p.total)||0,s_=Number(p.senia)||0,sal_=saldoReal(p);
+      const lt=i%2===0?LT:'FFFFFF';
+      const prods=p.itemsMadre?Object.entries(p.itemsMadre).filter(([,v])=>Number(v)>0).map(([k,qty])=>{const pr=PRODUCTOS_MADRE.find(x=>x.id===k);return pr?qty+'x '+pr.nombre:''}).filter(Boolean).join(' / '):(p.productos||'');
+      const uds=p.itemsMadre?Object.values(p.itemsMadre).reduce((a,v)=>a+Number(v),0):'';
+      filas.push(`<Row>${C(ST.tdC(lt),i+1)}${C(ST.tdB(lt),p.nombre||'')}${C(ST.td(lt),p.escuela||'')}${C(ST.tdC(lt),p.turno||'')}${C(ST.tdC(lt),fFecha(p.fechaPedido))}${C(ST.tdC(lt),fFecha(p.fechaEntrega))}${C(ST.td(lt),prods)}${C(ST.tdN(lt,'BE185D'),uds)}${C(ST.tdR(lt),fmt(t_))}${C(ST.td(lt),fmt(s_))}${sal_>0?C(ST.tdRr(lt),fmt(sal_)):C(ST.tdRg(lt),'Pago')}${C(ST.tdC(lt),eL[p.estado]||'')}</Row>`);
+    });
+    filas.push(`<Row ss:Height="18">${CM(ST.tot(BG),'TOTAL — '+ordenados.length+' pedidos',8)}${C(ST.totR(BG),fmt(gT))}${C(ST.totR(BG),fmt(gS))}${C(ST.totRr(BG),fmt(gSal))}${CE(ST.tot(BG))}</Row>`);
+    hojas.push({nombre:'General',filas,cols:[{w:4},{w:22},{w:24},{w:9},{w:12},{w:12},{w:40},{w:8},{w:13},{w:13},{w:13},{w:14}]});
+  }
+
+  // POR PRODUCTO
+  PRODUCTOS_MADRE.forEach((prod,pi)=>{
+    const conEste=ordenados.filter(p=>p.itemsMadre&&Number(p.itemsMadre[prod.id])>0);
+    if(!conEste.length) return;
+    const pal=PALETAS_MADRE.find(x=>x.id===prod.id)||PALETAS_MADRE[pi%PALETAS_MADRE.length];
+    const {bg:BG,lt:LT}=pal;
+    const N=11;
+    const tUni=conEste.reduce((a,p)=>a+Number(p.itemsMadre[prod.id]),0);
+    const tProd=conEste.reduce((a,p)=>a+(Number(p.total)||0),0);
+    const tSen=conEste.reduce((a,p)=>a+(Number(p.senia)||0),0);
+    const tSal=conEste.reduce((a,p)=>a+saldoReal(p),0);
+    const filas=[];
+    filas.push(`<Row ss:Height="22">${CM(ST.titulo(BG),'\u{1F337}  '+prod.nombre.toUpperCase()+' — DIA DE LA MADRE 2026',N)}</Row>`);
+    filas.push(`<Row ss:Height="16">${CM(ST.sub(LT,pal.txt),conEste.length+' clientes · '+tUni+' unidades · $'+fmt(prod.precio)+' c/u · Total: $'+fmt(tUni*prod.precio),N)}</Row>`);
+    filas.push(`<Row ss:Height="6">${CM(ST.sep(),'',N)}</Row>`);
+    filas.push(`<Row ss:Height="18">${C(ST.th(BG),'#')}${C(ST.thL(BG),'Nombre')}${C(ST.thL(BG),'Escuela')}${C(ST.th(BG),'Turno')}${C(ST.th(BG),'F.Pedido')}${C(ST.th(BG),'F.Entrega')}${C(ST.thL(BG),'Producto')}${C(ST.th(BG),'Cantidad')}${C(ST.th(BG),'Total pedido')}${C(ST.th(BG),'Señado')}${C(ST.th(BG),'Saldo')}</Row>`);
+    conEste.forEach((p,i)=>{
+      const lt=i%2===0?LT:'FFFFFF';
+      const sal=saldoReal(p);
+      filas.push(`<Row>${C(ST.tdC(lt),i+1)}${C(ST.tdB(lt),p.nombre||'')}${C(ST.td(lt),p.escuela||'')}${C(ST.tdC(lt),p.turno||'')}${C(ST.tdC(lt),fFecha(p.fechaPedido))}${C(ST.tdC(lt),fFecha(p.fechaEntrega))}${C(ST.td(lt),prod.nombre)}${C(ST.tdN(lt,BG),Number(p.itemsMadre[prod.id]))}${C(ST.tdR(lt),fmt(p.total||0))}${C(ST.td(lt),fmt(p.senia||0))}${sal>0?C(ST.tdRr(lt),fmt(sal)):C(ST.tdRg(lt),'Pago')}</Row>`);
+    });
+    filas.push(`<Row ss:Height="18">${CM(ST.tot(BG),'TOTAL — '+conEste.length+' clientes',7)}${C(ST.totR(BG),tUni+' uds')}${C(ST.totR(BG),fmt(tProd))}${C(ST.totR(BG),fmt(tSen))}${C(ST.totRr(BG),fmt(tSal))}</Row>`);
+    const nh=prod.nombre.length>31?prod.nombre.substring(0,31):prod.nombre;
+    hojas.push({nombre:nh,filas,cols:[{w:4},{w:22},{w:24},{w:9},{w:12},{w:12},{w:28},{w:10},{w:13},{w:13},{w:13}]});
+  });
+
+  const estilosXML=Object.values(estilosMap).map(s=>`
+    <Style ss:ID="${s.id}">
+      <Alignment ss:Horizontal="${s.align}" ss:Vertical="Center" ss:WrapText="0"/>
+      <Font ss:Bold="${s.bold?1:0}" ss:Color="#${s.fg}" ss:Size="${s.fs}"${s.italic?' ss:Italic="1"':''}/>
+      <Interior ss:Color="#${s.bg}" ss:Pattern="Solid"/>
+      <Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/></Borders>
+    </Style>`).join('');
+
+  const hojasXML=hojas.map(h=>{
+    const colsXML=h.cols.map(c=>`<Column ss:Width="${c.w*7}"/>`).join('');
+    return `<Worksheet ss:Name="${esc(h.nombre)}"><Table>${colsXML}${h.filas.join('')}</Table></Worksheet>`;
+  }).join('');
+
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+  xmlns:x="urn:schemas-microsoft-com:office:excel">
+  <Styles>${estilosXML}</Styles>
+  ${hojasXML}
+</Workbook>`;
+
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`madre2026-${new Date().toLocaleDateString('es-AR').replace(/\//g,'-')}.xls`; a.click();
+  URL.revokeObjectURL(url);
+  toast('\u{1F4E5} Excel del Día de la Madre descargado!');
+}
+
+// ========== IMPORTADOR DE PEDIDOS CARGADOS A MANO ==========
+// Alias por producto. Ordenados internamente de mas especifico a menos.
+const ALIAS_MADRE = {
+  // Calibrado con el vocabulario real de los pedidos cargados a mano.
+  caja_te_madre:      ['cajas de te dia de la madre','caja de te dia de la madre','cajas de te','caja de te','cajas te','caja te'],
+  caja_multiusos:     ['cajas multiusos','caja multiusos','cajas multiuso','caja multiuso','multiusos','multiuso'],
+  // "casas de te" / "casitas" es como le dicen a las cajitas de te ($2500, verificado)
+  cajitas_te:         ['cajitas de te','cajita de te','casitas de te','casita de te','casas de te','casa de te','cajitas te','cajita te','casitas te','casita te','casas te','casa te','cajitas','cajita','casitas','casita','casas'],
+  portacelular_madre: ['portacelulares dia de la madre','portacelular dia de la madre','porta celulares','porta celular','porta celus','porta celu','portacelulares','portacelular','portacelus','portacelu','portacels','portacel','porta cels','porta cel','celulares','celular','celus','celu'],
+  portarretrato_madre:['portarretratos','portarretrato','porta retratos','porta retrato','portaretratos','portaretrato','porta ret','porta rets','porta tr','porta trs','portarret','portaret','portatr','retratos','retrato'],
+  portarrollo:        ['portarrollos','portarrollo','porta rollos','porta rollo','portarroll','rollos','rollo'],
+  llavero_madre:      ['llaveros dia de la madre','llavero dia de la madre','llaveros','llavero','llav'],
+  colgante_madre:     ['colgantes dia de la madre','colgante dia de la madre','colgantes','colgante'],
+  bandeja_madre:      ['bandejas dia de la madre','bandeja dia de la madre','bandejas','bandeja'],
+  alhajero:           ['alhajeros','alhajero','alajeros','alajero','alhaj','alaj'],
+};
+
+// Frases de OTROS productos del catalogo que contienen palabras parecidas.
+// Se consumen ANTES de buscar, para que "cajita de encastres" no cuente como cajita de te.
+const NO_MADRE = [
+  'cajita de encastres','cajitas de encastres','caja de encastres','cajas de encastres',
+  'caja de atomos','cajas de atomos','caja atomos','cajas atomos',
+  'bolsa de discos','bolsas de discos','bolsa de bloques','bolsas de bloques',
+  'combo encastres','combo escaleritas','combo titeres','pack titeres',
+  'casa tangram','casita tangram','tablero sensorial','tablero montesori',
+];
+
+function normalizarTxt(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+// Lee texto libre y devuelve {items, hits}
+function parsearProductosMadre(texto){
+  const t = normalizarTxt(texto);
+  const items = {};
+  if(!t) return {items, hits:0};
+
+  const consumido = new Array(t.length).fill(false);
+
+  // Primero tapamos las frases que son de otros productos
+  NO_MADRE.forEach(f=>{
+    const nf = normalizarTxt(f);
+    if(!nf) return;
+    const pat = nf.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s+');
+    const rx = new RegExp(pat,'g');
+    let m;
+    while((m = rx.exec(t)) !== null){
+      for(let i=m.index;i<m.index+m[0].length;i++) consumido[i] = true;
+    }
+  });
+
+  const lista = [];
+  PRODUCTOS_MADRE.forEach(p=>{
+    (ALIAS_MADRE[p.id]||[]).forEach(a=>{
+      const na = normalizarTxt(a);
+      if(na) lista.push({id:p.id, alias:na});
+    });
+  });
+  // el alias mas largo gana: evita que "caja" se coma "caja de te"
+  lista.sort((a,b)=> b.alias.length - a.alias.length);
+
+  let hits = 0;
+  for(const {id, alias} of lista){
+    const pat = alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s+');
+    const rx = new RegExp('(?:^|\\s)'+pat+'(?=\\s|$)','g');
+    let m;
+    while((m = rx.exec(t)) !== null){
+      const hayEspacio = m[0].length > alias.length ? 1 : 0;
+      const ini = m.index + hayEspacio;
+      const fin = ini + alias.length;
+      let ocupado = false;
+      for(let i=ini;i<fin;i++){ if(consumido[i]){ ocupado = true; break; } }
+      if(ocupado){ rx.lastIndex = fin; continue; }
+
+      let cant = null, numIni = -1;
+      const antes = t.slice(0, ini);
+      const mA = antes.match(/(\d+)\s*(?:x|u|un|uds|unidades)?\s*$/);
+      if(mA){ cant = parseInt(mA[1]); numIni = antes.length - mA[0].length; }
+      if(cant === null){
+        const mD = t.slice(fin).match(/^\s*(?:x\s*)?(\d+)/);
+        if(mD) cant = parseInt(mD[1]);
+      }
+      if(cant === null) cant = 1;
+
+      if(cant > 0 && cant <= 5000){
+        items[id] = (items[id]||0) + cant;
+        hits++;
+        for(let i=ini;i<fin;i++) consumido[i] = true;
+        if(numIni >= 0){ for(let i=numIni;i<ini;i++) consumido[i] = true; }
+      }
+      rx.lastIndex = fin;
+    }
+  }
+  return {items, hits};
+}
+
+let impFilas = [];
+
+window.abrirImportador = function(){
+  // Solo pedidos comunes (sin evento) que tengan texto en productos
+  const candidatos = pedidos.filter(p => !p.evento && String(p.productos||'').trim());
+  impFilas = candidatos.map(p=>{
+    const r = parsearProductosMadre(p.productos);
+    const calc = PRODUCTOS_MADRE.reduce((a,pr)=> a + (r.items[pr.id]||0)*pr.precio, 0);
+    const estado = r.hits===0 ? 'nada' : (calc === (Number(p.total)||0) ? 'ok' : 'parcial');
+    return {pedido:p, items:r.items, hits:r.hits, calc, estado};
+  });
+
+  const nOk = impFilas.filter(f=>f.estado==='ok').length;
+  const nPar = impFilas.filter(f=>f.estado==='parcial').length;
+  const nNada = impFilas.filter(f=>f.estado==='nada').length;
+
+  document.getElementById('imp-resumen').innerHTML = !impFilas.length
+    ? '<b>No encontré pedidos comunes con productos cargados.</b> Si ya los convertiste, van a estar en la lista de abajo del panel.'
+    : `Encontré <b>${impFilas.length} pedidos</b> cargados a mano:<br>
+       <span style="color:#15803D;font-weight:700">\u{2705} ${nOk} calzan perfecto</span> (el detalle suma igual que el total cargado) ·
+       <span style="color:#B45309;font-weight:700">\u{26A0}\u{FE0F} ${nPar} a revisar</span> ·
+       <span style="color:#B91C1C;font-weight:700">\u{274C} ${nNada} sin reconocer</span>`;
+
+  renderImportador();
+  document.getElementById('overlay-importador').classList.add('show');
+}
+
+function renderImportador(){
+  const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  if(!impFilas.length){
+    document.getElementById('imp-lista').innerHTML = '';
+    document.getElementById('imp-btn-confirmar').style.display='none';
+    return;
+  }
+  document.getElementById('imp-btn-confirmar').style.display='block';
+  document.getElementById('imp-lista').innerHTML = impFilas.map((f,idx)=>{
+    const p = f.pedido;
+    const badge = f.estado==='ok' ? '<span class="imp-badge ok">\u{2705} Calza perfecto</span>'
+                : f.estado==='parcial' ? '<span class="imp-badge parcial">\u{26A0}\u{FE0F} Revisar</span>'
+                : '<span class="imp-badge nada">\u{274C} Cargar a mano</span>';
+    const dif = f.calc - (Number(p.total)||0);
+    const aviso = (f.estado==='parcial' && f.hits>0)
+      ? `<div style="font-size:11px;color:#B45309;margin-top:4px;font-weight:600">El detalle suma $${fmt(f.calc)} y el pedido dice $${fmt(Number(p.total)||0)} (${dif>0?'+':''}$${fmt(dif)}). Ajustá las cantidades.</div>`
+      : '';
+    const campos = PRODUCTOS_MADRE.map(pr=>{
+      const v = f.items[pr.id]||0;
+      return `<div class="imp-item">
+        <span class="imp-item-nom">${pr.nombre}</span>
+        <input type="number" min="0" value="${v}" class="${v>0?'tiene':''}"
+               id="imp-${idx}-${pr.id}" oninput="recalcImpFila(${idx})">
+      </div>`;
+    }).join('');
+    return `<div class="imp-fila ${f.estado}" id="imp-fila-${idx}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div class="imp-nombre">${esc(p.nombre)}</div>
+          <div class="imp-meta">\u{1F3EB} ${esc(p.escuela)} · Total cargado: <b>$${fmt(Number(p.total)||0)}</b></div>
+        </div>
+        ${badge}
+      </div>
+      <div class="imp-texto">"${esc(p.productos)}"</div>
+      ${aviso}
+      <div class="imp-items">${campos}</div>
+      <div class="imp-tot" id="imp-tot-${idx}">Detalle: $${fmt(f.calc)}</div>
+    </div>`;
+  }).join('');
+}
+
+window.recalcImpFila = function(idx){
+  let total = 0;
+  PRODUCTOS_MADRE.forEach(pr=>{
+    const el = document.getElementById(`imp-${idx}-${pr.id}`);
+    const v = parseInt(el?.value)||0;
+    if(el) el.classList.toggle('tiene', v>0);
+    total += v * pr.precio;
+  });
+  const t = document.getElementById(`imp-tot-${idx}`);
+  const orig = Number(impFilas[idx]?.pedido.total)||0;
+  if(t){
+    t.textContent = 'Detalle: $'+fmt(total) + (total===orig ? '  \u{2713} coincide' : '  (cargado: $'+fmt(orig)+')');
+    t.style.color = total===orig ? '#15803D' : '#B45309';
+  }
+}
+
+window.cerrarImportador = function(){
+  document.getElementById('overlay-importador').classList.remove('show');
+}
+
+window.confirmarImportacion = async function(){
+  const aGuardar = [];
+  impFilas.forEach((f,idx)=>{
+    const items = {};
+    const textos = [];
+    PRODUCTOS_MADRE.forEach(pr=>{
+      const v = parseInt(document.getElementById(`imp-${idx}-${pr.id}`)?.value)||0;
+      if(v>0){ items[pr.id]=v; textos.push(`${v} ${pr.nombre}`); }
+    });
+    if(Object.keys(items).length) aGuardar.push({id:f.pedido.id, items, textos});
+  });
+
+  if(!aGuardar.length){ toast('No hay nada para importar'); return; }
+
+  const btn = document.getElementById('imp-btn-confirmar');
+  btn.disabled = true; btn.textContent = 'Importando...';
+  let ok = 0, err = 0;
+  for(const it of aGuardar){
+    try{
+      await db.collection('pedidos').doc(it.id).update({
+        evento: 'madre2026',
+        itemsMadre: it.items,
+        productos: it.textos.join(', '),
+        updatedAt: new Date().toISOString()
+      });
+      ok++;
+    }catch(e){ err++; console.error('Error importando', it.id, e); }
+  }
+  btn.disabled = false; btn.textContent = '\u{2705} Confirmar e importar';
+  cerrarImportador();
+  toast(err ? `\u{26A0}\u{FE0F} ${ok} importados, ${err} con error` : `\u{2705} ${ok} pedidos importados al Día de la Madre`);
+}
+// ==================== FIN DÍA DE LA MADRE ====================
+
 
 function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':fmt(n);}
 function hoy(){return new Date().toISOString().split('T')[0];}
