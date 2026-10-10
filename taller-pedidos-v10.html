@@ -1890,7 +1890,22 @@ function catalogos(){
 let maestrasRanking = [];
 
 // ==================== METAS Y MES A MES ====================
-const METAS_DEFAULT = {'2026-04':7000000,'2026-05':12000000,'2026-06':12000000,'2026-07':12000000,'2026-08':12000000,'2026-09':12000000,'2026-10':12000000,'2026-11':12000000,'2026-12':15000000};
+// Metas que puso Germán el 10/10/2026. Vienen cargadas de fábrica: no hace falta
+// guardarlas ni que Firebase deje escribir. El modal solo las pisa si las cambia.
+const METAS_DEFAULT = {
+  '2026-04': 7000000,
+  '2026-05': 8000000,
+  '2026-06': 8000000,
+  '2026-07': 1200000,   // vacaciones de invierno
+  '2026-08': 8000000,
+  '2026-09': 8500000,
+  '2026-10': 9000000,
+  '2026-11': 10000000,
+  '2026-12': 15000000,
+  '2027-01': 1500000,   // vacaciones de verano
+  '2027-02': 6000000,
+  '2027-03': 8000000,
+};
 let metasGuardadas = null; // lo que vino de Firebase
 
 // Las metas viven DENTRO de la coleccion pedidos: las reglas de Firestore solo
@@ -1970,11 +1985,16 @@ function renderMesAMes(){
     const colPct = futuro || r.pct===null ? 'var(--gris)'
               : r.pct>=100 ? '#D97706' : r.pct>=85 ? 'var(--verde)' : r.pct>=50 ? '#B45309' : 'var(--rojo)';
     const txtPct = futuro ? (r.meta?'meta $'+fmtK(r.meta):'—') : (r.pct===null?'—':r.pct+'%');
+    // El monto va pegado arriba de su barra; si la barra llega muy alto, entra adentro.
+    const adentro = hF > H-17;
+    const etiqueta = r.fact
+      ? `<div style="position:absolute;left:-3px;right:-3px;bottom:${adentro?Math.max(1,hF-16):hF+3}px;text-align:center;font-size:9.5px;font-weight:800;white-space:nowrap;color:${adentro?'white':'var(--texto)'}">$${fmtK(r.fact)}</div>`
+      : '';
     return `<div style="flex:1;min-width:42px;display:flex;flex-direction:column;align-items:center;gap:4px">
-      <div style="font-size:9.5px;font-weight:800;color:var(--texto);white-space:nowrap">${r.fact?'$'+fmtK(r.fact):''}</div>
-      <div style="position:relative;width:100%;height:${H}px;display:flex;align-items:flex-end;justify-content:center">
+      <div style="position:relative;width:100%;height:${H+14}px;display:flex;align-items:flex-end;justify-content:center">
         ${hM?`<div style="position:absolute;left:0;right:0;bottom:${hM}px;border-top:2px dashed #BE185D;opacity:${futuro?'.4':'.75'}"></div>`:''}
         <div style="width:68%;height:${hF}px;background:${col};border-radius:6px 6px 0 0;${esHoy?'outline:2px solid var(--madera-dark);outline-offset:1px':''}"></div>
+        ${etiqueta}
       </div>
       <div style="font-size:10px;font-weight:${esHoy?'800':'600'};color:${esHoy?'var(--madera-dark)':'var(--gris)'};white-space:nowrap">${labelMes(r.mes)}</div>
       <div style="font-size:9.5px;font-weight:800;color:${colPct};white-space:nowrap">${txtPct}</div>
@@ -2042,6 +2062,22 @@ window.guardarMetas = async function(){
     const v=parseInt(inp.value);
     if(v>0) valores[k]=v;
   });
+
+  // Freno para el cero de más: si una meta es 5 veces la mediana, pregunto.
+  const nums=Object.values(valores).filter(v=>v>2000000).sort((a,b)=>a-b);
+  if(nums.length>=3){
+    const med=nums[Math.floor(nums.length/2)];
+    const raro=Object.entries(valores).find(([k,v])=> v > med*5);
+    if(raro){
+      const sug=Math.round(raro[1]/10);
+      if(!confirm(`${labelMes(raro[0])} quedó en $${fmt(raro[1])}, diez veces más que el resto.\n\n¿Querés que sea $${fmt(sug)}?\n\nAceptar = corregir · Cancelar = dejar como está`)){
+        // lo deja como está
+      } else {
+        valores[raro[0]]=sug;
+        const inp=document.getElementById('meta-'+raro[0]); if(inp) inp.value=sug;
+      }
+    }
+  }
   // Guardo primero local, asi nunca se pierde lo que acabás de escribir
   metasGuardadas = valores;
   try{ localStorage.setItem('metasTaller', JSON.stringify(valores)); }catch(e){}
