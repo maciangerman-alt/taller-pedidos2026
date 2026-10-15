@@ -737,7 +737,6 @@ const PRODUCTOS = [
   { id:132, nombre:'Átomos Encastrables x50', categoria:'Juguetes Plásticos', edades:['3 años','4 años','5 años','6 años'], precio:9100, img:'https://drive.google.com/thumbnail?id=1N9CApzySaTYUbpSAzoD12Q3i1XdHbpUD&sz=w1000', emoji:'⚛️', desc:'Bolsa de 50 átomos encastrables de plástico que estimulan la creatividad y el pensamiento constructivo. Ideal para juego libre y trabajo grupal.' },
   { id:133, nombre:'Pelotitas de Colores x20', categoria:'Juguetes Plásticos', edades:['3 años','4 años','5 años','6 años'], precio:6900, img:'https://drive.google.com/thumbnail?id=14Zf4t14PrZSih7B_RwnB3mIa7-y6QHJp&sz=w1000', emoji:'🔴', desc:'Set de 20 pelotitas de colores para trabajar motricidad, colores y juego sensorial. Versátiles para sala y recreo.' },
   { id:134, nombre:'Bloques Gigantes x12', categoria:'Juguetes Plásticos', edades:['3 años','4 años','5 años','6 años'], precio:21900, img:'https://drive.google.com/thumbnail?id=1e2MdzrOABsoAnShor1858U5vYrrkExgi&sz=w1000', emoji:'🟦', desc:'Set de 12 bloques gigantes de plástico para construcción libre. Desarrollan el pensamiento espacial y la creatividad en gran escala.' },
-  { id:135, nombre:'Combo Encastres Didáctico', categoria:'Juguetes Plásticos', destacado:true, edades:['3 años','4 años','5 años'], precio:28900, img:'https://drive.google.com/thumbnail?id=1aj8bPmWIY4VPcCazA-Wc_syZFmvwzOoy&sz=w1000', emoji:'🔷', desc:'Combo de 3 encajes de formas: Cubo (13x13x13 cm), Hexágono (18x18x8 cm) y Esfera (15 cm de diámetro), cada uno con sus piezas. Trabajan reconocimiento de formas y colores, relación figura-hueco, motricidad fina y coordinación óculo-manual. Stock limitado.' },
   { id:137, nombre:'Discos Encastrables x50', categoria:'Juguetes Plásticos', edades:['3 años','4 años','5 años'], precio:9100, img:'https://drive.google.com/thumbnail?id=15lEAlxGpVHIFo21S5CQesSC1gV_nh-IT&sz=w1000', emoji:'🟡', desc:'Bolsa de 50 discos encastrables de plástico para construir figuras en 2D y 3D. Trabajan motricidad fina, coordinación óculo-manual y pensamiento espacial.' },
   { id:138, nombre:'Bloques de Construcción tipo Rasti x50', categoria:'Juguetes Plásticos', edades:['3 años','4 años','5 años'], precio:9800, img:'https://drive.google.com/thumbnail?id=1VA3hhvEGNBl4qPjJNX5NZhPUCSbFQq7z&sz=w1000', emoji:'🧱', desc:'Set de 50 bloques de construcción encastrables. Favorecen la creatividad, la planificación y el pensamiento espacial mientras los chicos arman sus propias creaciones.' },
   { id:139, nombre:'Cajita de Encastres x150', categoria:'Juguetes Plásticos', destacado:true, edades:['3 años','4 años','5 años'], precio:28000, img:'https://drive.google.com/thumbnail?id=1Z6BUSvM7Pwzxio0U3LNE1kGBFuYTD3qK&sz=w1000', emoji:'📦', desc:'Cajita con 150 piezas: 50 átomos pastel, 50 átomos clásicos y 50 discos encastrables. Todo para equipar el rincón de construcción de la sala: creatividad, motricidad fina y juego en grupo.' },
@@ -1063,13 +1062,13 @@ function renderCatalogo(){
   if(categoriaActual === 'todas' && !busq){
     const cats = [...new Set(PRODUCTOS.map(p=>p.categoria))];
 
-    // SECCIÓN ESTRELLA DEL INICIO: Juguetes Plásticos (los destacados primero)
-    const prodsPlasticos = PRODUCTOS.filter(p=>p.categoria==='Juguetes Plásticos')
+    // SECCIÓN ESTRELLA DEL INICIO: Importados (estelar)
+    const prodsPlasticos = PRODUCTOS.filter(p=>p.categoria==='Importados')
       .sort((a,b)=>(b.destacado?1:0)-(a.destacado?1:0));
     const plasticosPortada = prodsPlasticos.slice(0,6);
 
     // Destacados generales: 1 por categoría, sin repetir la sección estrella
-    const catsResto = cats.filter(c=>c!=='Juguetes Plásticos');
+    const catsResto = cats.filter(c=>c!=='Importados');
     const destacados = catsResto.map(cat => PRODUCTOS.find(p=>p.categoria===cat)).filter(Boolean).slice(0,6);
 
     const restoHTML = cats.map(cat => {
@@ -1080,11 +1079,11 @@ function renderCatalogo(){
     }).join('');
 
     const secPlasticosHtml = plasticosPortada.length > 0
-      ? `<div class="cat-titulo" style="color:#FF8C42;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-           <span>🧸 Juguetes Didácticos Plásticos</span>
-           ${prodsPlasticos.length > plasticosPortada.length ? `<button onclick="setCategoriaDrop('Juguetes Plásticos','nav-cat-btn')" style="background:#FF8C42;color:white;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Ver todos →</button>` : ''}
+      ? `<div class="cat-titulo" style="color:#6C5CE7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+           <span>🌍 Juguetes Importados</span>
+           ${prodsPlasticos.length > plasticosPortada.length ? `<button onclick="setCategoriaDrop('Importados','nav-cat-btn')" style="background:#6C5CE7;color:white;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Ver todos →</button>` : ''}
          </div>
-         <div style="font-size:12.5px;color:var(--gris);margin:-8px 0 12px;font-family:'Nunito',sans-serif;">Encastres, átomos, discos y bloques para el rincón de construcción</div>
+         <div style="font-size:12.5px;color:var(--gris);margin:-8px 0 12px;font-family:'Nunito',sans-serif;">Encastres, arcoíris, trenes, títeres y más — línea importada premium</div>
          <div class="productos-grid">${plasticosPortada.map(productoCard).join('')}</div>`
       : '';
     content.innerHTML = secPlasticosHtml + `<div class="cat-titulo">✨ Destacados</div>
