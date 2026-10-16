@@ -823,6 +823,24 @@ let carrito = (()=>{
 carrito = Object.fromEntries(Object.entries(carrito).map(([k,v])=>[k,v]));
 let categoriaActual = 'todas';
 
+// FOTOS: primero la copia propia (carpeta img/ del sitio), si no está, la de Drive.
+function driveIdDe(url){ const m=(url||'').match(/[?&]id=([\w-]+)/)||(url||'').match(/\/d\/([\w-]+)/); return m?m[1]:''; }
+function fotosDe(url, grande){
+  const id = driveIdDe(url);
+  const local = id ? (grande ? `img/${id}.webp` : `img/s/${id}.webp`) : '';
+  const drive = url ? (grande ? url.replace('sz=w400','sz=w800') : url) : '';
+  return [local, drive].filter(Boolean);
+}
+function cargarConRespaldo(urls, ok, fallo){
+  let i = 0;
+  (function probar(){
+    if(i >= urls.length){ fallo && fallo(); return; }
+    const u = urls[i++], im = new Image();
+    im.onload = () => ok(u); im.onerror = probar; im.src = u;
+  })();
+}
+function fotoAlt(el, emoji){ const alt = el.dataset.alt; if(alt){ el.dataset.alt=''; el.src = alt; } else imgErrorCarrito(el, emoji); }
+
 function imgError(el, emoji){
   el.style.display='none';
   const div=document.createElement('div');
@@ -1002,10 +1020,9 @@ function setupLazyLoading(){
         const img = entry.target;
         if(img.dataset.src && !img.dataset.loaded){
           img.dataset.loaded = '1';
-          const real = new Image();
-          real.onload = () => { img.src = img.dataset.src; img.style.opacity='1'; };
-          real.onerror = () => { imgError(img, img.dataset.emoji || '🧩'); img.style.opacity='1'; };
-          real.src = img.dataset.src;
+          cargarConRespaldo(fotosDe(img.dataset.src, false),
+            u => { img.src = u; img.style.opacity='1'; },
+            () => { imgError(img, img.dataset.emoji || '🧩'); img.style.opacity='1'; });
         }
         imgObserver.unobserve(img);
       }
@@ -1370,7 +1387,7 @@ function renderCarrito(){
     const p = PRODUCTOS.find(x=>x.id===Number(id));
     if(!p) return '';
     return `<div class="carrito-item">
-      <img class="carrito-item-img" src="${p.img}" onerror="imgErrorCarrito(this,'${emojiDe(p)}')" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+      <img class="carrito-item-img" src="${fotosDe(p.img,false)[0]||''}" data-alt="${fotosDe(p.img,false)[1]||''}" onerror="fotoAlt(this,'${emojiDe(p)}')" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">
       <div class="carrito-item-info">
         <div class="carrito-item-nombre">${p.nombre}</div>
         <div class="carrito-item-precio">$${fmt(p.precio)} c/u · $${fmt(p.precio*qty)} total</div>
@@ -1884,8 +1901,11 @@ function abrirImgModal(id){
   const p = PRODUCTOS.find(x=>x.id===id);
   if(!p) return;
   imgModalProductoId = id;
-  document.getElementById('img-modal-img').src = p.img.replace('sz=w400','sz=w800');
-  document.getElementById('img-modal-img').onerror = function(){ this.src=''; this.style.display='none'; };
+  const modalImg = document.getElementById('img-modal-img');
+  modalImg.onerror = null; modalImg.style.display = ''; modalImg.removeAttribute('src');
+  cargarConRespaldo(fotosDe(p.img, true),
+    u => { if(imgModalProductoId === id) modalImg.src = u; },
+    () => { if(imgModalProductoId === id) modalImg.style.display = 'none'; });
   document.getElementById('img-modal-cat').textContent = p.categoria;
   document.getElementById('img-modal-nombre').textContent = p.nombre;
   document.getElementById('img-modal-desc').textContent = p.desc || p.descripcion || '';
