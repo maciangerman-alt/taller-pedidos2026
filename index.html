@@ -108,6 +108,9 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
 .header-acciones { display:flex; gap:8px; align-items:center; }
 .icon-btn { background:var(--bg-page); border:1.5px solid var(--borde); color:var(--texto); border-radius:50%; width:38px; height:38px; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform .12s, background .15s; padding:0; }
 .icon-btn:active { transform:scale(.92); }
+.btn-ayuda { font-family:'Fredoka One','Nunito',sans-serif; font-size:18px; font-weight:800; color:var(--primario); }
+.btn-ayuda .ayuda-label { display:none; }
+@media (min-width:769px){ .btn-ayuda { width:auto; border-radius:20px; padding:0 14px 0 12px; gap:6px; font-size:16px; } .btn-ayuda .ayuda-label { display:inline; font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; } }
 .header-carrito-btn { position:relative; background:var(--primario); color:white; border:none; border-radius:100px; padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer; font-family:'Nunito',sans-serif; display:flex; align-items:center; gap:7px; white-space:nowrap; flex-shrink:0; box-shadow:0 3px 10px rgba(255,107,107,.35); transition:transform .12s; }
 .header-carrito-btn:active { transform:scale(.94); }
 .carrito-badge { background:white; color:var(--primario); font-size:11px; font-weight:800; border-radius:100px; padding:1px 7px; min-width:20px; text-align:center; }
@@ -335,7 +338,7 @@ button, .nav-btn, .producto-card, a { -webkit-tap-highlight-color:transparent; t
 <body>
 
 <!-- TUTORIAL -->
-<div class="tutorial-overlay" id="tutorial-overlay">
+<div class="tutorial-overlay" id="tutorial-overlay" style="display:none;" onclick="if(event.target===this && ruletaGirada!==true) cerrarTutorial()">
 
   <!-- PANTALLA 1: Bienvenida -->
   <div id="tutorial-pantalla-1" class="tutorial-box" style="max-width:400px;width:100%;">
@@ -373,16 +376,14 @@ button, .nav-btn, .producto-card, a { -webkit-tap-highlight-color:transparent; t
     <!-- CTA a la ruleta -->
     <div style="background:linear-gradient(135deg,#FFF0F5,#FFF8E0);border-radius:14px;padding:16px;border:2px dashed #FFD93D;margin-bottom:16px;text-align:center;">
       <div style="font-size:22px;margin-bottom:4px;">🎁</div>
-      <div style="font-family:'Fredoka One',cursive;font-size:16px;color:#E05555;margin-bottom:4px;">Obtené un beneficio exclusivo</div>
-      <div style="font-size:12px;color:#777;">Antes de empezar, girá la ruleta y conseguí un descuento especial para tu primer pedido</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:16px;color:#E05555;margin-bottom:4px;">Premio por tu primer juego</div>
+      <div style="font-size:12px;color:#777;">Cuando agregues tu primer juego, girás la ruleta y te llevás un descuento para tu pedido</div>
     </div>
 
-    <button class="btn-empezar" onclick="irARuleta()" style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);border:none;">
-      ¡Quiero mi descuento! 🎰
+    <button class="btn-empezar" onclick="cerrarTutorial()" style="background:linear-gradient(135deg,#FF6B6B,#FF8E53);border:none;">
+      ¡Empezar a elegir! 🛍️
     </button>
-    <button onclick="cerrarTutorial()" style="width:100%;background:none;border:none;color:var(--gris);font-size:12px;padding:10px;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:6px;">
-      Saltar y explorar el catálogo →
-    </button>
+    
   </div>
 
   <!-- PANTALLA 2: Ruleta -->
@@ -408,7 +409,7 @@ button, .nav-btn, .producto-card, a { -webkit-tap-highlight-color:transparent; t
         <div style="font-family:'Fredoka One',cursive;font-size:24px;color:#1D9E75;margin-bottom:6px;">¡Ganaste 5% OFF!</div>
         <div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:16px;">El descuento se computará <b>automáticamente</b> al precio final de tu pedido. ¡No tenés que hacer nada!</div>
         <button class="btn-empezar" id="btn-empezar" onclick="cerrarTutorial()" style="background:linear-gradient(135deg,#1D9E75,#00B894);border:none;">
-          ¡Empezar a elegir con 5% OFF! 🛍️
+          ¡Seguir eligiendo con 5% OFF! 🛍️
         </button>
       </div>
     </div>
@@ -426,6 +427,7 @@ button, .nav-btn, .producto-card, a { -webkit-tap-highlight-color:transparent; t
       </div>
     </div>
     <div class="header-acciones">
+      <button class="icon-btn btn-ayuda" onclick="abrirTutorial()" title="¿Cómo comprar?" aria-label="¿Cómo comprar?">?<span class="ayuda-label">Cómo comprar</span></button>
       <button class="icon-btn" onclick="toggleDarkMode()" id="btn-dark" title="Modo oscuro">🌙</button>
       <button class="icon-btn" onclick="compartirCatalogo()" title="Compartir catálogo">📤</button>
       <button class="header-carrito-btn" onclick="toggleCarrito()" title="Mi pedido">
@@ -966,7 +968,7 @@ function girarRuleta(){
       window.descuentoRuleta = 0.05;
       localStorage.setItem('ta_dcto_ruleta','1');
       if(typeof renderCarrito==='function') renderCarrito();
-      document.getElementById('ruleta-resultado').style.display='block';
+      document.getElementById('ruleta-resultado').style.display='block'; const btnG=document.getElementById('btn-girar'); if(btnG) btnG.style.display='none'; setTimeout(()=>document.getElementById('ruleta-resultado').scrollIntoView({behavior:'smooth',block:'end'}),60);
       btn.style.display='none';
     }
   }
@@ -976,9 +978,22 @@ function girarRuleta(){
 // Recuperar el 5% de la ruleta si todavía no hizo su primer pedido
 if(localStorage.getItem('ta_dcto_ruleta')==='1') window.descuentoRuleta = 0.05;
 
-// No mostrar tutorial si ya lo vio
-if(localStorage.getItem('ta_tutorial_visto')) {
-  document.getElementById('tutorial-overlay').style.display='none';
+// El tutorial ya no aparece solo al entrar: se abre desde el botón "¿Cómo comprar?"
+function abrirTutorial(){
+  document.getElementById('tutorial-pantalla-1').style.display='block';
+  document.getElementById('tutorial-pantalla-2').style.display='none';
+  document.getElementById('tutorial-overlay').style.display='flex';
+}
+// La ruleta aparece cuando agregan su primer juego (una sola vez por persona)
+function ruletaPendiente(){
+  try { return !localStorage.getItem('ta_ruleta_jugada') && localStorage.getItem('ta_dcto_ruleta')!=='1'; } catch(e){ return false; }
+}
+function abrirRuleta(){
+  if(!ruletaPendiente() || ruletaGirada) return;
+  try { localStorage.setItem('ta_ruleta_jugada','1'); } catch(e){}
+  const im = document.getElementById('img-modal'); if(im && getComputedStyle(im).display!=='none' && typeof cerrarImgModalBtn==='function') cerrarImgModalBtn();
+  document.getElementById('tutorial-overlay').style.display='flex';
+  irARuleta();
 }
 
 
@@ -1256,6 +1271,7 @@ function agregar(id){
     ? `${emoji} ${nombre} (×${qty})`
     : `${emoji} ¡${nombre} agregado!`;
   toast(msg);
+  if(ruletaPendiente()) setTimeout(abrirRuleta, 900);
 }
 
 function cambiarCantidad(id, valor){
