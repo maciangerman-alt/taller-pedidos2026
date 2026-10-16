@@ -194,6 +194,10 @@ body.dark-mode .volver-inicio-btn { color:#7FD3A0; }
 .carrito-sub { font-size:12px; color:var(--gris); margin-top:2px; }
 .carrito-body { flex:1; overflow-y:auto; padding:16px; }
 .carrito-empty { text-align:center; padding:40px 20px; color:var(--gris); }
+.coco { display:block; height:auto; max-width:100%; pointer-events:none; user-select:none; -webkit-user-drag:none; filter:drop-shadow(0 6px 10px rgba(0,0,0,.12)); }
+.coco-flota { animation:cocoFlota 3.2s ease-in-out infinite; }
+@keyframes cocoFlota { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .coco-flota { animation:none; } }
 .carrito-empty-icon { font-size:48px; margin-bottom:12px; }
 .carrito-empty-title { font-size:15px; font-weight:700; margin-bottom:6px; }
 .carrito-empty-sub { font-size:12px; }
@@ -347,8 +351,8 @@ body.dark-mode .volver-inicio-btn { color:#7FD3A0; }
   <!-- PANTALLA 1: Bienvenida -->
   <div id="tutorial-pantalla-1" class="tutorial-box" style="max-width:400px;width:100%;">
     <!-- Header con degradado -->
-    <div style="background:linear-gradient(135deg,#FF6B6B,#FFD93D);border-radius:16px;padding:12px 16px;margin:-24px -28px 16px;position:relative;overflow:hidden;">
-      <div style="font-size:28px;margin-bottom:2px;">🧸</div>
+    <div style="background:linear-gradient(135deg,#FF6B6B,#FFD93D);border-radius:16px;padding:18px 112px 18px 18px;min-height:104px;text-align:left;margin:-24px -28px 16px;position:relative;overflow:hidden;">
+      <img src="img/coco/saludando.webp" alt="" class="coco coco-flota" style="position:absolute;right:6px;bottom:-4px;width:104px;z-index:2;">
       <div style="font-family:'Fredoka One',cursive;font-size:20px;color:white;text-shadow:0 2px 8px rgba(0,0,0,0.15);">¡Hola! Bienvenida</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.9);margin-top:2px;">al catálogo de Taller Artesanal</div>
       <!-- Bolitas decorativas -->
@@ -395,6 +399,7 @@ body.dark-mode .volver-inicio-btn { color:#7FD3A0; }
   <!-- PANTALLA 2: Ruleta -->
   <div id="tutorial-pantalla-2" style="display:none;max-width:380px;width:100%;">
     <div class="tutorial-box" style="text-align:center;">
+      <img src="img/coco/sorprendido.webp" alt="" class="coco coco-flota" style="width:84px;margin:-8px auto 4px;">
       <div style="font-family:'Fredoka One',cursive;font-size:24px;color:var(--primario);margin-bottom:4px;">¡Girá y ganás!</div>
       <div style="font-size:13px;color:var(--gris);margin-bottom:20px;">Un beneficio exclusivo para arrancar</div>
 
@@ -410,7 +415,7 @@ body.dark-mode .volver-inicio-btn { color:#7FD3A0; }
 
       <!-- Resultado (oculto hasta ganar) -->
       <div id="ruleta-resultado" style="display:none;margin-top:16px;background:linear-gradient(135deg,#E8F8F0,#D4F5E5);border-radius:16px;padding:20px;border:2px solid #1D9E75;">
-        <div style="font-size:36px;margin-bottom:8px;">🎁</div>
+        <img src="img/coco/saltando.webp" alt="" class="coco" style="width:96px;margin:-6px auto 6px;">
         <div style="font-family:'Fredoka One',cursive;font-size:24px;color:#1D9E75;margin-bottom:6px;">¡Ganaste 5% OFF!</div>
         <div style="font-size:13px;color:#555;line-height:1.5;margin-bottom:16px;">El descuento se computará <b>automáticamente</b> al precio final de tu pedido. ¡No tenés que hacer nada!</div>
         <button class="btn-empezar" id="btn-empezar" onclick="cerrarTutorial()" style="background:linear-gradient(135deg,#1D9E75,#00B894);border:none;">
@@ -553,7 +558,7 @@ body.dark-mode .volver-inicio-btn { color:#7FD3A0; }
 <div class="overlay" id="overlay" onclick="cerrarModalSiOverlay(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-titulo">Casi listo! 🎉</div>
+    <div style="display:flex;align-items:center;gap:10px;"><img src="img/coco/senalando.webp" alt="" class="coco" style="width:66px;flex-shrink:0;margin:-6px 0 -4px;"><div class="modal-titulo" style="margin-bottom:0;">¡Casi listo!</div></div>
     <div class="modal-sub">Completá tus datos para enviar el pedido</div>
 
     <div class="pedido-resumen" id="modal-resumen"></div>
@@ -1149,7 +1154,7 @@ function renderCatalogo(){
   });
 
   if(!filtrados.length){
-    content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris)">No se encontraron juegos</div>';
+    content.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--gris)"><img src="img/coco/sorprendido.webp" alt="" class="coco" style="width:120px;margin:0 auto 12px;"><div style="font-weight:800;font-size:15px;color:var(--texto);margin-bottom:4px;">No encontramos juegos con esa búsqueda</div><div style="font-size:13px;">Probá con otra palabra o mirá todas las categorías.</div></div>';
     return;
   }
 
@@ -1383,7 +1388,7 @@ function renderCarrito(){
 
   if(!items.length){
     body.innerHTML = `<div class="carrito-empty">
-      <div class="carrito-empty-icon">🧸</div>
+      <img src="img/coco/durmiendo.webp" alt="" class="coco" style="width:150px;margin:0 auto 10px;">
       <div class="carrito-empty-title">Tu pedido está vacío</div>
       <div class="carrito-empty-sub">Tocá los juegos para agregarlos</div>
     </div>`;
@@ -1766,7 +1771,7 @@ function cerrarPagoOverlay(){ document.getElementById('pago-overlay').style.disp
     const texto = document.getElementById('vuelta-texto');
     const btnWa = document.getElementById('vuelta-wa');
     if(ok){
-      icono.textContent='✅'; titulo.textContent='¡Pago recibido!';
+      icono.innerHTML=cocoImg('riendo',120); titulo.textContent='¡Pago recibido!';
       texto.innerHTML = `Operación N° <b>${operacion}</b>.<br>Tocá el botón para avisarnos por WhatsApp y coordinar la entrega.`;
       carrito = {}; localStorage.removeItem('ta_carrito'); localStorage.removeItem('ta_dcto_ruleta'); window.descuentoRuleta = 0; renderCatalogo(); renderCarrito();
       if(pend?.tel && typeof incrementarFidelidad==='function') incrementarFidelidad(pend.tel);
@@ -1775,11 +1780,11 @@ function cerrarPagoOverlay(){ document.getElementById('pago-overlay').style.disp
       btnWa.style.display='block';
       localStorage.removeItem('ta_pago_pendiente');
     } else if(estado==='pendiente'){
-      icono.textContent='⏳'; titulo.textContent='Pago en revisión';
+      icono.innerHTML=cocoImg('sentado',110); titulo.textContent='Pago en revisión';
       texto.innerHTML = 'Mercado Pago está procesando tu pago. Te avisamos apenas se acredite. Tu carrito sigue guardado.';
       btnWa.style.display='none';
     } else {
-      icono.textContent='⚠️'; titulo.textContent='El pago no se completó';
+      icono.innerHTML=cocoImg('sorprendido',110); titulo.textContent='El pago no se completó';
       texto.innerHTML = 'No se cobró nada. Tu carrito sigue guardado: podés intentarlo de nuevo o elegir otro medio.';
       btnWa.style.display='none';
     }
@@ -1787,6 +1792,7 @@ function cerrarPagoOverlay(){ document.getElementById('pago-overlay').style.disp
   });
 })();
 
+function cocoImg(pose, w){ return `<img src="img/coco/${pose}.webp" alt="" class="coco" style="width:${w}px;margin:0 auto;">`; }
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
 function toggleDarkMode(){
@@ -1888,7 +1894,7 @@ function mostrarBannerFidelidad(compras){
     window.descuentoFidelidad = 0.15;
   } else return; // No aplica descuento
 
-  document.getElementById('fid-emoji').textContent = emoji;
+  document.getElementById('fid-emoji').innerHTML = cocoImg('riendo',110);
   document.getElementById('fid-titulo').textContent = titulo;
   document.getElementById('fid-subtitulo').textContent = subtitulo;
   document.getElementById('fid-descuento').textContent = descuento;
@@ -2084,7 +2090,7 @@ function compartirCarrito(){
 <!-- PANTALLA CONFIRMACIÓN PEDIDO -->
 <div id="confirmacion-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--surface-2,white);border-radius:24px;padding:32px 24px;max-width:360px;width:100%;text-align:center;">
-    <div style="font-size:56px;margin-bottom:12px;">✅</div>
+    <img src="img/coco/saltando.webp" alt="" class="coco" style="width:130px;margin:-6px auto 8px;">
     <div style="font-size:20px;font-weight:800;color:#2D5016;font-family:'Fredoka One',cursive;margin-bottom:6px;">¡Pedido registrado!</div>
     <div style="font-size:13px;color:#666;margin-bottom:16px;">Ya recibimos tu pedido y te contactamos pronto.</div>
     <div id="confirmacion-id" style="background:#F0F7EA;border-radius:12px;padding:10px 16px;font-size:12px;color:#2D5016;font-weight:700;margin-bottom:8px;font-family:monospace;letter-spacing:1px;"></div>
@@ -2248,55 +2254,7 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
     <div class="sec-hd">
       <!-- Cocodrilo pensativo -->
       <div class="croc-wrapper">
-        <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
-          <!-- Cuerpo -->
-          <ellipse cx="100" cy="148" rx="52" ry="42" fill="#4CAF50"/>
-          <!-- Brazo izq pensativo (en mentón) -->
-          <ellipse cx="57" cy="152" rx="10" ry="7" fill="#4CAF50" transform="rotate(-20,57,152)"/>
-          <!-- Brazo der -->
-          <ellipse cx="143" cy="152" rx="10" ry="7" fill="#4CAF50" transform="rotate(20,143,152)"/>
-          <!-- Mano en mentón -->
-          <circle cx="62" cy="140" r="7" fill="#4CAF50"/>
-          <!-- Pata izq -->
-          <ellipse cx="78" cy="188" rx="12" ry="7" fill="#388E3C"/>
-          <!-- Pata der -->
-          <ellipse cx="122" cy="188" rx="12" ry="7" fill="#388E3C"/>
-          <!-- Cabeza -->
-          <ellipse cx="100" cy="108" rx="38" ry="34" fill="#4CAF50"/>
-          <!-- Hocico -->
-          <ellipse cx="100" cy="126" rx="24" ry="14" fill="#66BB6A"/>
-          <!-- Fosas nasales -->
-          <circle cx="92" cy="122" r="3" fill="#2E7D32"/>
-          <circle cx="108" cy="122" r="3" fill="#2E7D32"/>
-          <!-- Ojos -->
-          <ellipse cx="86" cy="100" rx="9" ry="10" fill="white"/>
-          <ellipse cx="114" cy="100" rx="9" ry="10" fill="white"/>
-          <circle cx="88" cy="101" r="5" fill="#1B5E20"/>
-          <circle cx="116" cy="101" r="5" fill="#1B5E20"/>
-          <circle cx="89" cy="99" r="2" fill="black"/>
-          <circle cx="117" cy="99" r="2" fill="black"/>
-          <circle cx="91" cy="98" r="1" fill="white"/>
-          <circle cx="119" cy="98" r="1" fill="white"/>
-          <!-- Gorro hélice - base -->
-          <rect x="78" y="72" width="44" height="12" rx="6" fill="#1565C0"/>
-          <!-- Ala gorro -->
-          <ellipse cx="100" cy="72" rx="34" ry="6" fill="#FFD700"/>
-          <!-- Hélice -->
-          <rect x="97" y="56" width="6" height="16" rx="3" fill="#FF5722"/>
-          <ellipse cx="100" cy="58" rx="18" ry="6" fill="#FFB300" transform="rotate(0,100,58)"/>
-          <ellipse cx="100" cy="58" rx="18" ry="6" fill="#FFB300" transform="rotate(90,100,58)"/>
-          <!-- Mochila naranja -->
-          <rect x="130" y="120" width="28" height="34" rx="8" fill="#FF6D00"/>
-          <rect x="132" y="126" width="24" height="4" rx="2" fill="#FF8F00"/>
-          <circle cx="144" cy="137" r="4" fill="#FF8F00"/>
-          <!-- Tiras mochila -->
-          <path d="M130 124 Q120 132 122 150" stroke="#FF6D00" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <!-- Signo pregunta flotante -->
-          <text x="48" y="95" font-size="26" fill="#FFD700" font-weight="900" font-family="Arial">?</text>
-          <text x="148" y="88" font-size="18" fill="#FFD700" font-weight="900" font-family="Arial">?</text>
-          <!-- Boca sonrisa -->
-          <path d="M90 132 Q100 140 110 132" stroke="#2E7D32" stroke-width="2" fill="none" stroke-linecap="round"/>
-        </svg>
+        <img src="img/coco/pensando.webp" alt="" class="coco coco-flota" style="width:150px;">
       </div>
       <small>✦ Todo lo que querés saber</small>
       <h2>Preguntas <em>Frecuentes</em></h2>
@@ -2423,52 +2381,7 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
     <div class="croc-side" style="align-items:center;margin-bottom:52px;gap:32px;">
       <!-- Croc apuntando -->
       <div class="croc-wrapper" style="margin:0;flex-shrink:0;">
-        <svg width="130" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
-          <!-- Cola -->
-          <ellipse cx="154" cy="175" rx="32" ry="10" fill="#388E3C" transform="rotate(-15,154,175)"/>
-          <!-- Cuerpo -->
-          <ellipse cx="100" cy="155" rx="50" ry="40" fill="#4CAF50"/>
-          <!-- Pata izq -->
-          <ellipse cx="78" cy="193" rx="13" ry="7" fill="#388E3C"/>
-          <!-- Pata der -->
-          <ellipse cx="122" cy="193" rx="13" ry="7" fill="#388E3C"/>
-          <!-- Brazo der apuntando -->
-          <path d="M148 148 Q175 130 190 118" stroke="#4CAF50" stroke-width="14" fill="none" stroke-linecap="round"/>
-          <!-- Dedo apuntando -->
-          <circle cx="192" cy="116" r="7" fill="#66BB6A"/>
-          <!-- Brazo izq -->
-          <ellipse cx="55" cy="158" rx="11" ry="7" fill="#4CAF50" transform="rotate(15,55,158)"/>
-          <!-- Cabeza -->
-          <ellipse cx="100" cy="112" rx="37" ry="33" fill="#4CAF50"/>
-          <!-- Hocico -->
-          <ellipse cx="100" cy="130" rx="23" ry="13" fill="#66BB6A"/>
-          <circle cx="92" cy="126" r="2.5" fill="#2E7D32"/>
-          <circle cx="108" cy="126" r="2.5" fill="#2E7D32"/>
-          <!-- Ojos felices -->
-          <ellipse cx="87" cy="104" rx="9" ry="10" fill="white"/>
-          <ellipse cx="113" cy="104" rx="9" ry="10" fill="white"/>
-          <circle cx="89" cy="105" r="5" fill="#1B5E20"/>
-          <circle cx="115" cy="105" r="5" fill="#1B5E20"/>
-          <circle cx="90" cy="103" r="2" fill="black"/>
-          <circle cx="116" cy="103" r="2" fill="black"/>
-          <circle cx="92" cy="102" r="1" fill="white"/>
-          <circle cx="118" cy="102" r="1" fill="white"/>
-          <!-- Sonrisa -->
-          <path d="M90 136 Q100 144 110 136" stroke="#2E7D32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <!-- Gorro -->
-          <rect x="79" y="76" width="42" height="11" rx="5.5" fill="#1565C0"/>
-          <ellipse cx="100" cy="76" rx="33" ry="6" fill="#FFD700"/>
-          <rect x="97" y="60" width="6" height="16" rx="3" fill="#FF5722"/>
-          <ellipse cx="100" cy="62" rx="17" ry="5" fill="#FFB300"/>
-          <ellipse cx="100" cy="62" rx="17" ry="5" fill="#FFB300" transform="rotate(90,100,62)"/>
-          <!-- Mochila -->
-          <rect x="132" y="128" width="26" height="32" rx="7" fill="#FF6D00"/>
-          <rect x="134" y="134" width="22" height="4" rx="2" fill="#FF8F00"/>
-          <circle cx="145" cy="144" r="3.5" fill="#FF8F00"/>
-          <path d="M132 130 Q122 138 124 156" stroke="#FF6D00" stroke-width="4" fill="none" stroke-linecap="round"/>
-          <!-- Estrella decorativa -->
-          <text x="165" y="108" font-size="22" fill="#FFD700">★</text>
-        </svg>
+        <img src="img/coco/senalando.webp" alt="" class="coco coco-flota" style="width:160px;">
       </div>
       <div class="sec-hd" style="text-align:left;margin-bottom:0;">
         <small>✦ Para el aula</small>
@@ -2518,54 +2431,7 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
   <div style="max-width:720px;margin:0 auto;">
     <!-- Croc saltando feliz -->
     <div style="display:flex;justify-content:center;margin-bottom:24px;">
-      <svg width="120" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
-        <!-- Cola -->
-        <ellipse cx="156" cy="178" rx="30" ry="9" fill="#388E3C" transform="rotate(-10,156,178)"/>
-        <!-- Cuerpo -->
-        <ellipse cx="100" cy="158" rx="48" ry="38" fill="#4CAF50"/>
-        <!-- Brazos arriba festivo -->
-        <path d="M54 145 Q35 118 28 105" stroke="#4CAF50" stroke-width="13" fill="none" stroke-linecap="round"/>
-        <path d="M146 145 Q165 118 172 105" stroke="#4CAF50" stroke-width="13" fill="none" stroke-linecap="round"/>
-        <!-- Manos -->
-        <circle cx="26" cy="102" r="8" fill="#66BB6A"/>
-        <circle cx="174" cy="102" r="8" fill="#66BB6A"/>
-        <!-- Patas en el aire -->
-        <ellipse cx="80" cy="196" rx="12" ry="6" fill="#388E3C" transform="rotate(-20,80,196)"/>
-        <ellipse cx="120" cy="196" rx="12" ry="6" fill="#388E3C" transform="rotate(20,120,196)"/>
-        <!-- Cabeza -->
-        <ellipse cx="100" cy="112" rx="36" ry="32" fill="#4CAF50"/>
-        <!-- Hocico -->
-        <ellipse cx="100" cy="130" rx="22" ry="12" fill="#66BB6A"/>
-        <circle cx="93" cy="126" r="2.5" fill="#2E7D32"/>
-        <circle cx="107" cy="126" r="2.5" fill="#2E7D32"/>
-        <!-- Ojos contentos -->
-        <ellipse cx="87" cy="105" rx="9" ry="9" fill="white"/>
-        <ellipse cx="113" cy="105" rx="9" ry="9" fill="white"/>
-        <circle cx="89" cy="106" r="5" fill="#1B5E20"/>
-        <circle cx="115" cy="106" r="5" fill="#1B5E20"/>
-        <circle cx="90" cy="104" r="2" fill="black"/>
-        <circle cx="116" cy="104" r="2" fill="black"/>
-        <circle cx="92" cy="103" r="1" fill="white"/>
-        <circle cx="118" cy="103" r="1" fill="white"/>
-        <!-- Sonrisa grande -->
-        <path d="M88 136 Q100 146 112 136" stroke="#2E7D32" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <!-- Gorro -->
-        <rect x="80" y="78" width="40" height="11" rx="5.5" fill="#1565C0"/>
-        <ellipse cx="100" cy="78" rx="32" ry="6" fill="#FFD700"/>
-        <rect x="97" y="61" width="6" height="17" rx="3" fill="#FF5722"/>
-        <ellipse cx="100" cy="63" rx="17" ry="5" fill="#FFB300"/>
-        <ellipse cx="100" cy="63" rx="17" ry="5" fill="#FFB300" transform="rotate(90,100,63)"/>
-        <!-- Mochila -->
-        <rect x="134" y="130" width="24" height="30" rx="7" fill="#FF6D00"/>
-        <rect x="136" y="136" width="20" height="4" rx="2" fill="#FF8F00"/>
-        <circle cx="146" cy="145" r="3.5" fill="#FF8F00"/>
-        <path d="M134 132 Q124 140 126 154" stroke="#FF6D00" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <!-- Estrellas -->
-        <text x="20" y="145" font-size="20" fill="#FFD700">★</text>
-        <text x="168" y="150" font-size="20" fill="#FFD700">★</text>
-        <text x="50" y="85" font-size="16" fill="rgba(255,255,255,0.8)">✦</text>
-        <text x="142" y="80" font-size="16" fill="rgba(255,255,255,0.8)">✦</text>
-      </svg>
+      <img src="img/coco/corriendo.webp" alt="" class="coco coco-flota" style="width:150px;">
     </div>
     <h3>¿Listo para armar tu pedido?</h3>
     <p>Explorá el catálogo, elegí tus favoritos y escribinos por WhatsApp. Hacemos envíos a todo el país.</p>
@@ -2586,22 +2452,7 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
       <div class="footer-brand">
         <div class="footer-logo">
           <!-- Mini croc en footer -->
-          <svg width="36" height="36" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="100" cy="130" rx="50" ry="38" fill="#4CAF50"/>
-            <ellipse cx="100" cy="100" rx="36" ry="32" fill="#4CAF50"/>
-            <ellipse cx="100" cy="118" rx="22" ry="12" fill="#66BB6A"/>
-            <ellipse cx="88" cy="96" rx="8" ry="9" fill="white"/>
-            <ellipse cx="112" cy="96" rx="8" ry="9" fill="white"/>
-            <circle cx="90" cy="97" r="4" fill="#1B5E20"/>
-            <circle cx="114" cy="97" r="4" fill="#1B5E20"/>
-            <circle cx="91" cy="96" r="1.5" fill="black"/>
-            <circle cx="115" cy="96" r="1.5" fill="black"/>
-            <rect x="79" y="68" width="42" height="11" rx="5" fill="#1565C0"/>
-            <ellipse cx="100" cy="68" rx="33" ry="6" fill="#FFD700"/>
-            <rect x="97" y="52" width="6" height="16" rx="3" fill="#FF5722"/>
-            <ellipse cx="100" cy="54" rx="16" ry="5" fill="#FFB300"/>
-            <ellipse cx="100" cy="54" rx="16" ry="5" fill="#FFB300" transform="rotate(90,100,54)"/>
-          </svg>
+          <img src="img/coco/saludando.webp" alt="" class="coco" style="width:52px;filter:none;">
           Taller Artesanal
         </div>
         <p>Juguetes de madera hechos con amor en Tucumán, Argentina. Para chicos que merecen lo mejor del juego libre.</p>
@@ -2666,7 +2517,7 @@ function toggleFaq(el){
   <div style="background:white;border-radius:28px;max-width:380px;width:100%;text-align:center;overflow:hidden;">
     <!-- Header festivo -->
     <div style="background:linear-gradient(135deg,#FFD700,#FF6B6B,#A29BFE);padding:28px 20px 20px;position:relative;">
-      <div style="font-size:56px;margin-bottom:4px;" id="fid-emoji">🎉</div>
+      <div style="margin-bottom:4px;" id="fid-emoji"><img src="img/coco/riendo.webp" alt="" class="coco" style="width:110px;margin:0 auto;"></div>
       <div style="font-family:'Fredoka One',cursive;font-size:26px;color:white;text-shadow:0 2px 8px rgba(0,0,0,0.2);" id="fid-titulo">¡Compradora VIP!</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.9);margin-top:4px;" id="fid-subtitulo">Tu fidelidad tiene premio</div>
       <!-- Confetti decorativo -->
