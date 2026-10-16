@@ -154,6 +154,14 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
 .cat-btn { padding:7px 16px; border-radius:100px; border:2px solid var(--borde); background:white; font-size:12px; font-weight:700; color:var(--gris); cursor:pointer; white-space:nowrap; font-family:'Nunito',sans-serif; transition:all 0.15s; }
 .cat-btn:hover { border-color:var(--madera-light); color:var(--madera); }
 .cat-btn.active { background:var(--madera); border-color:var(--madera); color:white; }
+.ver-mas-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:-4px 0 28px; padding:13px 16px; background:var(--surface-2); color:var(--verde); border:2px solid var(--verde); border-radius:14px; font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; cursor:pointer; transition:background .15s, color .15s; }
+.ver-mas-btn:hover, .ver-mas-btn:active { background:var(--verde); color:white; }
+.ver-mas-btn span { transition:transform .15s; }
+.ver-mas-btn:hover span { transform:translateX(3px); }
+body.dark-mode .ver-mas-btn { color:#7FD3A0; border-color:#3E8E5F; }
+body.dark-mode .ver-mas-btn:hover { background:#2D7A4F; color:white; }
+.volver-inicio-btn { background:none; border:none; color:var(--verde); font-family:'Nunito',sans-serif; font-size:13px; font-weight:800; cursor:pointer; padding:4px 0 14px; }
+body.dark-mode .volver-inicio-btn { color:#7FD3A0; }
 .cat-titulo { font-family:'Fredoka One',cursive; font-size:20px; color:var(--texto); margin-bottom:14px; margin-top:8px; display:flex; align-items:center; gap:8px; }
 .productos-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; margin-bottom:28px; }
 .producto-card { background:white; border-radius:18px; border:1.5px solid var(--borde); overflow:hidden; cursor:pointer; transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; position:relative; box-shadow:0 3px 14px rgba(26,26,46,0.07); display:flex; flex-direction:column; }
@@ -996,7 +1004,7 @@ function setupLazyLoading(){
           img.dataset.loaded = '1';
           const real = new Image();
           real.onload = () => { img.src = img.dataset.src; img.style.opacity='1'; };
-          real.onerror = () => { imgError(img, img.alt); img.style.opacity='1'; };
+          real.onerror = () => { imgError(img, img.dataset.emoji || '🧩'); img.style.opacity='1'; };
           real.src = img.dataset.src;
         }
         imgObserver.unobserve(img);
@@ -1071,6 +1079,24 @@ function setPrecioNav(precio, btnId){
   renderCatalogo();
 }
 
+// "Ver más" de una categoría: filtra y sube al principio del catálogo
+function verCategoria(cat){
+  setCategoriaDrop(cat, 'nav-cat-btn');
+  irArribaCatalogo();
+}
+function volverInicio(){
+  const btnTodos = document.querySelector('.header-nav .nav-btn');
+  setCategoriaNav('todas', btnTodos);
+  irArribaCatalogo();
+}
+function irArribaCatalogo(){
+  const el = document.getElementById('catalogo-content');
+  const header = document.querySelector('.header');
+  if(!el) return;
+  const y = el.getBoundingClientRect().top + window.scrollY - (header ? header.offsetHeight : 0) - 12;
+  window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+}
+
 function setCategoria(cat, el){
   categoriaActual = cat;
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
@@ -1116,17 +1142,20 @@ function renderCatalogo(){
     const catsResto = cats.filter(c=>c!=='Importados');
     const destacados = catsResto.map(cat => PRODUCTOS.find(p=>p.categoria===cat)).filter(Boolean).slice(0,6);
 
-    const restoHTML = cats.map(cat => {
+    const POR_CATEGORIA = 6;
+    const restoHTML = catsResto.map(cat => {
       const prods = filtrados.filter(p=>p.categoria===cat);
       if(!prods.length) return '';
+      const resto = prods.length - POR_CATEGORIA;
       return `<div class="cat-titulo">${catEmoji(cat)} ${cat}</div>
-        <div class="productos-grid">${prods.map(productoCard).join('')}</div>`;
+        <div class="productos-grid">${prods.slice(0, POR_CATEGORIA).map(productoCard).join('')}</div>
+        ${resto > 0 ? `<button class="ver-mas-btn" onclick="verCategoria('${cat}')">Ver los ${prods.length} juegos de ${cat} <span>→</span></button>` : ''}`;
     }).join('');
 
     const secPlasticosHtml = plasticosPortada.length > 0
       ? `<div class="cat-titulo" style="color:#6C5CE7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
            <span>🌍 Juguetes Importados</span>
-           ${prodsPlasticos.length > plasticosPortada.length ? `<button onclick="setCategoriaDrop('Importados','nav-cat-btn')" style="background:#6C5CE7;color:white;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Ver todos →</button>` : ''}
+           ${prodsPlasticos.length > plasticosPortada.length ? `<button onclick="verCategoria('Importados')" style="background:#6C5CE7;color:white;border:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">Ver todos →</button>` : ''}
          </div>
          <div style="font-size:12.5px;color:var(--gris);margin:-8px 0 12px;font-family:'Nunito',sans-serif;">Encastres, arcoíris, trenes, títeres y más — línea importada premium</div>
          <div class="productos-grid">${plasticosPortada.map(productoCard).join('')}</div>`
@@ -1134,12 +1163,15 @@ function renderCatalogo(){
     content.innerHTML = secPlasticosHtml + `<div class="cat-titulo">✨ Destacados</div>
       <div class="productos-grid">${destacados.map(productoCard).join('')}</div>` + restoHTML;
   } else {
-    content.innerHTML = `<div class="productos-grid">${filtrados.map(productoCard).join('')}</div>`;
+    const volver = (categoriaActual !== 'todas' && !busq)
+      ? `<button class="volver-inicio-btn" onclick="volverInicio()">← Volver al inicio</button>` : '';
+    content.innerHTML = volver + `<div class="productos-grid">${filtrados.map(productoCard).join('')}</div>`;
   }
   // Activar lazy loading después de renderizar las cards
   requestAnimationFrame(setupLazyLoading);
 }
 
+function emojiDe(p){ return (p && p.emoji) || catEmoji(p && p.categoria) || '🧩'; }
 function catEmoji(cat){
   const map = {'Rompecabezas':'🧩','Encastres':'🔧','Apilables':'🏗️','Seriaciones':'📐','Mapas':'🗺️','Lúdicos':'🎲','Importados':'📦','Combos':'🎁','Educativos':'📚','Día del Estudiante':'🎒','Enhebradores':'🧵','Juguetes Plásticos':'🧸'};
   return map[cat]||'🎯';
@@ -1155,67 +1187,38 @@ function productoCard(p){
     ${esMasVendido ? '<div class="badge-canje" style="background:#F59E0B;right:8px;left:auto;font-size:9px;">⭐ Más pedido</div>' : ''}
     ${p.categoria==='Día del Estudiante' ? '<div class="badge-canje" style="background:#1565C0;font-size:9px;">🎒 DÍA DEL ESTUDIANTE</div>' : ''}
     ${p.destacado ? '<div class="badge-canje" style="background:#FF8C42;font-size:9px;">⭐ DESTACADO</div>' : ''}
-    <img class="producto-img" data-src="${p.img}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${p.nombre}" loading="lazy" decoding="async" onerror="imgError(this,'${p.emoji}')" onclick="abrirImgModal(${p.id})" style="cursor:zoom-in;background:${cardBg}; opacity:0; transition:opacity 0.25s;">
+    <img class="producto-img" data-src="${p.img}" data-emoji="${emojiDe(p)}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${p.nombre}" loading="lazy" decoding="async" onerror="imgError(this,'${emojiDe(p)}')" onclick="abrirImgModal(${p.id})" style="cursor:zoom-in;background:${cardBg}; opacity:0; transition:opacity 0.25s;">
     <div class="producto-info">
       <div class="producto-nombre">${p.nombre}</div>
       <div class="producto-precio">${p.precioOriginal ? `<span class="precio-original">$${fmt(p.precioOriginal)}</span><span class="precio-promo">$${fmt(p.precio)}</span>` : `$${fmt(p.precio)}`}</div>
       <div class="producto-edad">${p.edades.join(' · ')}</div>
     </div>
-    ${qty>0
-      ? `<div class="producto-qty-ctrl">
-          <button class="qty-ctrl-btn" onclick="event.stopPropagation();quitarUno(${p.id})">−</button>
-          <input type="number" class="qty-ctrl-num" value="${qty}" min="1" max="99"
-            onclick="event.stopPropagation()"
-            onchange="event.stopPropagation();cambiarCantidad(${p.id},this.value)"
-            style="background:rgba(255,255,255,0.3);border:none;color:white;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;width:36px;text-align:center;border-radius:6px;padding:2px;">
-          <button class="qty-ctrl-btn" onclick="event.stopPropagation();agregar(${p.id})">+</button>
-        </div>`
-      : `<button class="producto-add-btn" onclick="agregar(${p.id})">+ Agregar al pedido</button>`
-    }
+    ${controlCardHTML(p.id, qty)}
   </div>`;
 }
 
 
-function actualizarCard(id){
-  const p = PRODUCTOS.find(x=>x.id===id);
-  if(!p) return;
-  const card = document.getElementById('card-'+id);
-  if(!card) return;
-  const qty = carrito[id]||0;
-
-  // Actualizar clase en-carrito
-  card.classList.toggle('en-carrito', qty>0);
-
-  // Actualizar badge
-  const badge = document.getElementById('badge-'+id);
-  if(badge){ badge.textContent=qty; badge.classList.toggle('show', qty>0); }
-
-  // Actualizar zona de botón (última parte del producto-info)
-  const info = card.querySelector('.producto-info');
-  if(!info) return;
-  // Eliminar el control anterior (add-btn o qty-ctrl)
-  const oldBtn = info.querySelector('.producto-add-btn');
-  const oldCtrl = info.querySelector('.producto-qty-ctrl');
-  if(oldBtn) oldBtn.remove();
-  if(oldCtrl) oldCtrl.remove();
-
-  if(qty>0){
-    const ctrl = document.createElement('div');
-    ctrl.className = 'producto-qty-ctrl';
-    ctrl.innerHTML = `<button class="qty-ctrl-btn" onclick="event.stopPropagation();quitarUno(${id})">−</button>
+function controlCardHTML(id, qty){
+  if(qty > 0) return `<div class="producto-qty-ctrl">
+      <button class="qty-ctrl-btn" onclick="event.stopPropagation();quitarUno(${id})">−</button>
       <input type="number" class="qty-ctrl-num" value="${qty}" min="1" max="99"
         onclick="event.stopPropagation()"
         onchange="event.stopPropagation();cambiarCantidad(${id},this.value)"
         style="background:rgba(255,255,255,0.3);border:none;color:white;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;width:36px;text-align:center;border-radius:6px;padding:2px;">
-      <button class="qty-ctrl-btn" onclick="event.stopPropagation();agregar(${id})">+</button>`;
-    info.appendChild(ctrl);
-  } else {
-    const btn = document.createElement('button');
-    btn.className = 'producto-add-btn';
-    btn.textContent = '+ Agregar al pedido';
-    btn.onclick = function(){ agregar(id); };
-    info.appendChild(btn);
-  }
+      <button class="qty-ctrl-btn" onclick="event.stopPropagation();agregar(${id})">+</button>
+    </div>`;
+  return `<button class="producto-add-btn" onclick="agregar(${id})">+ Agregar al pedido</button>`;
+}
+
+// Actualiza TODAS las tarjetas de ese producto (puede estar en varias secciones a la vez)
+function actualizarCard(id){
+  const qty = carrito[id] || 0;
+  document.querySelectorAll(`.producto-card[id="card-${id}"]`).forEach(card => {
+    card.classList.toggle('en-carrito', qty > 0);
+    card.querySelectorAll('.qty-badge').forEach(b => { b.textContent = qty; b.classList.toggle('show', qty > 0); });
+    card.querySelectorAll('.producto-add-btn, .producto-qty-ctrl').forEach(e => e.remove());
+    card.insertAdjacentHTML('beforeend', controlCardHTML(id, qty));
+  });
 }
 
 function agregar(id){
@@ -1224,7 +1227,7 @@ function agregar(id){
   actualizarCard(id);
   renderCarrito();
   const p = PRODUCTOS.find(x=>x.id===id);
-  const emoji = p ? p.emoji : '🧩';
+  const emoji = p ? emojiDe(p) : '🧩';
   const nombre = p ? p.nombre : 'Producto';
   const qty = carrito[id];
   const msg = qty > 1
@@ -1367,7 +1370,7 @@ function renderCarrito(){
     const p = PRODUCTOS.find(x=>x.id===Number(id));
     if(!p) return '';
     return `<div class="carrito-item">
-      <img class="carrito-item-img" src="${p.img}" onerror="imgErrorCarrito(this,'${p.emoji}')" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+      <img class="carrito-item-img" src="${p.img}" onerror="imgErrorCarrito(this,'${emojiDe(p)}')" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">
       <div class="carrito-item-info">
         <div class="carrito-item-nombre">${p.nombre}</div>
         <div class="carrito-item-precio">$${fmt(p.precio)} c/u · $${fmt(p.precio*qty)} total</div>
@@ -2482,51 +2485,6 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
 </section>
 
 <!-- ──────────────────────────────────────────
-     D) BENEFICIOS DE LOS JUGUETES
-     ────────────────────────────────────────── -->
-<section class="sec-extra" style="background:linear-gradient(160deg,#f0f7f2 0%,#e8f5e9 100%);">
-  <div class="sec-inner">
-    <div class="sec-hd">
-      <small>✦ Lo que la ciencia dice</small>
-      <h2>Jugar con madera <em>transforma</em></h2>
-      <p>Beneficios comprobados del juego libre con materiales naturales en la infancia.</p>
-    </div>
-    <div class="ben-grid">
-      <div class="ben-card">
-        <span class="ben-ico">🧠</span>
-        <div class="ben-tit">Desarrollo cognitivo</div>
-        <p class="ben-txt">Estimulan la resolución de problemas, la memoria y la concentración. El juego con objetos concretos es base del pensamiento abstracto.</p>
-      </div>
-      <div class="ben-card">
-        <span class="ben-ico">🤏</span>
-        <div class="ben-tit">Motricidad fina</div>
-        <p class="ben-txt">Encajar, apilar, ensartar y construir desarrollan los músculos de la mano, clave para la escritura y las tareas cotidianas.</p>
-      </div>
-      <div class="ben-card">
-        <span class="ben-ico">🌈</span>
-        <div class="ben-tit">Creatividad e imaginación</div>
-        <p class="ben-txt">Un bloque de madera puede ser un auto, una casa o un dragón. La ambigüedad del material activa la imaginación activa de los niños.</p>
-      </div>
-      <div class="ben-card">
-        <span class="ben-ico">🤝</span>
-        <div class="ben-tit">Habilidades sociales</div>
-        <p class="ben-txt">El juego compartido enseña a negociar, esperar, ceder y colaborar. Habilidades que ninguna app puede reemplazar.</p>
-      </div>
-      <div class="ben-card">
-        <span class="ben-ico">😌</span>
-        <div class="ben-tit">Regulación emocional</div>
-        <p class="ben-txt">El juego libre sin pantallas reduce el estrés y la ansiedad, favoreciendo estados de calma y atención sostenida.</p>
-      </div>
-      <div class="ben-card">
-        <span class="ben-ico">🌍</span>
-        <div class="ben-tit">Conciencia ambiental</div>
-        <p class="ben-txt">Crecer rodeado de materiales naturales genera una conexión real con el mundo físico y los valores de cuidado del ambiente.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ──────────────────────────────────────────
      E) BANDA CTA + CROC FELIZ
      ────────────────────────────────────────── -->
 <div class="croc-band">
@@ -2637,7 +2595,7 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
         <h4>Contacto</h4>
         <ul>
           <li><span>📱</span> <a href="https://wa.me/5493816544078" target="_blank" rel="noopener">381 654-4078</a></li>
-          <li><span>📧</span> tallerartesanal.ok@gmail.com</li>
+          <li><span>📧</span> tallerartesanalok@gmail.com</li>
           <li><span>📍</span> Tucumán, Argentina</li>
           <li><span>⏰</span> Lun–Vie 9 a 18 hs</li>
         </ul>
