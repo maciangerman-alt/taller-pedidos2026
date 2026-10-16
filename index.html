@@ -758,6 +758,7 @@ const PRODUCTOS = [
   { id:100, nombre:'Abecedario Grande', categoria:'Educativos', edades:['4 años','5 años','6 años','7 años o más'], precio:11000, img:'https://drive.google.com/thumbnail?id=10C4amuQ-ma5i18miJuKdjGRA8hlxLuz0&sz=w400', emoji:'🔤' , desc:'Abecedario grande en madera con letras manipulables para trabajar el reconocimiento de letras y el inicio de la lectoescritura. Recurso fundamental para sala de 5 y primer grado.' },
   { id:101, nombre:'Mapa de Tucumán', categoria:'Mapas', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:6000, img:'https://drive.google.com/thumbnail?id=1xgcSjQURvJMaD4-MXbkfXR2euCo9Rq4I&sz=w400', emoji:'🗺️' , desc:'Mapa de Argentina en madera con sus provincias encastrables. Recurso fundamental para las ciencias sociales, trabajando ubicación espacial y reconocimiento del territorio.' },
   { id:109, nombre:'Librito para Colorear + 6 Lápices', categoria:'Lúdicos', edades:['3 años','4 años','5 años'], precio:1700, img:'https://drive.google.com/thumbnail?id=17EDE2izAD_y-WutaLXkz0rn5eN-5RrEg&sz=w400', emoji:'🎨' , desc:'Librito para colorear con 6 lápices incluidos. Estimula la creatividad, la expresión artística y la motricidad fina.' },
+  { id:152, nombre:'Correspondencia del 1 al 10', categoria:'Lúdicos', edades:['4 años','5 años'], precio:7000, img:'img/correspondencia-1-al-10.webp', emoji:'🔢' , desc:'Rompecabezas de correspondencia número-cantidad del 1 al 10: cada número encastra con la pieza que tiene esa misma cantidad de puntos. Trabaja el conteo, la asociación del número con la cantidad y la motricidad fina.' },
 
   // ===== DUPLICADOS MULTI-CATEGORÍA =====
   { id:111, nombre:'Rompecabezas 10x10', categoria:'Rompecabezas', edades:['3 años','4 años','5 años'], precio:1400, img:'https://drive.google.com/thumbnail?id=1_u_q9rU8QaRGETFG-UM6_Ah1euKI2cfM&sz=w400', emoji:'🧩' , desc:'Rompecabezas de madera de 10x10 cm de madera que estimula la concentración, la motricidad fina y el reconocimiento de formas. Elaborado artesanalmente en Tucumán.' },
@@ -824,7 +825,7 @@ carrito = Object.fromEntries(Object.entries(carrito).map(([k,v])=>[k,v]));
 let categoriaActual = 'todas';
 
 // FOTOS: primero la copia propia (carpeta img/ del sitio), si no está, la de Drive.
-function driveIdDe(url){ const m=(url||'').match(/[?&]id=([\w-]+)/)||(url||'').match(/\/d\/([\w-]+)/); return m?m[1]:''; }
+function driveIdDe(url){ const m=(url||'').match(/[?&]id=([\w-]+)/)||(url||'').match(/\/d\/([\w-]+)/)||(url||'').match(/^img\/(?:s\/)?([\w-]+)\.webp$/); return m?m[1]:''; }
 function fotosDe(url, grande){
   const id = driveIdDe(url);
   const local = id ? (grande ? `img/${id}.webp` : `img/s/${id}.webp`) : '';
