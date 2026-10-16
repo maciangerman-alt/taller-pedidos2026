@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Taller Artesanal — Catálogo</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -44,19 +44,13 @@
   --azul: #3B82F6;
 }
 body.dark-mode {
-  --bg-page: #0F1A2E; --crema: #0F1A2E; --crema-dark: #162035;
-  --surface-2: #1A2540; --surface-1: #142038;
-  --borde: #253550; --texto: #E0EAFF; --gris: #8899BB;
-  --carrito-bg: #1A2540;
-  --madera: #FF6B6B; --madera-dark: #0F1A2E; --madera-light: #FF9999;
-}
-body.dark-mode {
-  --madera: #C49A6C; --madera-dark: #2a1f14; --madera-light: #8B5E3C;
-  --crema: #1a1410; --crema-dark: #241c16; --borde: #3a2e26;
-  --verde: #2D7A4F; --verde-light: #1a2e22;
-  --texto: #F0E6D3; --gris: #9CA3AF;
+  --bg-page: #1a1410; --crema: #1a1410; --crema-dark: #241c16;
+  --surface-2: #241c16; --surface-1: #1a1410;
+  --borde: #3a2e26; --texto: #F0E6D3; --gris: #9CA3AF;
   --carrito-bg: #1f1814;
-  --surface-1: #1a1410; --surface-2: #241c16;
+  --madera: #C49A6C; --madera-dark: #2a1f14; --madera-light: #8B5E3C;
+  --verde: #2D7A4F; --verde-light: #1a2e22;
+  --rojo: #FF6B6B; --rojo-light: #3a1a1a;
 }
 body.dark-mode .header { background:rgba(30,30,48,0.92); border-bottom-color:var(--primario); }
 body.dark-mode .cart-bar { background:var(--surface-2); border-top-color:var(--borde); box-shadow:0 -6px 26px rgba(0,0,0,.5); }
@@ -65,7 +59,6 @@ body.dark-mode .header-nav { background:#16162A; border-top-color:var(--borde); 
 body.dark-mode .nav-btn { background:#2A2A40; border-color:var(--borde); color:var(--texto); }
 body.dark-mode .nav-dropdown-menu { background:#1E1E30; border-color:var(--borde); }
 body.dark-mode .nav-drop-item:hover { background:#2A2A40; }
-body.dark-mode .producto-card { background:#1E1E30; }
 body.dark-mode .producto-card { background:#1E1E30; }
 body.dark-mode .carrito-item { background:#2a1f14; }
 body.dark-mode .search-bar { background:#241c16; color:#F0E6D3; }
@@ -273,7 +266,7 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
@@ -298,6 +291,43 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
         return { ok: false, id: null };
       }
     };
+
+    // ============================================================
+    // IDEA 5: CARRITO PERSISTENTE POR TELÉFONO (Firebase)
+    // ============================================================
+    // Normalizar teléfono: solo dígitos, 10 chars
+    function normalizarTel(tel){ return tel.replace(/\D/g,'').slice(-10); }
+
+    window.guardarCarritoFirebase = async function(telefono, carritoData){
+      try {
+        const key = normalizarTel(telefono);
+        if(!key || key.length < 8) return false;
+        await setDoc(doc(db, 'carritos', key), {
+          carrito: carritoData,
+          updatedAt: new Date().toISOString()
+        });
+        return true;
+      } catch(e){ console.error('Error guardando carrito:', e); return false; }
+    };
+
+    window.cargarCarritoFirebase = async function(telefono){
+      try {
+        const key = normalizarTel(telefono);
+        if(!key || key.length < 8) return null;
+        const snap = await getDoc(doc(db, 'carritos', key));
+        if(snap.exists()) return snap.data().carrito;
+        return null;
+      } catch(e){ console.error('Error cargando carrito:', e); return null; }
+    };
+
+    window.limpiarCarritoFirebase = async function(telefono){
+      try {
+        const key = normalizarTel(telefono);
+        if(!key) return;
+        await deleteDoc(doc(db, 'carritos', key));
+      } catch(e){ /* silencioso */ }
+    };
+
     window.firebaseReady = true;
   </script>
 </head>
@@ -419,7 +449,6 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
         <div class="nav-drop-item" onclick="setCategoriaDrop('Juguetes Plásticos','nav-cat-btn')"><span class="nav-dot" style="background:#FF8C42"></span>🧸 Juguetes Plásticos</div>
         <div class="nav-drop-item" onclick="setCategoriaDrop('Combos','nav-cat-btn')"><span class="nav-dot" style="background:#FDCB6E"></span>🎁 Combos</div>
         <div class="nav-drop-item" onclick="setCategoriaDrop('Importados','nav-cat-btn')"><span class="nav-dot" style="background:#B2BEC3"></span>📦 Importados</div>
-        <div class="nav-drop-item" onclick="setCategoriaDrop('Plan Canje','nav-cat-btn')" style="color:#E91E8C;"><span class="nav-dot" style="background:#E91E8C"></span>🔄 Plan Canje</div>
       </div>
     </div>
 
@@ -486,7 +515,27 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
       </div>
       <button class="btn-pedido" onclick="abrirModal()" id="btn-pedido" disabled>💬 Enviar pedido por WhatsApp</button>
       <div id="carrito-mp-nota" style="display:none;font-size:11px;text-align:center;color:var(--gris);margin:6px 0 2px;font-family:'Nunito',sans-serif;">🔒 Pago seguro con Mercado Pago · o pagás al recibir (madera)</div>
-      <button class="btn-vaciar" onclick="vaciarCarrito()">🗑️ Vaciar carrito</button>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn-vaciar" style="flex:1;margin-top:0;" onclick="vaciarCarrito()">🗑️ Vaciar</button>
+        <button class="btn-vaciar" style="flex:1;margin-top:0;background:#E8F5E9;color:#1B5E20;" onclick="compartirCarrito()" title="Compartir carrito por link">🔗 Compartir</button>
+      </div>
+      <!-- GUARDAR CARRITO POR TELÉFONO -->
+      <details style="margin-top:10px;border-radius:10px;overflow:hidden;border:1px solid var(--borde);">
+        <summary style="padding:8px 12px;font-size:12px;font-weight:700;color:var(--gris);cursor:pointer;background:var(--surface-1,#fafafa);font-family:'Nunito',sans-serif;list-style:none;display:flex;align-items:center;gap:6px;">
+          ☁️ Guardar carrito en la nube
+        </summary>
+        <div style="padding:10px 12px;background:var(--crema);display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:11px;color:var(--gris);font-family:'Nunito',sans-serif;">Ingresá tu teléfono para guardar o retomar tu pedido desde otro dispositivo.</div>
+          <input id="tel-nube" type="tel" placeholder="📱 Ej: 3814123456" maxlength="15"
+            style="border:1.5px solid var(--borde);border-radius:8px;padding:8px 10px;font-size:13px;width:100%;box-sizing:border-box;font-family:'Nunito',sans-serif;background:var(--surface-2,white);color:var(--texto);"
+            oninput="this.value=this.value.replace(/[^\d]/g,'')">
+          <div style="display:flex;gap:6px;">
+            <button onclick="guardarNube()" style="flex:1;background:var(--verde);color:white;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">☁️ Guardar</button>
+            <button onclick="restaurarNube()" style="flex:1;background:#E8F5E9;color:#1B5E20;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;">📲 Retomar</button>
+          </div>
+          <div id="nube-status" style="font-size:11px;color:var(--gris);text-align:center;font-family:'Nunito',sans-serif;min-height:14px;"></div>
+        </div>
+      </details>
     </div>
   </div>
 
@@ -684,13 +733,6 @@ const PRODUCTOS = [
   { id:80, nombre:'Apilable del 1 al 5', categoria:'Apilables', edades:['3 años', '4 años'], precio:8700, img:'https://drive.google.com/thumbnail?id=17IxQkayWLIIuVfQ9dQ0t9fj2g9Jw4MbA&sz=w400', emoji:'🔢' , desc:'Torre apilable de madera que trabaja la seriación por tamaño, el reconocimiento de colores y la coordinación. Desarrolla la paciencia y la motricidad fina.' },
   { id:81, nombre:'Apilable de Figuras Geométricas', categoria:'Apilables', edades:[ '4 años', '5 años'], precio:9500, img:'https://drive.google.com/thumbnail?id=1dUAVzqxyfujnj2qSKAQcSgbDPBUUZQw5&sz=w400', emoji:'🔺' , desc:'Apilable de figuras geométricas que trabaja el reconocimiento de formas, colores y tamaños de forma concreta. Recurso ideal para iniciar el aprendizaje matemático.' },
   { id:82, nombre:'Bloques Escalonados', categoria:'Apilables', edades:['3 años', '4 años', '5 años'], precio:13500, img:'https://drive.google.com/thumbnail?id=108mKj3xRsp9_2c8BUMyIEwsF5SNbY01a&sz=w400', emoji:'🪜' , desc:'Bloques escalonados de madera para trabajar conceptos de tamaño, orden y seriación. Estimulan la construcción libre y el pensamiento lógico-matemático.' },
-
-  // ===== PLAN CANJE (promocional hasta 15/09) =====
-  { id:83, nombre:'Plan Canje — Combo 1', categoria:'Plan Canje', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:50000, precioOriginal:75000, img:'https://drive.google.com/thumbnail?id=1ZKP04VGxiOjEJ8ooxhLqp5bO69NWQSmB&sz=w400', emoji:'🔄' , desc:'Combo 1 del Plan Canje: llevate este conjunto de juguetes didácticos por $50.000 donando 3 o más juguetes usados. Juntos renovamos el juego y lo donamos a escuelas que más lo necesitan.' },
-  { id:84, nombre:'Plan Canje — Combo 2', categoria:'Plan Canje', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:50000, precioOriginal:75000, img:'https://drive.google.com/thumbnail?id=1sUHx0TNxO3j-8JaWOG8XUoAsDxKJRZVV&sz=w400', emoji:'🔄' , desc:'Combo 2 del Plan Canje: llevate este conjunto de juguetes didácticos por $50.000 donando 3 o más juguetes usados. Juntos renovamos el juego y lo donamos a escuelas que más lo necesitan.' },
-  { id:85, nombre:'Plan Canje — Combo 3', categoria:'Plan Canje', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:50000, precioOriginal:75000, img:'https://drive.google.com/thumbnail?id=11V9YcTbm4sQuRyArGFr_hc5a0z0JTuX2&sz=w400', emoji:'🔄' , desc:'Combo 3 del Plan Canje: llevate este conjunto de juguetes didácticos por $50.000 donando 3 o más juguetes usados. Juntos renovamos el juego y lo donamos a escuelas que más lo necesitan.' },
-  { id:86, nombre:'Plan Canje — Combo 4', categoria:'Plan Canje', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:50000, precioOriginal:75000, img:'https://drive.google.com/thumbnail?id=1jPZzubY33q_5ut-sMAr1sz_1EPBMqbxn&sz=w400', emoji:'🔄' , desc:'Combo 4 del Plan Canje: llevate este conjunto de juguetes didácticos por $50.000 donando 3 o más juguetes usados. Juntos renovamos el juego y lo donamos a escuelas que más lo necesitan.' },
-  { id:87, nombre:'Plan Canje — Combo 5', categoria:'Plan Canje', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:50000, precioOriginal:75000, img:'https://drive.google.com/thumbnail?id=12jlottPdAttM93mBYCXxs6PX1Viiwqxt&sz=w400', emoji:'🔄' , desc:'Combo 5 del Plan Canje: llevate este conjunto de juguetes didácticos por $50.000 donando 3 o más juguetes usados. Juntos renovamos el juego y lo donamos a escuelas que más lo necesitan.' },
 
   // ===== NUEVOS PRODUCTOS AGOSTO 2026 =====
   { id:88, nombre:'Combo 5 Juegos 25x25', categoria:'Combos', edades:['3 años','4 años','5 años','6 años','7 años o más'], precio:27500, img:'https://drive.google.com/thumbnail?id=1dVc8yxaIiJ5q5sQOMzW3u5TvUBT9KqKg&sz=w400', emoji:'📦' , desc:'Combo de 5 rompecabezas de 25x25 cm a un precio especial. Ideal para equipar la sala con variedad de temáticas y niveles de dificultad.' },
@@ -1017,8 +1059,6 @@ function setCategoriaDrop(cat, btnId){
   const prefix = labels[btnId] || '';
   document.getElementById(btnId).textContent = prefix + cat + ' ▾';
   document.getElementById(btnId).classList.add('active');
-  // Si es Plan Canje mostrar popup
-  if(cat==='Plan Canje') document.getElementById('popup-canje').style.display='flex';
   renderCatalogo();
 }
 
@@ -1035,7 +1075,6 @@ function setCategoria(cat, el){
   categoriaActual = cat;
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   if(el) el.classList.add('active');
-  if(cat === 'Plan Canje') document.getElementById('popup-canje').style.display='flex';
   renderCatalogo();
 }
 
@@ -1047,7 +1086,11 @@ function renderCatalogo(){
 
   const precioMax = precioNavActual || parseInt(document.getElementById('filtro-precio')?.value||'0');
   let filtrados = PRODUCTOS.filter(p => {
-    const matchBusq = !busq || p.nombre.toLowerCase().includes(busq);
+    const matchBusq = !busq ||
+      p.nombre.toLowerCase().includes(busq) ||
+      p.categoria.toLowerCase().includes(busq) ||
+      (p.desc||p.descripcion||'').toLowerCase().includes(busq) ||
+      (p.edades||[]).some(e=>e.toLowerCase().includes(busq));
     const matchCat = categoriaActual === 'todas' ||
       p.categoria === categoriaActual ||
       p.edades.includes(categoriaActual);
@@ -1098,26 +1141,24 @@ function renderCatalogo(){
 }
 
 function catEmoji(cat){
-  const map = {'Rompecabezas':'🧩','Encastres':'🔧','Apilables':'🏗️','Seriaciones':'📐','Mapas':'🗺️','Lúdicos':'🎲','Importados':'📦','Plan Canje':'🔄','Combos':'🎁','Educativos':'📚','Día del Estudiante':'🎒','Enhebradores':'🧵','Juguetes Plásticos':'🧸'};
+  const map = {'Rompecabezas':'🧩','Encastres':'🔧','Apilables':'🏗️','Seriaciones':'📐','Mapas':'🗺️','Lúdicos':'🎲','Importados':'📦','Combos':'🎁','Educativos':'📚','Día del Estudiante':'🎒','Enhebradores':'🧵','Juguetes Plásticos':'🧸'};
   return map[cat]||'🎯';
 }
 
 function productoCard(p){
   const qty = carrito[p.id]||0;
-  const esCanje = p.categoria === 'Plan Canje';
   const esMasVendido = MAS_VENDIDOS_SET.has(p.id);
-  const catColors = {'Rompecabezas':'#FFE8E8','Encastres':'#E0FFF8','Apilables':'#FFFDE0','Seriaciones':'#EDE8FF','Mapas':'#E0EEFF','Lúdicos':'#FFE8F0','Educativos':'#E0FFEA','Combos':'#FFF5E0','Plan Canje':'#FFE0F5','Importados':'#F0F0F0','Día del Estudiante':'#E0F0FF'};
+  const catColors = {'Rompecabezas':'#FFE8E8','Encastres':'#E0FFF8','Apilables':'#FFFDE0','Seriaciones':'#EDE8FF','Mapas':'#E0EEFF','Lúdicos':'#FFE8F0','Educativos':'#E0FFEA','Combos':'#FFF5E0','Importados':'#F0F0F0','Día del Estudiante':'#E0F0FF'};
   const cardBg = catColors[p.categoria] || '#FFFFFF';
   return `<div class="producto-card ${qty>0?'en-carrito':''}" id="card-${p.id}">
     <div class="qty-badge ${qty>0?'show':''}" id="badge-${p.id}">${qty}</div>
-    ${esCanje ? '<div class="badge-canje">♻️ CANJE</div>' : ''}
     ${esMasVendido ? '<div class="badge-canje" style="background:#F59E0B;right:8px;left:auto;font-size:9px;">⭐ Más pedido</div>' : ''}
     ${p.categoria==='Día del Estudiante' ? '<div class="badge-canje" style="background:#1565C0;font-size:9px;">🎒 DÍA DEL ESTUDIANTE</div>' : ''}
     ${p.destacado ? '<div class="badge-canje" style="background:#FF8C42;font-size:9px;">⭐ DESTACADO</div>' : ''}
     <img class="producto-img" data-src="${p.img}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="${p.nombre}" loading="lazy" decoding="async" onerror="imgError(this,'${p.emoji}')" onclick="abrirImgModal(${p.id})" style="cursor:zoom-in;background:${cardBg}; opacity:0; transition:opacity 0.25s;">
     <div class="producto-info">
       <div class="producto-nombre">${p.nombre}</div>
-      <div class="producto-precio">${(esCanje||p.precioOriginal) ? `<span class="precio-original">$${fmt(p.precioOriginal||75000)}</span><span class="precio-promo">$${fmt(p.precio)}</span>` : `$${fmt(p.precio)}`}</div>
+      <div class="producto-precio">${p.precioOriginal ? `<span class="precio-original">$${fmt(p.precioOriginal)}</span><span class="precio-promo">$${fmt(p.precio)}</span>` : `$${fmt(p.precio)}`}</div>
       <div class="producto-edad">${p.edades.join(' · ')}</div>
     </div>
     ${qty>0
@@ -1182,7 +1223,14 @@ function agregar(id){
   localStorage.setItem('ta_carrito', JSON.stringify(carrito));
   actualizarCard(id);
   renderCarrito();
-  toast('✓ Agregado al pedido');
+  const p = PRODUCTOS.find(x=>x.id===id);
+  const emoji = p ? p.emoji : '🧩';
+  const nombre = p ? p.nombre : 'Producto';
+  const qty = carrito[id];
+  const msg = qty > 1
+    ? `${emoji} ${nombre} (×${qty})`
+    : `${emoji} ¡${nombre} agregado!`;
+  toast(msg);
 }
 
 function cambiarCantidad(id, valor){
@@ -1216,7 +1264,7 @@ function renderCarrito(){
   const totalPesos = items.reduce((a,[id,qty])=>a+(PRODUCTOS.find(p=>p.id===Number(id))?.precio||0)*qty,0);
 
   // PROMO: 5 rompecabezas 15x15 por $15.000 (ahorro $2500 por grupo)
-  const SIN_DCTO = ['Día del Estudiante','Combos','Plan Canje'];
+  const SIN_DCTO = ['Día del Estudiante','Combos'];
   const itemsConDcto = items.filter(([id])=>{ const p=PRODUCTOS.find(x=>x.id===Number(id)); return p&&!SIN_DCTO.includes(p.categoria); });
   const total15x15 = itemsConDcto.reduce((a,[id,qty])=>{
     const p = PRODUCTOS.find(x=>x.id===Number(id));
@@ -1225,7 +1273,7 @@ function renderCarrito(){
   const promos = Math.floor(total15x15 / 5);
   const descPromo = promos * 2500;
 
-  // DESCUENTO SORPRESA POR CANTIDAD — solo productos con descuento (no Día del Estudiante, Combos, Plan Canje)
+  // DESCUENTO SORPRESA POR CANTIDAD — solo productos con descuento (no Día del Estudiante, Combos)
   const conDctoCount = itemsConDcto.reduce((a,[,qty])=>a+qty,0);
   let pctDescuento = 0;
   let labelDescuento = '';
@@ -1278,7 +1326,8 @@ function renderCarrito(){
   const filaEnvio = document.getElementById('fila-envio');
   const envioEl = document.getElementById('carrito-envio');
   if(filaEnvio && envioEl){
-    const savedProv = JSON.parse(localStorage.getItem('taller_maestra')||'{}').provincia || 'Tucumán';
+    let savedProv = 'Tucumán';
+    try { savedProv = JSON.parse(localStorage.getItem('taller_maestra')||'{}').provincia || 'Tucumán'; } catch(e){ savedProv = 'Tucumán'; }
     if(savedProv && totalItems > 0){
       const costoEnvio = getCostoEnvio(savedProv);
       filaEnvio.style.display = 'flex';
@@ -1342,7 +1391,7 @@ function eliminarProducto(id){
 
 function vaciarCarrito(){
   if(!Object.keys(carrito).length) return;
-  if(confirm('¿Vaciar el carrito?')){ carrito={}; renderCatalogo(); renderCarrito(); }
+  if(confirm('¿Vaciar el carrito?')){ carrito={}; localStorage.removeItem('ta_carrito'); renderCatalogo(); renderCarrito(); }
 }
 
 function toggleCarrito(){
@@ -1371,7 +1420,7 @@ function _abrirModalInterno(){
   const totalItems = items.reduce((a,[,qty])=>a+qty,0);
   const total15x15 = items.reduce((a,[id,qty])=>{ const p=PRODUCTOS.find(x=>x.id===Number(id)); return a+(p&&p.nombre.includes('15x15')&&p.categoria==='Rompecabezas'?qty:0); },0);
   const descPromo = Math.floor(total15x15/5)*2500;
-  const SIN_DCTO_MODAL = ['Día del Estudiante','Combos','Plan Canje'];
+  const SIN_DCTO_MODAL = ['Día del Estudiante','Combos'];
   const itemsConDctoModal = items.filter(([id])=>{ const p=PRODUCTOS.find(x=>x.id===Number(id)); return p&&!SIN_DCTO_MODAL.includes(p.categoria); });
   const conDctoCount = itemsConDctoModal.reduce((a,[,qty])=>a+qty,0);
   const pctBase = conDctoCount>=25?0.10:conDctoCount>=15?0.05:0;
@@ -1389,7 +1438,8 @@ function _abrirModalInterno(){
   html+=`<div class="pedido-resumen-item" style="font-weight:800;font-size:15px;border-top:2px solid #eee;padding-top:8px;margin-top:4px"><span>Total</span><span>$${fmt(totalFinal)}</span></div>`;
   resumen.innerHTML = html;
   // Autocompletar datos guardados
-  const saved = JSON.parse(localStorage.getItem('taller_maestra')||'{}');
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('taller_maestra')||'{}'); } catch(e){ saved = {}; }
   if(saved.nombre) document.getElementById('m-nombre').value=saved.nombre;
   if(saved.escuela) document.getElementById('m-escuela').value=saved.escuela;
   if(saved.tel) document.getElementById('m-tel').value=saved.tel;
@@ -1458,7 +1508,7 @@ function enviarPedido(){
   const items = Object.entries(carrito);
   const totalPesos = items.reduce((a,[id,qty])=>a+(PRODUCTOS.find(p=>p.id===Number(id))?.precio||0)*qty,0);
   const totalItems = items.reduce((a,[,qty])=>a+qty,0);
-  const SIN_DCTO_ENV = ['Día del Estudiante','Combos','Plan Canje'];
+  const SIN_DCTO_ENV = ['Día del Estudiante','Combos'];
   const itemsConDctoEnv = items.filter(([id])=>{ const p=PRODUCTOS.find(x=>x.id===Number(id)); return p&&!SIN_DCTO_ENV.includes(p.categoria); });
   const total15x15 = itemsConDctoEnv.reduce((a,[id,qty])=>{ const p=PRODUCTOS.find(x=>x.id===Number(id)); return a+(p&&p.nombre.includes('15x15')&&p.categoria==='Rompecabezas'?qty:0); },0);
   const descPromo = Math.floor(total15x15/5)*2500;
@@ -1555,7 +1605,7 @@ function enviarPedido(){
   localStorage.setItem('taller_maestra', JSON.stringify({nombre, escuela, tel, provincia, ciudad}));
 
   // Abrir WhatsApp ANTES del await (mobile bloquea window.open post-async)
-  window.open(`https://wa.me/5493813311414?text=${encodeURIComponent(msg)}`, '_blank');
+  window.open(`https://wa.me/5493816544078?text=${encodeURIComponent(msg)}`, '_blank');
 
   // El 5% de bienvenida es para el primer pedido
   localStorage.removeItem('ta_dcto_ruleta'); window.descuentoRuleta = 0;
@@ -1677,7 +1727,8 @@ function cerrarPagoOverlay(){ document.getElementById('pago-overlay').style.disp
   const q = new URLSearchParams(location.search);
   const estado = q.get('pago');
   if(!estado) return;
-  const pend = JSON.parse(localStorage.getItem('ta_pago_pendiente')||'null');
+  let pend = null;
+  try { pend = JSON.parse(localStorage.getItem('ta_pago_pendiente')||'null'); } catch(e){ pend = null; }
   const operacion = String(q.get('payment_id') || q.get('collection_id') || '').replace(/\D/g,'').slice(0,20);
   history.replaceState(null, '', location.pathname);
   const ok = estado==='aprobado' && q.get('status')==='approved';
@@ -1693,7 +1744,7 @@ function cerrarPagoOverlay(){ document.getElementById('pago-overlay').style.disp
       carrito = {}; localStorage.removeItem('ta_carrito'); localStorage.removeItem('ta_dcto_ruleta'); window.descuentoRuleta = 0; renderCatalogo(); renderCarrito();
       if(pend?.tel && typeof incrementarFidelidad==='function') incrementarFidelidad(pend.tel);
       const msg = (pend?.msg||'*Taller Artesanal — Pago recibido*') + `\n✅ *Pago Mercado Pago aprobado* — $${fmt(pend?.monto||0)} — Operación N° ${operacion}`;
-      btnWa.href = `https://wa.me/5493813311414?text=${encodeURIComponent(msg)}`;
+      btnWa.href = `https://wa.me/5493816544078?text=${encodeURIComponent(msg)}`;
       btnWa.style.display='block';
       localStorage.removeItem('ta_pago_pendiente');
     } else if(estado==='pendiente'){
@@ -1834,7 +1885,7 @@ function abrirImgModal(id){
   document.getElementById('img-modal-img').onerror = function(){ this.src=''; this.style.display='none'; };
   document.getElementById('img-modal-cat').textContent = p.categoria;
   document.getElementById('img-modal-nombre').textContent = p.nombre;
-  document.getElementById('img-modal-desc').textContent = p.desc || '';
+  document.getElementById('img-modal-desc').textContent = p.desc || p.descripcion || '';
   document.getElementById('img-modal-edades').textContent = p.edades.join(' · ');
   const origEl = document.getElementById('img-modal-precio-orig');
   if(p.precioOriginal){ origEl.style.display='inline'; origEl.textContent='$'+fmt(p.precioOriginal); }
@@ -1847,6 +1898,7 @@ function abrirImgModal(id){
 }
 function cerrarImgModal(e){ if(e.target===document.getElementById('img-modal')) cerrarImgModalBtn(); }
 function cerrarImgModalBtn(){ document.getElementById('img-modal').classList.remove('open'); document.body.style.overflow=''; }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ const m=document.getElementById('img-modal'); if(m&&m.classList.contains('open')) cerrarImgModalBtn(); } });
 function agregarDesdeModal(){
   if(imgModalProductoId===null) return;
   agregar(imgModalProductoId);
@@ -1890,6 +1942,113 @@ async function cargarPreciosDesdeSheets(){
 setTimeout(cargarPreciosDesdeSheets, 800);
 
 if(typeof setupDropZone==='function') setupDropZone();
+
+// ============================================================
+// IDEA 5: GUARDAR/RESTAURAR CARRITO EN LA NUBE (Firebase)
+// ============================================================
+async function guardarNube(){
+  const tel = (document.getElementById('tel-nube')||{}).value||'';
+  if(tel.length < 8){ toast('📱 Ingresá un teléfono válido'); return; }
+  if(!Object.keys(carrito).length){ toast('🛒 El carrito está vacío'); return; }
+  const status = document.getElementById('nube-status');
+  if(status) status.textContent = 'Guardando...';
+  if(typeof window.guardarCarritoFirebase !== 'function'){
+    toast('☁️ Firebase no disponible aún, reintentá en un momento'); return;
+  }
+  const ok = await window.guardarCarritoFirebase(tel, carrito);
+  if(ok){
+    try{ localStorage.setItem('ta_tel_nube', tel); } catch(e){}
+    if(status) status.textContent = '✅ Guardado OK';
+    toast('☁️ Carrito guardado en la nube');
+  } else {
+    if(status) status.textContent = '❌ Error al guardar';
+    toast('❌ No se pudo guardar. Verificá conexión.');
+  }
+}
+
+async function restaurarNube(){
+  let tel = (document.getElementById('tel-nube')||{}).value||'';
+  if(!tel){ try{ tel = localStorage.getItem('ta_tel_nube')||''; } catch(e){} }
+  if(tel.length < 8){ toast('📱 Ingresá tu número de teléfono'); return; }
+  const status = document.getElementById('nube-status');
+  if(status) status.textContent = 'Cargando...';
+  if(typeof window.cargarCarritoFirebase !== 'function'){
+    toast('☁️ Firebase no disponible aún, reintentá en un momento'); return;
+  }
+  const data = await window.cargarCarritoFirebase(tel);
+  if(data && Object.keys(data).length){
+    carrito = {};
+    const idsValidos = new Set(PRODUCTOS.map(p=>p.id));
+    Object.keys(data).forEach(k=>{
+      const id = Number(k);
+      if(idsValidos.has(id) && data[k]>0) carrito[id] = data[k];
+    });
+    localStorage.setItem('ta_carrito', JSON.stringify(carrito));
+    try{ localStorage.setItem('ta_tel_nube', tel); } catch(e){}
+    renderCatalogo();
+    renderCarrito();
+    if(status) status.textContent = '✅ Carrito restaurado';
+    toast('📲 ¡Carrito restaurado desde la nube!');
+  } else {
+    if(status) status.textContent = 'No se encontró carrito guardado';
+    toast('📭 No hay carrito guardado para ese número');
+  }
+}
+
+// Pre-cargar el teléfono guardado en el input
+(function precargarTelNube(){
+  try {
+    const tel = localStorage.getItem('ta_tel_nube');
+    if(tel){ setTimeout(()=>{ const inp=document.getElementById('tel-nube'); if(inp) inp.value=tel; }, 500); }
+  } catch(e){}
+})();
+
+// ============================================================
+// IDEA 2: COMPARTIR CARRITO POR LINK (base64 URL)
+// ============================================================
+function compartirCarrito(){
+  if(!Object.keys(carrito).length){ toast('🛒 El carrito está vacío'); return; }
+  try {
+    const data = JSON.stringify(carrito);
+    const b64 = btoa(unescape(encodeURIComponent(data)));
+    const url = window.location.origin + window.location.pathname + '?c=' + b64;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(()=>{
+        toast('🔗 ¡Link copiado! Compartilo por WhatsApp');
+      }).catch(()=>{ prompt('Copiá este link:', url); });
+    } else {
+      prompt('Copiá este link:', url);
+    }
+  } catch(e){ toast('❌ Error al generar link'); }
+}
+
+// Leer carrito desde URL ?c=... al cargar
+(function restaurarCarritoDesdeURL(){
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const b64 = params.get('c');
+    if(!b64) return;
+    const data = JSON.parse(decodeURIComponent(escape(atob(b64))));
+    if(typeof data === 'object' && data !== null){
+      // Validar que los ids existen en PRODUCTOS
+      const idsValidos = new Set(PRODUCTOS.map(p=>p.id));
+      Object.keys(data).forEach(k=>{
+        const id = Number(k);
+        if(idsValidos.has(id) && Number.isInteger(data[k]) && data[k]>0){
+          carrito[id] = data[k];
+        }
+      });
+      if(Object.keys(carrito).length){
+        localStorage.setItem('ta_carrito', JSON.stringify(carrito));
+        renderCatalogo();
+        renderCarrito();
+        toast('🛒 Carrito restaurado desde link compartido');
+        // Limpiar URL sin recargar
+        history.replaceState(null,'', window.location.pathname);
+      }
+    }
+  } catch(e){ /* URL inválida, ignorar */ }
+})();
 </script>
 
 <!-- PANTALLA CONFIRMACIÓN PEDIDO -->
@@ -1930,22 +2089,6 @@ if(typeof setupDropZone==='function') setupDropZone();
   </div>
 </div>
 
-<!-- POPUP PLAN CANJE -->
-<div id="popup-canje" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:700;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:var(--surface-2,white);border-radius:24px;padding:28px 22px;max-width:360px;width:100%;text-align:center;position:relative;">
-    <div style="font-size:42px;margin-bottom:8px;">♻️</div>
-    <div style="font-size:19px;font-weight:800;color:#E91E8C;font-family:'Fredoka One',cursive;margin-bottom:8px;">¡Plan Canje!</div>
-    <div style="font-size:13px;color:#444;line-height:1.6;margin-bottom:12px;">
-      Llevate un combo de <b>$75.000</b> por solo <b style="color:#E91E8C;">$50.000</b><br>
-      donando <b>3 o más juguetes usados</b>.<br>
-      Los renovamos y los donamos a escuelas. 🏫
-    </div>
-    <div style="background:#FFF0F5;border-radius:12px;padding:10px 14px;font-size:12px;color:#E91E8C;font-weight:700;margin-bottom:16px;">
-      ⏰ Promoción válida hasta el 15 de septiembre
-    </div>
-    <button onclick="document.getElementById('popup-canje').style.display='none'" style="background:#E91E8C;color:white;border:none;border-radius:12px;padding:12px 28px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;width:100%;">¡Quiero participar! 🎉</button>
-  </div>
-</div>
 
 <div id="img-modal" onclick="cerrarImgModal(event)">
   <div class="img-modal-box" id="img-modal-box">
@@ -1964,6 +2107,574 @@ if(typeof setupDropZone==='function') setupDropZone();
     </div>
   </div>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SECCIONES PROFESIONALES — FAQ / COMPARACIÓN / BENEFICIOS / FOOTER
+     ═══════════════════════════════════════════════════════════ -->
+
+<style>
+/* ─── Secciones extra ─── */
+.sec-extra { padding: 72px 20px; }
+.sec-inner { max-width: 960px; margin: 0 auto; }
+.sec-hd { text-align:center; margin-bottom:52px; }
+.sec-hd small { display:block; font-size:11px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--verde); margin-bottom:10px; }
+.sec-hd h2 { font-family:'Fredoka One',cursive; font-size:clamp(28px,5vw,42px); color:var(--texto); margin:0; line-height:1.15; }
+.sec-hd h2 em { color:var(--verde); font-style:normal; }
+.sec-hd p { font-size:16px; color:var(--gris); margin:14px auto 0; max-width:560px; line-height:1.65; }
+
+/* ─── Quitar triángulo nativo de details/summary ─── */
+details > summary { list-style:none; }
+details > summary::-webkit-details-marker { display:none; }
+
+/* ─── Acordeón FAQ ─── */
+.faq-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:680px){ .faq-grid { grid-template-columns:1fr; } }
+.faq-item { background:white; border-radius:16px; border:1.5px solid var(--borde); overflow:hidden; transition:box-shadow 0.2s; }
+body.dark-mode .faq-item { background:#1E2035; border-color:#2E3258; }
+.faq-item:hover { box-shadow:0 4px 20px rgba(45,122,79,.12); }
+.faq-q { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; cursor:pointer; gap:12px; }
+.faq-q span { font-weight:700; font-size:14px; color:var(--texto); line-height:1.4; flex:1; }
+.faq-ico { width:28px; height:28px; background:var(--verde); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; flex-shrink:0; transition:transform 0.25s; }
+.faq-item.open .faq-ico { transform:rotate(45deg); }
+.faq-a { font-size:13px; line-height:1.65; color:var(--gris); padding:0 20px; max-height:0; overflow:hidden; transition:max-height 0.35s ease, padding 0.2s; }
+.faq-item.open .faq-a { max-height:300px; padding:0 20px 18px; }
+
+/* ─── Tabla comparación ─── */
+.comp-table { width:100%; border-collapse:collapse; overflow:hidden; border-radius:20px; box-shadow:0 4px 24px rgba(0,0,0,.07); }
+.comp-table th { padding:18px 24px; font-family:'Fredoka One',cursive; font-size:16px; text-align:center; }
+.comp-table th:first-child { width:38%; text-align:left; }
+.comp-table .col-madera { background:var(--verde); color:white; }
+.comp-table .col-plastico { background:#C0392B; color:white; }
+.comp-table .col-pantallas { background:#2C3E50; color:white; }
+.comp-table td { padding:14px 20px; font-size:13.5px; color:var(--texto); border-bottom:1px solid var(--borde); vertical-align:middle; text-align:center; }
+.comp-table td:first-child { text-align:left; font-weight:700; background:var(--bg-page); }
+body.dark-mode .comp-table td:first-child { background:#1A1C2E; }
+body.dark-mode .comp-table td { color:#E0E4FF; border-color:#2E3258; }
+.comp-table tbody tr:last-child td { border-bottom:none; }
+.comp-table tbody tr:nth-child(even) td:not(:first-child) { background:rgba(45,122,79,.05); }
+body.dark-mode .comp-table tbody tr:nth-child(even) td:not(:first-child) { background:rgba(45,122,79,.10); }
+.chk { color:var(--verde); font-size:18px; font-weight:900; }
+.cruz { color:#C0392B; font-size:17px; }
+.wrap-table { overflow-x:auto; border-radius:20px; }
+
+/* ─── Beneficios grid ─── */
+.ben-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+@media(max-width:680px){ .ben-grid { grid-template-columns:1fr 1fr; } }
+@media(max-width:420px){ .ben-grid { grid-template-columns:1fr; } }
+.ben-card { background:white; border-radius:20px; padding:28px 22px; text-align:center; border:1.5px solid var(--borde); transition:transform 0.2s, box-shadow 0.2s; }
+body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
+.ben-card:hover { transform:translateY(-4px); box-shadow:0 10px 32px rgba(45,122,79,.15); }
+.ben-ico { font-size:40px; margin-bottom:14px; display:block; }
+.ben-tit { font-family:'Fredoka One',cursive; font-size:17px; color:var(--verde); margin-bottom:8px; }
+.ben-txt { font-size:13px; color:var(--gris); line-height:1.6; }
+
+/* ─── Croc SVG inline ─── */
+.croc-wrapper { display:flex; justify-content:center; margin:0 auto 36px; }
+.croc-wrapper svg { width:140px; height:auto; filter:drop-shadow(0 8px 16px rgba(0,0,0,.12)); }
+.croc-side { display:flex; align-items:flex-end; gap:40px; }
+.croc-side .sec-hd { text-align:left; margin-bottom:0; flex:1; }
+.croc-side .croc-wrapper { margin:0; }
+@media(max-width:600px){ .croc-side { flex-direction:column; align-items:center; } .croc-side .sec-hd { text-align:center; } }
+
+/* ─── Footer pro ─── */
+#ta-footer { background:linear-gradient(130deg,#1A2E1E 0%,#243328 50%,#0D1F24 100%); color:rgba(255,255,255,.88); padding:72px 20px 0; }
+.footer-inner { max-width:960px; margin:0 auto; }
+.footer-top { display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:48px; padding-bottom:52px; border-bottom:1px solid rgba(255,255,255,.1); }
+@media(max-width:720px){ .footer-top { grid-template-columns:1fr; gap:32px; } }
+.footer-brand .footer-logo { font-family:'Fredoka One',cursive; font-size:28px; color:white; margin-bottom:10px; display:flex; align-items:center; gap:10px; }
+.footer-brand p { font-size:13.5px; line-height:1.7; opacity:.75; margin:0 0 20px; max-width:280px; }
+.footer-socials { display:flex; gap:10px; flex-wrap:wrap; }
+.footer-social-btn { display:flex; align-items:center; gap:7px; padding:9px 15px; border-radius:50px; font-size:13px; font-weight:700; text-decoration:none; transition:transform 0.15s, opacity 0.15s; }
+.footer-social-btn:hover { transform:translateY(-2px); opacity:.85; }
+.footer-social-btn.ig { background:linear-gradient(135deg,#E1306C,#F77737); color:white; }
+.footer-social-btn.wa { background:#25D366; color:white; }
+.footer-col h4 { font-family:'Fredoka One',cursive; font-size:17px; color:white; margin:0 0 16px; }
+.footer-col ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.footer-col ul li { font-size:13.5px; opacity:.78; display:flex; align-items:center; gap:8px; }
+.footer-col ul li span { font-size:16px; }
+.footer-col a { color:inherit; text-decoration:none; transition:opacity 0.15s; }
+.footer-col a:hover { opacity:1; text-decoration:underline; }
+.footer-bar { padding:20px 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:12px; opacity:.55; }
+.footer-bar a { color:inherit; text-decoration:none; }
+.footer-bar a:hover { opacity:.9; text-decoration:underline; }
+
+/* ─── Banda verde croc ─── */
+.croc-band { background:linear-gradient(135deg,#2D7A4F 0%,#1E5C3A 100%); padding:56px 20px; text-align:center; }
+.croc-band h3 { font-family:'Fredoka One',cursive; font-size:clamp(22px,4vw,34px); color:white; margin:0 0 10px; }
+.croc-band p { color:rgba(255,255,255,.85); font-size:15px; max-width:560px; margin:0 auto 28px; line-height:1.6; }
+.croc-band-btn { display:inline-flex; align-items:center; gap:8px; background:white; color:var(--verde); padding:14px 28px; border-radius:50px; font-size:15px; font-weight:800; text-decoration:none; font-family:'Nunito',sans-serif; box-shadow:0 4px 20px rgba(0,0,0,.15); transition:transform 0.15s; }
+.croc-band-btn:hover { transform:translateY(-2px); }
+</style>
+
+<!-- ══════════════════ SVG COCODRILO MASCOTA ══════════════════
+     Reutilizable: se inserta inline donde se necesite
+     ══════════════════════════════════════════════════════════ -->
+
+<!-- ──────────────────────────────────────────
+     A) SECCIÓN FAQ
+     ────────────────────────────────────────── -->
+<section class="sec-extra" style="background:var(--bg-page);">
+  <div class="sec-inner">
+    <div class="sec-hd">
+      <!-- Cocodrilo pensativo -->
+      <div class="croc-wrapper">
+        <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cuerpo -->
+          <ellipse cx="100" cy="148" rx="52" ry="42" fill="#4CAF50"/>
+          <!-- Brazo izq pensativo (en mentón) -->
+          <ellipse cx="57" cy="152" rx="10" ry="7" fill="#4CAF50" transform="rotate(-20,57,152)"/>
+          <!-- Brazo der -->
+          <ellipse cx="143" cy="152" rx="10" ry="7" fill="#4CAF50" transform="rotate(20,143,152)"/>
+          <!-- Mano en mentón -->
+          <circle cx="62" cy="140" r="7" fill="#4CAF50"/>
+          <!-- Pata izq -->
+          <ellipse cx="78" cy="188" rx="12" ry="7" fill="#388E3C"/>
+          <!-- Pata der -->
+          <ellipse cx="122" cy="188" rx="12" ry="7" fill="#388E3C"/>
+          <!-- Cabeza -->
+          <ellipse cx="100" cy="108" rx="38" ry="34" fill="#4CAF50"/>
+          <!-- Hocico -->
+          <ellipse cx="100" cy="126" rx="24" ry="14" fill="#66BB6A"/>
+          <!-- Fosas nasales -->
+          <circle cx="92" cy="122" r="3" fill="#2E7D32"/>
+          <circle cx="108" cy="122" r="3" fill="#2E7D32"/>
+          <!-- Ojos -->
+          <ellipse cx="86" cy="100" rx="9" ry="10" fill="white"/>
+          <ellipse cx="114" cy="100" rx="9" ry="10" fill="white"/>
+          <circle cx="88" cy="101" r="5" fill="#1B5E20"/>
+          <circle cx="116" cy="101" r="5" fill="#1B5E20"/>
+          <circle cx="89" cy="99" r="2" fill="black"/>
+          <circle cx="117" cy="99" r="2" fill="black"/>
+          <circle cx="91" cy="98" r="1" fill="white"/>
+          <circle cx="119" cy="98" r="1" fill="white"/>
+          <!-- Gorro hélice - base -->
+          <rect x="78" y="72" width="44" height="12" rx="6" fill="#1565C0"/>
+          <!-- Ala gorro -->
+          <ellipse cx="100" cy="72" rx="34" ry="6" fill="#FFD700"/>
+          <!-- Hélice -->
+          <rect x="97" y="56" width="6" height="16" rx="3" fill="#FF5722"/>
+          <ellipse cx="100" cy="58" rx="18" ry="6" fill="#FFB300" transform="rotate(0,100,58)"/>
+          <ellipse cx="100" cy="58" rx="18" ry="6" fill="#FFB300" transform="rotate(90,100,58)"/>
+          <!-- Mochila naranja -->
+          <rect x="130" y="120" width="28" height="34" rx="8" fill="#FF6D00"/>
+          <rect x="132" y="126" width="24" height="4" rx="2" fill="#FF8F00"/>
+          <circle cx="144" cy="137" r="4" fill="#FF8F00"/>
+          <!-- Tiras mochila -->
+          <path d="M130 124 Q120 132 122 150" stroke="#FF6D00" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <!-- Signo pregunta flotante -->
+          <text x="48" y="95" font-size="26" fill="#FFD700" font-weight="900" font-family="Arial">?</text>
+          <text x="148" y="88" font-size="18" fill="#FFD700" font-weight="900" font-family="Arial">?</text>
+          <!-- Boca sonrisa -->
+          <path d="M90 132 Q100 140 110 132" stroke="#2E7D32" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <small>✦ Todo lo que querés saber</small>
+      <h2>Preguntas <em>Frecuentes</em></h2>
+      <p>Respondemos las dudas más comunes de docentes, mamás y papás que nos eligen.</p>
+    </div>
+
+    <div class="faq-grid">
+      <!-- Columna A -->
+      <div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Los juguetes son seguros para niños pequeños?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Sí. Todos nuestros juguetes están fabricados con madera de alta calidad y pinturas atóxicas certificadas. Son seguros desde los 12 meses, siempre con la supervisión adulta recomendada para cada edad.</div>
+        </div>
+        <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Puedo pedir personalizado para una escuela?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">¡Absolutamente! Trabajamos con jardines, escuelas y centros de salud. Podemos armar combos docentes, personalizar piezas y gestionar la entrega en cantidad. Escribinos por WhatsApp para cotización.</div>
+        </div>
+        <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Hacen envíos a todo el país?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Sí, enviamos a todo Argentina por correo o servicio de paquetería. Para Tucumán capital, también ofrecemos entrega personalizada sin costo adicional en pedidos desde $15.000.</div>
+        </div>
+        <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Qué métodos de pago aceptan?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Aceptamos transferencia bancaria, Mercado Pago (tarjetas de crédito/débito y cuotas sin interés según banco), y efectivo para entregas en mano en Tucumán.</div>
+        </div>
+      </div>
+      <!-- Columna B -->
+      <div>
+        <div class="faq-item" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Son aptos para sala de maternal o jardín?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Muchos de nuestros juguetes están diseñados especialmente para nivel inicial. Tenés filtros de edad en el catálogo para encontrar los ideales para tu sala. Varios son material Montessori adaptado.</div>
+        </div>
+        <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Puedo cambiar o devolver un producto?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Sí. Tenés 10 días desde la recepción para reportar cualquier inconveniente. Si el producto tiene defecto de fabricación, lo reponemos sin costo. El cambio por preferencia tiene un pequeño costo de envío.</div>
+        </div>
+        <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Los juguetes tienen garantía?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Garantizamos la calidad artesanal de cada pieza. Si detectás algún defecto en el armado o acabado dentro de los 30 días, te lo reparamos o reemplazamos sin cargo.</div>
+        </div>
+        <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
+          <div class="faq-q"><span>¿Cuánto demora en llegar mi pedido?</span><div class="faq-ico">+</div></div>
+          <div class="faq-a">Tucumán capital: 24 a 48 hs. Interior del país: 3 a 7 días hábiles según la empresa de correo. Te enviamos el número de seguimiento cuando tu pedido es despachado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────
+     B) SECCIÓN COMPARACIÓN
+     ────────────────────────────────────────── -->
+<section class="sec-extra" style="background:var(--crema-dark,#E2E8FF);">
+  <div class="sec-inner">
+    <div class="sec-hd">
+      <small>✦ Por qué elegir madera</small>
+      <h2>Juguetes de madera vs <em>otras opciones</em></h2>
+      <p>Una mirada clara para que elijas lo mejor para el desarrollo de tus hijos.</p>
+    </div>
+    <div class="wrap-table">
+      <table class="comp-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="col-madera">🌳 Madera artesanal</th>
+            <th class="col-plastico">🏭 Plástico industrial</th>
+            <th class="col-pantallas">📱 Pantallas / Apps</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Duración</td>
+            <td><span class="chk">✓</span> Décadas si se cuida</td>
+            <td><span class="cruz">✗</span> Se rompe con el uso</td>
+            <td><span class="cruz">✗</span> Depende de actualizaciones</td>
+          </tr>
+          <tr>
+            <td>Desarrollo motriz</td>
+            <td><span class="chk">✓</span> Estimula motricidad fina</td>
+            <td>Limitado</td>
+            <td><span class="cruz">✗</span> Nulo, solo táctil</td>
+          </tr>
+          <tr>
+            <td>Creatividad libre</td>
+            <td><span class="chk">✓</span> Imaginación sin límites</td>
+            <td>Guiada por el diseño</td>
+            <td><span class="cruz">✗</span> Respuesta predefinida</td>
+          </tr>
+          <tr>
+            <td>Impacto ambiental</td>
+            <td><span class="chk">✓</span> Natural y biodegradable</td>
+            <td><span class="cruz">✗</span> Contaminante</td>
+            <td><span class="cruz">✗</span> Electrónico, no reciclable</td>
+          </tr>
+          <tr>
+            <td>Seguridad</td>
+            <td><span class="chk">✓</span> Pinturas atóxicas</td>
+            <td>Variable según marca</td>
+            <td><span class="cruz">✗</span> Radiación, adicción</td>
+          </tr>
+          <tr>
+            <td>Juego social</td>
+            <td><span class="chk">✓</span> Compartido, colaborativo</td>
+            <td>Individual/grupal</td>
+            <td><span class="cruz">✗</span> Aislante por diseño</td>
+          </tr>
+          <tr>
+            <td>Valor hecho en Argentina</td>
+            <td><span class="chk">✓</span> Trabajo artesanal local</td>
+            <td><span class="cruz">✗</span> Importado masivo</td>
+            <td><span class="cruz">✗</span> Empresa extranjera</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────
+     C) BENEFICIOS PARA DOCENTES
+     ────────────────────────────────────────── -->
+<section class="sec-extra" style="background:var(--bg-page);">
+  <div class="sec-inner">
+    <div class="croc-side" style="align-items:center;margin-bottom:52px;gap:32px;">
+      <!-- Croc apuntando -->
+      <div class="croc-wrapper" style="margin:0;flex-shrink:0;">
+        <svg width="130" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cola -->
+          <ellipse cx="154" cy="175" rx="32" ry="10" fill="#388E3C" transform="rotate(-15,154,175)"/>
+          <!-- Cuerpo -->
+          <ellipse cx="100" cy="155" rx="50" ry="40" fill="#4CAF50"/>
+          <!-- Pata izq -->
+          <ellipse cx="78" cy="193" rx="13" ry="7" fill="#388E3C"/>
+          <!-- Pata der -->
+          <ellipse cx="122" cy="193" rx="13" ry="7" fill="#388E3C"/>
+          <!-- Brazo der apuntando -->
+          <path d="M148 148 Q175 130 190 118" stroke="#4CAF50" stroke-width="14" fill="none" stroke-linecap="round"/>
+          <!-- Dedo apuntando -->
+          <circle cx="192" cy="116" r="7" fill="#66BB6A"/>
+          <!-- Brazo izq -->
+          <ellipse cx="55" cy="158" rx="11" ry="7" fill="#4CAF50" transform="rotate(15,55,158)"/>
+          <!-- Cabeza -->
+          <ellipse cx="100" cy="112" rx="37" ry="33" fill="#4CAF50"/>
+          <!-- Hocico -->
+          <ellipse cx="100" cy="130" rx="23" ry="13" fill="#66BB6A"/>
+          <circle cx="92" cy="126" r="2.5" fill="#2E7D32"/>
+          <circle cx="108" cy="126" r="2.5" fill="#2E7D32"/>
+          <!-- Ojos felices -->
+          <ellipse cx="87" cy="104" rx="9" ry="10" fill="white"/>
+          <ellipse cx="113" cy="104" rx="9" ry="10" fill="white"/>
+          <circle cx="89" cy="105" r="5" fill="#1B5E20"/>
+          <circle cx="115" cy="105" r="5" fill="#1B5E20"/>
+          <circle cx="90" cy="103" r="2" fill="black"/>
+          <circle cx="116" cy="103" r="2" fill="black"/>
+          <circle cx="92" cy="102" r="1" fill="white"/>
+          <circle cx="118" cy="102" r="1" fill="white"/>
+          <!-- Sonrisa -->
+          <path d="M90 136 Q100 144 110 136" stroke="#2E7D32" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- Gorro -->
+          <rect x="79" y="76" width="42" height="11" rx="5.5" fill="#1565C0"/>
+          <ellipse cx="100" cy="76" rx="33" ry="6" fill="#FFD700"/>
+          <rect x="97" y="60" width="6" height="16" rx="3" fill="#FF5722"/>
+          <ellipse cx="100" cy="62" rx="17" ry="5" fill="#FFB300"/>
+          <ellipse cx="100" cy="62" rx="17" ry="5" fill="#FFB300" transform="rotate(90,100,62)"/>
+          <!-- Mochila -->
+          <rect x="132" y="128" width="26" height="32" rx="7" fill="#FF6D00"/>
+          <rect x="134" y="134" width="22" height="4" rx="2" fill="#FF8F00"/>
+          <circle cx="145" cy="144" r="3.5" fill="#FF8F00"/>
+          <path d="M132 130 Q122 138 124 156" stroke="#FF6D00" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <!-- Estrella decorativa -->
+          <text x="165" y="108" font-size="22" fill="#FFD700">★</text>
+        </svg>
+      </div>
+      <div class="sec-hd" style="text-align:left;margin-bottom:0;">
+        <small>✦ Para el aula</small>
+        <h2>Diseñados para <em>docentes</em></h2>
+        <p style="text-align:left;max-width:100%;">Sabemos que elegís materiales con criterio. Nuestros juguetes son herramientas pedagógicas de verdad.</p>
+      </div>
+    </div>
+    <div class="ben-grid">
+      <div class="ben-card">
+        <span class="ben-ico">📚</span>
+        <div class="ben-tit">Currículum integrado</div>
+        <p class="ben-txt">Cada juguete acompaña contenidos del nivel inicial y primario. Usamos como base el enfoque Montessori y el aprendizaje por el juego.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🎨</span>
+        <div class="ben-tit">Sin manual rígido</div>
+        <p class="ben-txt">Herramientas abiertas que el docente adapta a su planificación. No hay una sola forma de jugar: favorecen la creatividad libre.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">👥</span>
+        <div class="ben-tit">Pensados para grupos</div>
+        <p class="ben-txt">Muchos de nuestros juegos permiten el trabajo en pequeños grupos o toda la sala, promoviendo la cooperación y el diálogo.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🛡️</span>
+        <div class="ben-tit">Seguros en el aula</div>
+        <p class="ben-txt">Materiales no tóxicos, sin piezas pequeñas peligrosas para las edades indicadas. Robustos para el uso diario en entornos escolares.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">💰</span>
+        <div class="ben-tit">Combos y descuentos</div>
+        <p class="ben-txt">Ofrecemos descuentos especiales para escuelas, jardines y compras institucionales. Consultá nuestros packs por sala o por nivel.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🔄</span>
+        <div class="ben-tit">Durabilidad comprobada</div>
+        <p class="ben-txt">Madera maciza que aguanta el uso intensivo del aula durante años. Muchas docentes nos repiten porque duran más que cualquier alternativa.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────
+     D) BENEFICIOS DE LOS JUGUETES
+     ────────────────────────────────────────── -->
+<section class="sec-extra" style="background:linear-gradient(160deg,#f0f7f2 0%,#e8f5e9 100%);">
+  <div class="sec-inner">
+    <div class="sec-hd">
+      <small>✦ Lo que la ciencia dice</small>
+      <h2>Jugar con madera <em>transforma</em></h2>
+      <p>Beneficios comprobados del juego libre con materiales naturales en la infancia.</p>
+    </div>
+    <div class="ben-grid">
+      <div class="ben-card">
+        <span class="ben-ico">🧠</span>
+        <div class="ben-tit">Desarrollo cognitivo</div>
+        <p class="ben-txt">Estimulan la resolución de problemas, la memoria y la concentración. El juego con objetos concretos es base del pensamiento abstracto.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🤏</span>
+        <div class="ben-tit">Motricidad fina</div>
+        <p class="ben-txt">Encajar, apilar, ensartar y construir desarrollan los músculos de la mano, clave para la escritura y las tareas cotidianas.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🌈</span>
+        <div class="ben-tit">Creatividad e imaginación</div>
+        <p class="ben-txt">Un bloque de madera puede ser un auto, una casa o un dragón. La ambigüedad del material activa la imaginación activa de los niños.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🤝</span>
+        <div class="ben-tit">Habilidades sociales</div>
+        <p class="ben-txt">El juego compartido enseña a negociar, esperar, ceder y colaborar. Habilidades que ninguna app puede reemplazar.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">😌</span>
+        <div class="ben-tit">Regulación emocional</div>
+        <p class="ben-txt">El juego libre sin pantallas reduce el estrés y la ansiedad, favoreciendo estados de calma y atención sostenida.</p>
+      </div>
+      <div class="ben-card">
+        <span class="ben-ico">🌍</span>
+        <div class="ben-tit">Conciencia ambiental</div>
+        <p class="ben-txt">Crecer rodeado de materiales naturales genera una conexión real con el mundo físico y los valores de cuidado del ambiente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────────────────────────────────
+     E) BANDA CTA + CROC FELIZ
+     ────────────────────────────────────────── -->
+<div class="croc-band">
+  <div style="max-width:720px;margin:0 auto;">
+    <!-- Croc saltando feliz -->
+    <div style="display:flex;justify-content:center;margin-bottom:24px;">
+      <svg width="120" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg">
+        <!-- Cola -->
+        <ellipse cx="156" cy="178" rx="30" ry="9" fill="#388E3C" transform="rotate(-10,156,178)"/>
+        <!-- Cuerpo -->
+        <ellipse cx="100" cy="158" rx="48" ry="38" fill="#4CAF50"/>
+        <!-- Brazos arriba festivo -->
+        <path d="M54 145 Q35 118 28 105" stroke="#4CAF50" stroke-width="13" fill="none" stroke-linecap="round"/>
+        <path d="M146 145 Q165 118 172 105" stroke="#4CAF50" stroke-width="13" fill="none" stroke-linecap="round"/>
+        <!-- Manos -->
+        <circle cx="26" cy="102" r="8" fill="#66BB6A"/>
+        <circle cx="174" cy="102" r="8" fill="#66BB6A"/>
+        <!-- Patas en el aire -->
+        <ellipse cx="80" cy="196" rx="12" ry="6" fill="#388E3C" transform="rotate(-20,80,196)"/>
+        <ellipse cx="120" cy="196" rx="12" ry="6" fill="#388E3C" transform="rotate(20,120,196)"/>
+        <!-- Cabeza -->
+        <ellipse cx="100" cy="112" rx="36" ry="32" fill="#4CAF50"/>
+        <!-- Hocico -->
+        <ellipse cx="100" cy="130" rx="22" ry="12" fill="#66BB6A"/>
+        <circle cx="93" cy="126" r="2.5" fill="#2E7D32"/>
+        <circle cx="107" cy="126" r="2.5" fill="#2E7D32"/>
+        <!-- Ojos contentos -->
+        <ellipse cx="87" cy="105" rx="9" ry="9" fill="white"/>
+        <ellipse cx="113" cy="105" rx="9" ry="9" fill="white"/>
+        <circle cx="89" cy="106" r="5" fill="#1B5E20"/>
+        <circle cx="115" cy="106" r="5" fill="#1B5E20"/>
+        <circle cx="90" cy="104" r="2" fill="black"/>
+        <circle cx="116" cy="104" r="2" fill="black"/>
+        <circle cx="92" cy="103" r="1" fill="white"/>
+        <circle cx="118" cy="103" r="1" fill="white"/>
+        <!-- Sonrisa grande -->
+        <path d="M88 136 Q100 146 112 136" stroke="#2E7D32" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- Gorro -->
+        <rect x="80" y="78" width="40" height="11" rx="5.5" fill="#1565C0"/>
+        <ellipse cx="100" cy="78" rx="32" ry="6" fill="#FFD700"/>
+        <rect x="97" y="61" width="6" height="17" rx="3" fill="#FF5722"/>
+        <ellipse cx="100" cy="63" rx="17" ry="5" fill="#FFB300"/>
+        <ellipse cx="100" cy="63" rx="17" ry="5" fill="#FFB300" transform="rotate(90,100,63)"/>
+        <!-- Mochila -->
+        <rect x="134" y="130" width="24" height="30" rx="7" fill="#FF6D00"/>
+        <rect x="136" y="136" width="20" height="4" rx="2" fill="#FF8F00"/>
+        <circle cx="146" cy="145" r="3.5" fill="#FF8F00"/>
+        <path d="M134 132 Q124 140 126 154" stroke="#FF6D00" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <!-- Estrellas -->
+        <text x="20" y="145" font-size="20" fill="#FFD700">★</text>
+        <text x="168" y="150" font-size="20" fill="#FFD700">★</text>
+        <text x="50" y="85" font-size="16" fill="rgba(255,255,255,0.8)">✦</text>
+        <text x="142" y="80" font-size="16" fill="rgba(255,255,255,0.8)">✦</text>
+      </svg>
+    </div>
+    <h3>¿Listo para armar tu pedido?</h3>
+    <p>Explorá el catálogo, elegí tus favoritos y escribinos por WhatsApp. Hacemos envíos a todo el país.</p>
+    <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;" class="croc-band-btn">
+      🛒 Ver catálogo completo
+    </a>
+  </div>
+</div>
+
+<!-- ──────────────────────────────────────────
+     F) FOOTER PRO
+     ────────────────────────────────────────── -->
+<footer id="ta-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+
+      <!-- Columna marca -->
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <!-- Mini croc en footer -->
+          <svg width="36" height="36" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="100" cy="130" rx="50" ry="38" fill="#4CAF50"/>
+            <ellipse cx="100" cy="100" rx="36" ry="32" fill="#4CAF50"/>
+            <ellipse cx="100" cy="118" rx="22" ry="12" fill="#66BB6A"/>
+            <ellipse cx="88" cy="96" rx="8" ry="9" fill="white"/>
+            <ellipse cx="112" cy="96" rx="8" ry="9" fill="white"/>
+            <circle cx="90" cy="97" r="4" fill="#1B5E20"/>
+            <circle cx="114" cy="97" r="4" fill="#1B5E20"/>
+            <circle cx="91" cy="96" r="1.5" fill="black"/>
+            <circle cx="115" cy="96" r="1.5" fill="black"/>
+            <rect x="79" y="68" width="42" height="11" rx="5" fill="#1565C0"/>
+            <ellipse cx="100" cy="68" rx="33" ry="6" fill="#FFD700"/>
+            <rect x="97" y="52" width="6" height="16" rx="3" fill="#FF5722"/>
+            <ellipse cx="100" cy="54" rx="16" ry="5" fill="#FFB300"/>
+            <ellipse cx="100" cy="54" rx="16" ry="5" fill="#FFB300" transform="rotate(90,100,54)"/>
+          </svg>
+          Taller Artesanal
+        </div>
+        <p>Juguetes de madera hechos con amor en Tucumán, Argentina. Para chicos que merecen lo mejor del juego libre.</p>
+        <div class="footer-socials">
+          <a class="footer-social-btn ig" href="https://www.instagram.com/tallerartesanal.ok/" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            @tallerartesanal.ok
+          </a>
+          <a class="footer-social-btn wa" href="https://wa.me/5493816544078" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            381 654-4078
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna contacto -->
+      <div class="footer-col">
+        <h4>Contacto</h4>
+        <ul>
+          <li><span>📱</span> <a href="https://wa.me/5493816544078" target="_blank" rel="noopener">381 654-4078</a></li>
+          <li><span>📧</span> tallerartesanal.ok@gmail.com</li>
+          <li><span>📍</span> Tucumán, Argentina</li>
+          <li><span>⏰</span> Lun–Vie 9 a 18 hs</li>
+        </ul>
+      </div>
+
+      <!-- Columna catálogo -->
+      <div class="footer-col">
+        <h4>Catálogo</h4>
+        <ul>
+          <li><span>🌳</span> <a href="#" onclick="typeof setCategoriaNav==='function'&&setCategoriaNav('todas',null);window.scrollTo({top:0,behavior:'smooth'});return false;">Ver todos los juguetes</a></li>
+          <li><span>🎒</span> <a href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Para jardín y sala</a></li>
+          <li><span>🤝</span> Atención personalizada por WhatsApp</li>
+          <li><span>📦</span> Envíos a todo Argentina</li>
+          <li><span>💳</span> Mercado Pago · Transferencia</li>
+        </ul>
+      </div>
+
+    </div><!-- /footer-top -->
+
+    <div class="footer-bar">
+      <span>© 2026 Taller Artesanal · Hecho con ❤️ en Tucumán, Argentina</span>
+      <span>
+        Desarrollo web propio ·
+        <a href="mailto:maciangerman@gmail.com">maciangerman@gmail.com</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ─── FAQ accordion ───────────────────────────────────────
+function toggleFaq(el){
+  const wasOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i=>i.classList.remove('open'));
+  if(!wasOpen) el.classList.add('open');
+}
+</script>
 
 <!-- BANNER FIDELIDAD -->
 <div id="banner-fidelidad" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:900;align-items:center;justify-content:center;padding:20px;">
