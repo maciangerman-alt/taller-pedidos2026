@@ -150,7 +150,15 @@ body.dark-mode .banner-mp { background:#10304A; border-color:#0B84BC; color:#BFE
   .banner-mp { font-size:12px; padding:8px 12px; line-height:1.4; }
   .banner-mp-sub { font-size:11px; }
   .search-bar { padding:11px 14px; border-radius:14px; margin-bottom:12px; }
+  /* Título del header: que entre completo en celulares y nunca quede tapado por los botones */
+  .header-inner { gap:8px; padding:10px 12px; }
+  .header-brand { gap:7px; flex:1 1 auto; min-width:0; }
+  .header-brand img { width:32px !important; height:32px !important; flex-shrink:0; }
+  .header-brand > div { min-width:0; }
+  .header-acciones { gap:6px; flex-shrink:0; }
+  .icon-btn { width:34px; height:34px; font-size:14px; }
 }
+@media(max-width:359px){ .header-logo { font-size:13.5px; } }
 
 /* CATÁLOGO */
 .catalogo { padding:20px; overflow-y:auto; }
@@ -422,7 +430,7 @@ button, .nav-btn, .producto-card, a { -webkit-tap-highlight-color:transparent; t
     <div class="header-brand">
       <img src="https://i.ibb.co/R4dnhnkH/Dise-o-sin-t-tulo-2.png" style="width:36px;height:36px;object-fit:contain;border-radius:8px;" onerror="this.outerHTML='<span style=font-size:28px>🧩</span>'">
       <div>
-        <div class="header-logo" style="font-family:'Fredoka One',cursive;font-size:20px;color:var(--primario);">Taller Artesanal</div>
+        <div class="header-logo" style="font-family:'Fredoka One',cursive;color:var(--primario);">Taller Artesanal</div>
         <div class="header-sub" style="font-size:11px;color:var(--gris);">Juegos didácticos de madera</div>
       </div>
     </div>
@@ -2292,7 +2300,7 @@ body.dark-mode .ben-card { background:#1E2035; border-color:#2E3258; }
         </div>
         <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
           <div class="faq-q"><span>¿Hacen envíos a todo el país?</span><div class="faq-ico">+</div></div>
-          <div class="faq-a">Sí, enviamos a todo Argentina por correo o servicio de paquetería. Para Tucumán capital, también ofrecemos entrega personalizada sin costo adicional en pedidos desde $15.000.</div>
+          <div class="faq-a">Sí, enviamos a todo Argentina por correo o servicio de paquetería. En Tucumán el envío cuesta $2.000. Para el resto del país, en tu pedido vas a ver un costo de envío estimado según tu provincia, y lo confirmamos por WhatsApp.</div>
         </div>
         <div class="faq-item" style="margin-top:14px;" onclick="toggleFaq(this)">
           <div class="faq-q"><span>¿Qué métodos de pago aceptan?</span><div class="faq-ico">+</div></div>
