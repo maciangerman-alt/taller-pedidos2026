@@ -75,6 +75,57 @@
   .pedido-card.estudiante-card::before { background:#0F766E; }
   .pedido-card.madre-card { background:linear-gradient(135deg,#FDF2F8 0%,#FCE7F3 100%); border-color:#F9A8D4; }
   .pedido-card.madre-card::before { background:#BE185D; }
+  /* ===== FIN DE AÑO ===== */
+  .pedido-card.finano-card { background:linear-gradient(135deg,#F0FDF4 0%,#ECFDF5 100%); border-color:#6EE7B7; }
+  .pedido-card.finano-card::before { background:#047857; }
+  .fa-planes { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .fa-plan { text-align:center; padding:12px 6px; border:2px solid var(--borde); border-radius:12px; font-size:14px; font-weight:800; color:var(--gris); cursor:pointer; background:white; user-select:none; }
+  .fa-plan.selected { border-color:#047857; background:#047857; color:white; }
+  .fa-prod { padding:10px 0; border-bottom:1px solid var(--borde); }
+  .fa-prod-top { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .fa-prod-nom { font-size:13px; font-weight:800; color:var(--texto); }
+  .fa-prod-precio { font-size:11px; color:var(--gris); }
+  .fa-prod-precio.falta { color:#B91C1C; font-weight:700; }
+  .fa-vars { display:flex; gap:8px; flex-wrap:wrap; margin-top:6px; }
+  .fa-var { display:flex; align-items:center; gap:5px; background:var(--crema); border-radius:8px; padding:4px 7px; }
+  .fa-var span { font-size:11px; font-weight:700; color:var(--madera-dark); min-width:42px; }
+  .fa-var button { width:24px; height:24px; border-radius:100px; border:1.5px solid var(--borde); background:white; font-size:14px; cursor:pointer; color:var(--madera-dark); line-height:1; padding:0; }
+  .fa-var button.mas { background:#047857; border-color:#047857; color:white; }
+  .fa-var input { width:46px; text-align:center; font-size:14px; font-weight:800; border:1.5px solid var(--borde); border-radius:7px; padding:3px; font-family:'DM Sans',sans-serif; }
+  .fa-var input.tiene { border-color:#047857; background:#ECFDF5; color:#047857; }
+  .fa-sub { font-size:12px; font-weight:800; color:#047857; }
+  .fa-cuotas { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:8px; margin-bottom:10px; }
+  .fa-cuota { border:1.5px solid var(--borde); border-radius:10px; padding:8px 10px; background:white; }
+  .fa-cuota .n { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--gris); }
+  .fa-cuota .m { font-size:15px; font-weight:800; color:var(--texto); margin-top:2px; }
+  .fa-cuota .e { font-size:11px; font-weight:700; margin-top:2px; }
+  .fa-cuota.paga { border-color:#86EFAC; background:#F0FDF4; } .fa-cuota.paga .e { color:#15803D; }
+  .fa-cuota.parcial { border-color:#FCD34D; background:#FFFBEB; } .fa-cuota.parcial .e { color:#B45309; }
+  .fa-cuota.debe .e { color:#B91C1C; }
+  .fa-pago-row { display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; padding:6px 10px; background:#F0FDF4; border:1px solid #BBF7D0; border-radius:8px; margin-bottom:5px; }
+  .fa-pago-row button { background:none; border:none; color:var(--rojo); font-size:14px; cursor:pointer; }
+  .fa-nuevo-pago { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-top:8px; }
+  .fa-btn-pago { grid-column:1/-1; background:#ECFDF5; color:#047857; border:1.5px dashed #6EE7B7; border-radius:10px; padding:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .fa-chip { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; margin-right:4px; }
+  .fa-chip.plan { background:#047857; color:white; }
+  .fa-chip.ok { background:#DCFCE7; color:#15803D; }
+  .fa-chip.debe { background:#FEE2E2; color:#B91C1C; }
+  .fa-chip.info { background:#E0F2FE; color:#0369A1; }
+  .fa-chip.warn { background:#FEF3C7; color:#B45309; }
+  .fa-dots { display:inline-flex; gap:3px; vertical-align:middle; margin-left:4px; }
+  .fa-dots i { width:9px; height:9px; border-radius:100px; background:#E5E7EB; display:inline-block; }
+  .fa-dots i.p { background:#10B981; } .fa-dots i.h { background:linear-gradient(90deg,#10B981 50%,#E5E7EB 50%); }
+  .fa-res-row { display:flex; justify-content:space-between; gap:8px; font-size:12px; padding:5px 0; border-bottom:1px solid var(--borde); flex-wrap:wrap; }
+  .fa-res-row .det { color:var(--gris); font-size:11px; }
+  .impfa-planes { display:inline-flex; gap:4px; }
+  .impfa-planes button { font-size:11px; font-weight:800; border:1.5px solid var(--borde); background:white; color:var(--gris); border-radius:100px; padding:3px 10px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .impfa-planes button.on { background:#047857; border-color:#047857; color:white; }
+  .imp-fila.saltar { opacity:.45; }
+  .precios-fa-grid { display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:6px; align-items:center; }
+  .precios-fa-grid .h { font-size:11px; font-weight:800; color:#047857; text-align:center; text-transform:uppercase; }
+  .precios-fa-grid .p { font-size:13px; font-weight:700; color:var(--texto); }
+  .precios-fa-grid input { width:100%; box-sizing:border-box; text-align:right; font-size:13px; font-weight:700; border:1.5px solid var(--borde); border-radius:8px; padding:7px 8px; font-family:'DM Sans',sans-serif; }
+  .precios-fa-grid input:placeholder-shown { border-color:#FCA5A5; background:#FEF2F2; }
   /* IMPORTADOR */
   .imp-fila { background:white; border:1.5px solid var(--borde); border-radius:12px; padding:12px 14px; margin-bottom:10px; }
   .imp-fila.ok { border-color:#86EFAC; background:#F0FDF4; }
@@ -349,7 +400,8 @@
   <div class="tab" onclick="setTab('jardines')" id="tab-jardines" style="display:none">🌸 Día de los Jardines <span class="tab-badge" id="badge-jardines">0</span></div>
   <div class="tab" onclick="setTab('padre')" id="tab-padre" style="display:none">👔 Día del Padre <span class="tab-badge" id="badge-padre">0</span></div>
   <div class="tab" onclick="setTab('estudiante')" id="tab-estudiante" style="display:none">🎓 Día del Estudiante <span class="tab-badge" id="badge-estudiante">0</span></div>
-  <div class="tab" onclick="setTab('madre')" id="tab-madre">🌷 Día de la Madre <span class="tab-badge" id="badge-madre">0</span></div>
+  <div class="tab" onclick="setTab('madre')" id="tab-madre" style="display:none">🌷 Día de la Madre <span class="tab-badge" id="badge-madre">0</span></div>
+  <div class="tab" onclick="setTab('finano')" id="tab-finano">🎓 Fin de Año <span class="tab-badge" id="badge-finano">0</span></div>
   <div class="tab" onclick="setTab('clientes')" id="tab-clientes">👥 Clientes</div>
   <div class="tab" onclick="setTab('caja')" id="tab-caja">💰 Caja</div>
   <div class="tab" onclick="setTab('analytics')" id="tab-analytics">📊 Analytics</div>
@@ -895,6 +947,206 @@
       <div class="confirm-btns">
         <button class="confirm-btn-cancel" onclick="cerrarConfirm()">Cancelar</button>
         <button class="confirm-btn-ok" id="confirm-btn-ok">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========== PANEL FIN DE AÑO ========== -->
+  <div id="panel-finano" style="display:none">
+    <div style="background:linear-gradient(135deg,#065F46,#10B981);color:white;border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:11px;font-weight:700;opacity:0.75;text-transform:uppercase;letter-spacing:1px;">✨ EVENTO ESPECIAL 2026</div>
+        <div style="font-size:20px;font-weight:800;margin-top:4px;">🎓 FIN DE AÑO</div>
+        <div style="font-size:12px;opacity:0.8;margin-top:2px">Portacarpetas · Puff · Percheros · Libreros · Cunas · Camiones</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:40px;font-weight:800;color:#A7F3D0" id="finano-count">0</div>
+        <div style="font-size:11px;opacity:0.7">pedidos</div>
+      </div>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:14px;border:1.5px solid var(--borde);margin-bottom:16px;">
+      <div style="font-weight:700;color:var(--madera-dark);margin-bottom:12px;font-size:14px;">📊 Para producir</div>
+      <div id="finano-resumen-productos"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:2px solid var(--borde);margin-top:10px;padding-top:10px;">
+        <div style="text-align:center;background:var(--crema);border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Total vendido</div>
+          <div style="font-size:15px;font-weight:800;color:var(--madera-dark)" id="finano-total-general">$0</div>
+        </div>
+        <div style="text-align:center;background:#E8F5EE;border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Ya cobrado</div>
+          <div style="font-size:15px;font-weight:800;color:var(--verde)" id="finano-total-cobrado">$0</div>
+        </div>
+        <div style="text-align:center;background:#FEF2F2;border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Saldo pendiente</div>
+          <div style="font-size:15px;font-weight:800;color:var(--rojo)" id="finano-total-saldo">$0</div>
+        </div>
+        <div style="text-align:center;background:#ECFDF5;border-radius:8px;padding:8px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:2px;">Pedidos por plan</div>
+          <div style="font-size:13px;font-weight:800;color:#047857" id="finano-planes">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:10px;">
+      <button onclick="abrirModalFinAno()" style="flex:1;background:#047857;color:white;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">➕ Nuevo pedido</button>
+      <button onclick="exportarFinAno()" style="flex:1;background:white;color:#047857;border:2px solid #047857;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">📥 Excel</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <button onclick="abrirImportadorFA()" style="flex:2;min-width:180px;background:#ECFDF5;color:#047857;border:2px dashed #6EE7B7;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">🔄 Importar cargados a mano</button>
+      <button onclick="abrirPreciosFA()" style="flex:1;min-width:120px;background:white;color:#047857;border:2px solid #6EE7B7;border-radius:12px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">⚙️ Precios</button>
+    </div>
+    <div id="finano-aviso-precios"></div>
+
+    <input type="text" placeholder="🔍  Buscar por nombre o escuela..." oninput="renderFinAno()" id="buscador-finano" style="width:100%;background:white;border:2px solid #6EE7B7;border-radius:12px;padding:13px 18px;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:12px;box-sizing:border-box;color:var(--texto);" onfocus="this.style.borderColor='#047857'" onblur="this.style.borderColor='#6EE7B7'">
+
+    <div class="filtros" id="finano-filtros">
+      <button class="filtro-btn active" onclick="setFiltroFinAno('todos',this)">Todos</button>
+      <button class="filtro-btn" onclick="setFiltroFinAno('debe',this)">💳 Deben cuota</button>
+      <button class="filtro-btn" onclick="setFiltroFinAno('pendiente',this)">⏳ Pendiente</button>
+      <button class="filtro-btn" onclick="setFiltroFinAno('produccion',this)">🔧 Producción</button>
+      <button class="filtro-btn" onclick="setFiltroFinAno('listo',this)">✅ Listo</button>
+      <button class="filtro-btn" onclick="setFiltroFinAno('entregado',this)">🚚 Entregado</button>
+      <button class="filtro-btn" onclick="setFiltroFinAno('cobrado',this)">💵 Cobrado</button>
+    </div>
+    <div id="lista-finano"></div>
+  </div>
+
+  <!-- MODAL FIN DE AÑO -->
+  <div class="overlay" id="overlay-finano" onclick="if(event.target===this)cerrarModalFinAno()">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-finano-title">🎓 Nuevo Pedido — Fin de Año</div>
+
+      <div class="form-section">
+        <div class="form-section-title">👤 DATOS DEL CLIENTE</div>
+        <div class="form-group">
+          <label class="form-label">Nombre de la maestra *</label>
+          <input class="form-input" id="ff-nombre" placeholder="Ej: María González">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Escuela *</label>
+            <input class="form-input" id="ff-escuela" placeholder="Nombre de la escuela">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Turno</label>
+            <select class="form-select" id="ff-turno">
+              <option value="">—</option>
+              <option>Mañana</option><option>Tarde</option><option>Todo el día</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input class="form-input" id="ff-tel" placeholder="381 123 4567" type="tel">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">💳 ¿EN CUÁNTAS CUOTAS PAGA?</div>
+        <div class="fa-planes" id="ff-planes">
+          <div class="fa-plan" data-plan="1" onclick="selPlanFA(1)">1 pago</div>
+          <div class="fa-plan" data-plan="2" onclick="selPlanFA(2)">2 cuotas</div>
+          <div class="fa-plan" data-plan="3" onclick="selPlanFA(3)">3 cuotas</div>
+        </div>
+        <div style="font-size:11px;color:var(--gris);margin-top:6px">Cambiar el plan cambia los precios de abajo.</div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">🎓 PRODUCTOS</div>
+        <div id="finano-items-form"></div>
+        <div style="background:var(--crema);border-radius:10px;padding:12px;margin-top:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <span style="font-weight:700;color:var(--madera-dark)">Total del pedido:</span>
+            <input class="form-input" id="ff-total" type="number" oninput="marcarTotalManualFA()" style="max-width:150px;text-align:right;font-size:18px;font-weight:800;color:var(--madera-dark)">
+          </div>
+          <div id="ff-total-info" style="font-size:11px;margin-top:6px;color:var(--gris)"></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">💰 CUOTAS Y PAGOS</div>
+        <div id="ff-cuotas"></div>
+        <div id="ff-pagos"></div>
+        <div class="fa-nuevo-pago">
+          <input class="form-input" id="ff-pago-monto" type="number" placeholder="Monto">
+          <input class="form-input" id="ff-pago-fecha" type="date">
+          <select class="form-select" id="ff-pago-metodo">
+            <option>Efectivo</option><option>Transferencia</option><option>Mercado Pago</option>
+          </select>
+          <button onclick="agregarPagoFA()" class="fa-btn-pago">+ Registrar pago</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">📋 Estado y fecha</div>
+        <div class="estado-selector" id="ff-estado-opts">
+          <div class="estado-opt selected" data-val="pendiente" onclick="selEstadoFinAno(this)">⏳ Pendiente</div>
+          <div class="estado-opt" data-val="produccion" onclick="selEstadoFinAno(this)">🔧 Producción</div>
+          <div class="estado-opt" data-val="listo" onclick="selEstadoFinAno(this)">✅ Listo</div>
+          <div class="estado-opt" data-val="entregado" onclick="selEstadoFinAno(this)">🚚 Entregado</div>
+          <div class="estado-opt" data-val="cobrado" onclick="selEstadoFinAno(this)">💵 Cobrado</div>
+        </div>
+        <div class="form-row" style="margin-top:12px">
+          <div class="form-group">
+            <label class="form-label">Fecha del pedido</label>
+            <input class="form-input" id="ff-fecha-pedido" type="date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de entrega</label>
+            <input class="form-input" id="ff-fecha-entrega" type="date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Observaciones (diseños, nombres, etc.)</label>
+          <input class="form-input" id="ff-obs" placeholder="Ej: 2 Kpop, 3 Stitch rosa, llevan nombres">
+        </div>
+      </div>
+
+      <div id="ff-eliminar-wrap" style="display:none;margin-bottom:12px">
+        <button onclick="eliminarPedidoFinAno()" style="width:100%;background:var(--rojo-light);color:var(--rojo);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">🗑️ Eliminar pedido</button>
+      </div>
+      <button onclick="guardarPedidoFinAno()" style="width:100%;background:#047857;color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Guardar pedido</button>
+    </div>
+  </div>
+
+  <!-- MODAL PRECIOS FIN DE AÑO -->
+  <div class="overlay" id="overlay-precios-fa" onclick="if(event.target===this)cerrarPreciosFA()">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">⚙️ Precios de Fin de Año</div>
+      <div style="font-size:13px;color:var(--gris);margin-bottom:12px;line-height:1.5">
+        Precio <b>total por unidad</b> según cómo paga la maestra. Dejá vacío lo que todavía no está definido.
+        Los pedidos ya guardados <b>no cambian</b> su total: esto aplica a los que cargues o recalcules.
+      </div>
+      <div id="precios-fa-tabla"></div>
+      <div style="display:flex;gap:10px;margin-top:14px">
+        <button onclick="cerrarPreciosFA()" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+        <button onclick="guardarPreciosFA()" style="flex:2;background:#047857;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">💾 Guardar precios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORTADOR FIN DE AÑO -->
+  <div class="overlay" id="overlay-imp-fa" onclick="if(event.target===this)cerrarImportadorFA()">
+    <div class="modal" style="max-width:900px">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🔄 Importar pedidos de fin de año</div>
+      <div style="font-size:13px;color:var(--gris);margin-bottom:12px;line-height:1.5">
+        Busqué en los pedidos comunes los que mencionan <b>portacarpetas, puff, percheros, libreros, cunas o camiones</b>,
+        y adiviné en cuántas cuotas pagan. <b>Revisá y corregí</b> lo que haga falta. Nada se guarda hasta que toques Confirmar.
+      </div>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gris);margin-bottom:10px;cursor:pointer;">
+        <input type="checkbox" id="impfa-viejos" onchange="abrirImportadorFA()" style="width:16px;height:16px;cursor:pointer;">
+        <span>Incluir también los ya <b>entregados o cobrados</b> (suelen ser ventas viejas, no de fin de año)</span>
+      </label>
+      <div id="impfa-resumen" style="background:var(--crema);border-radius:10px;padding:12px;margin-bottom:10px;font-size:13px;"></div>
+      <div id="impfa-lista" style="max-height:52vh;overflow-y:auto;margin-bottom:14px;"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="cerrarImportadorFA()" style="flex:1;background:var(--crema-dark);color:var(--madera-dark);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+        <button onclick="confirmarImportacionFA()" id="impfa-btn-confirmar" style="flex:2;background:#047857;color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">✅ Confirmar e importar</button>
       </div>
     </div>
   </div>
@@ -1566,6 +1818,8 @@ function iniciarPedidos(){
   document.getElementById('badge-estudiante').textContent=pedidos.filter(p=>p.evento==='estudiante2026'&&p.estado!=='cobrado').length;
   document.getElementById('badge-madre').textContent=pedidos.filter(p=>p.evento==='madre2026'&&p.estado!=='cobrado').length;
   if(document.getElementById('tab-madre').classList.contains('active')) renderMadre();
+  document.getElementById('badge-finano').textContent=pedidos.filter(p=>p.evento==='finano2026'&&p.estado!=='cobrado').length;
+  if(document.getElementById('tab-finano').classList.contains('active')) renderFinAno();
   if(document.getElementById('tab-hoy').classList.contains('active')) renderHoy();
   if(document.getElementById('tab-jardines').classList.contains('active')) renderJardines();
   if(document.getElementById('tab-padre').classList.contains('active')) renderPadre();
@@ -1587,6 +1841,8 @@ function iniciarPedidos(){
     document.getElementById('badge-estudiante').textContent=pedidos.filter(p=>p.evento==='estudiante2026'&&p.estado!=='cobrado').length;
     document.getElementById('badge-madre').textContent=pedidos.filter(p=>p.evento==='madre2026'&&p.estado!=='cobrado').length;
     if(document.getElementById('tab-madre').classList.contains('active')) renderMadre();
+    document.getElementById('badge-finano').textContent=pedidos.filter(p=>p.evento==='finano2026'&&p.estado!=='cobrado').length;
+    if(document.getElementById('tab-finano').classList.contains('active')) renderFinAno();
     if(document.getElementById('tab-jardines').classList.contains('active')) renderJardines();
     if(document.getElementById('tab-padre').classList.contains('active')) renderPadre();
     if(document.getElementById('tab-estudiante').classList.contains('active')) renderEstudiante();
@@ -1628,10 +1884,11 @@ window.renderPedidos = function() {
     const esPadre = p.evento==='padre2026';
     const esEstudiante = p.evento==='estudiante2026';
     const esMadre = p.evento==='madre2026';
-    return `<div class="pedido-card ${p.estado||'pendiente'}${esJardin?' jardin-card':''}${esPadre?' padre-card':''}${esEstudiante?' estudiante-card':''}${esMadre?' madre-card':''}" onclick="abrirEditar('${p.id}')">
+    const esFinAno = p.evento==='finano2026';
+    return `<div class="pedido-card ${p.estado||'pendiente'}${esJardin?' jardin-card':''}${esPadre?' padre-card':''}${esEstudiante?' estudiante-card':''}${esMadre?' madre-card':''}${esFinAno?' finano-card':''}" onclick="abrirEditar('${p.id}')">
       <div class="pedido-top">
         <div>
-          <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}${esJardin?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#7C3AED;color:white;margin-left:6px;">🌸 Jardines</span>':''}${esPadre?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#1D4ED8;color:white;margin-left:6px;">👔 Día del Padre</span>':''}</div>
+          <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}${esJardin?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#7C3AED;color:white;margin-left:6px;">🌸 Jardines</span>':''}${esPadre?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#1D4ED8;color:white;margin-left:6px;">👔 Día del Padre</span>':''}${esFinAno?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#047857;color:white;margin-left:6px;">🎓 Fin de Año · '+(Number(p.cuotas)>1?p.cuotas+' cuotas':'1 pago')+'</span>':''}</div>
           <div class="pedido-escuela">${p.escuela||''}${p.turno?' · '+p.turno:''}</div>
         </div>
         <span class="estado-badge estado-${p.estado||'pendiente'}">${eL[p.estado]||''}</span>
@@ -1910,6 +2167,7 @@ function renderAnalytics() {
     {k:'padre2026',      n:'👔 Día del Padre'},
     {k:'estudiante2026', n:'🎓 Día del Estudiante'},
     {k:'madre2026',      n:'🌸 Día de la Madre'},
+    {k:'finano2026',     n:'🎓 Fin de Año'},
     {k:null,             n:'🧸 Pedidos comunes'},
   ].map(e=>{
     const g = pedidos.filter(p=> e.k ? p.evento===e.k : !p.evento);
@@ -1955,6 +2213,7 @@ function catalogos(){
     padre2026:      {campo:'itemsPadre',      lista: safe(()=>PRODUCTOS_PADRE)},
     estudiante2026: {campo:'itemsEstudiante', lista: safe(()=>PRODUCTOS_ESTUDIANTE)},
     madre2026:      {campo:'itemsMadre',      lista: safe(()=>PRODUCTOS_MADRE)},
+    finano2026:     {campo:'itemsFinAno',     lista: safe(()=>FINANO_CLAVES)},
   };
   return _CATALOGOS;
 }
@@ -2111,6 +2370,7 @@ function escucharMetas(){
         metasGuardadas = s.data().valores;
         try{ localStorage.setItem('metasTaller', JSON.stringify(metasGuardadas)); }catch(e){}
       }
+      if(s.exists && s.data().preciosFinAno){ try{ recibirPreciosFA(s.data().preciosFinAno); }catch(e){ console.warn('precios FA', e); } }
       if(s.exists && Array.isArray(s.data().uniones)){
         unionesManuales = s.data().uniones;
         try{ localStorage.setItem('unionesTaller', JSON.stringify(unionesManuales)); }catch(e){}
@@ -2587,6 +2847,7 @@ window.abrirEditar=function(id){
   const p=pedidos.find(x=>x.id===id);if(!p)return;
   // Si es pedido de jardines, abrir el modal de jardines en lugar del general
   if(p.evento==='jardin2026'){ abrirEditarJardines(id); return; }
+  if(p.evento==='finano2026'){ abrirEditarFinAno(id); return; }
   editandoId=id;
   document.getElementById('modal-title').textContent='Editar Pedido';
   document.getElementById('btn-eliminar-wrap').style.display='block';
@@ -2692,6 +2953,8 @@ window.guardarPedido=async function(){
   else if(pedidoActual?.evento==='padre2026' && padreOn) eventoFinal = 'padre2026';
   else if(pedidoActual?.evento==='estudiante2026' && estudianteOn) eventoFinal = 'estudiante2026';
   else if(pedidoActual?.evento==='madre2026' && madreOn) eventoFinal = 'madre2026';
+  // Eventos sin interruptor en este formulario (ej. Fin de Año): no se pierden al guardar
+  else if(pedidoActual?.evento && !['jardin2026','padre2026','estudiante2026','madre2026'].includes(pedidoActual.evento)) eventoFinal = pedidoActual.evento;
   const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,productos:document.getElementById('f-productos').value,fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
   try{
     if(editandoId){await db.collection("pedidos").doc(editandoId).update(data);toast('✅ Pedido actualizado');}
@@ -2730,7 +2993,7 @@ window.eliminarPedido=async function(){
 }
 
 window.setTab=function(tab){
-  ['pedidos','hoy','jardines','padre','estudiante','madre','clientes','caja','analytics'].forEach(t=>{
+  ['pedidos','hoy','jardines','padre','estudiante','madre','finano','clientes','caja','analytics'].forEach(t=>{
     const p=document.getElementById('panel-'+t); if(p) p.style.display=t===tab?'block':'none';
     const tb=document.getElementById('tab-'+t); if(tb) tb.classList.toggle('active',t===tab);
   });
@@ -2740,6 +3003,7 @@ window.setTab=function(tab){
   if(tab==='padre')renderPadre();
   if(tab==='estudiante')renderEstudiante();
   if(tab==='madre')renderMadre();
+  if(tab==='finano')renderFinAno();
   if(tab==='clientes')renderClientes();
 }
 
@@ -3917,7 +4181,7 @@ window.renderClientes = function(){
     const totalCobrado = c.pedidos.reduce((a,p)=>p.estado==='cobrado'?a+(Number(p.total)||0):a+(Number(p.senia)||0),0);
     const saldo = Math.max(0,totalFacturado-totalCobrado);
     const eventos=[...new Set(c.pedidos.map(p=>p.evento).filter(Boolean))];
-    const badges=eventos.map(e=>e==='jardin2026'?'<span style="font-size:10px;background:#F5F3FF;color:#7C3AED;padding:2px 7px;border-radius:100px;font-weight:700;">🌸 Jardines</span>':e==='padre2026'?'<span style="font-size:10px;background:#EFF6FF;color:#1D4ED8;padding:2px 7px;border-radius:100px;font-weight:700;">👔 Padre</span>':e==='estudiante2026'?'<span style="font-size:10px;background:#F0FDFA;color:#0F766E;padding:2px 7px;border-radius:100px;font-weight:700;">🎓 Estudiante</span>':e==='madre2026'?'<span style="font-size:10px;background:#FDF2F8;color:#BE185D;padding:2px 7px;border-radius:100px;font-weight:700;">🌷 Madre</span>':'').join(' ');
+    const badges=eventos.map(e=>e==='jardin2026'?'<span style="font-size:10px;background:#F5F3FF;color:#7C3AED;padding:2px 7px;border-radius:100px;font-weight:700;">🌸 Jardines</span>':e==='padre2026'?'<span style="font-size:10px;background:#EFF6FF;color:#1D4ED8;padding:2px 7px;border-radius:100px;font-weight:700;">👔 Padre</span>':e==='estudiante2026'?'<span style="font-size:10px;background:#F0FDFA;color:#0F766E;padding:2px 7px;border-radius:100px;font-weight:700;">🎓 Estudiante</span>':e==='madre2026'?'<span style="font-size:10px;background:#FDF2F8;color:#BE185D;padding:2px 7px;border-radius:100px;font-weight:700;">🌷 Madre</span>':e==='finano2026'?'<span style="font-size:10px;background:#ECFDF5;color:#047857;padding:2px 7px;border-radius:100px;font-weight:700;">🎓 Fin de Año</span>':'').join(' ');
     const ultimo=c.pedidos.sort((a,b)=>(b.fechaPedido||'').localeCompare(a.fechaPedido||''))[0];
     return `<div class="cliente-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -5419,6 +5683,874 @@ window.abrirDuplicados = function(){
   document.getElementById('overlay-dups').classList.add('show');
 }
 // ==================== FIN DÍA DE LA MADRE ====================
+// ==================== FIN DE AÑO: CATÁLOGO, PRECIOS Y DETECTOR ====================
+// split:true = se cuenta por nena / varón (y "sin definir" cuando el texto no lo dice)
+const PRODUCTOS_FINANO = [
+  { id:'portacarpetas', nombre:'Portacarpetas', split:true,  emoji:'📁' },
+  { id:'puff',          nombre:'Puff',          split:true,  emoji:'🪑' },
+  { id:'perchero',      nombre:'Perchero',      split:true,  emoji:'🧥' },
+  { id:'librero',       nombre:'Librero',       split:true,  emoji:'📚' },
+  { id:'cuna',          nombre:'Cuna',          split:false, emoji:'🛏️' },
+  { id:'camion',        nombre:'Camión',        split:false, emoji:'🚚' },
+];
+const VARIANTES_FINANO = [
+  { k:'nena',  n:'Nena'  },
+  { k:'varon', n:'Varón' },
+  { k:'',      n:'Sin definir' },
+];
+// Clave plana de cada casillero: "puff_nena", "puff_varon", "puff" (sin definir), "cuna"
+function claveFA(pid, v){ return v ? pid+'_'+v : pid; }
+function prodDeClave(k){ return PRODUCTOS_FINANO.find(p=> k===p.id || k.startsWith(p.id+'_')); }
+// Lista plana para Analytics (cuenta unidades)
+const FINANO_CLAVES = [];
+PRODUCTOS_FINANO.forEach(p=>{
+  if(p.split) VARIANTES_FINANO.forEach(v=>FINANO_CLAVES.push({id:claveFA(p.id,v.k), nombre:p.nombre+(v.k?' '+v.n:'')}));
+  else FINANO_CLAVES.push({id:p.id, nombre:p.nombre});
+});
+
+// Precio TOTAL por unidad según el plan (1 pago, 2 cuotas, 3 cuotas).
+// null = todavía no confirmado. Se editan desde la pestaña (⚙️ Precios) y quedan en Firebase.
+const PRECIOS_FINANO_DEFAULT = {
+  portacarpetas: {1:null,  2:null,  3:null},
+  puff:          {1:18000, 2:19000, 3:null},
+  perchero:      {1:13000, 2:15000, 3:null},
+  librero:       {1:13000, 2:null,  3:null},
+  cuna:          {1:13000, 2:15000, 3:null},
+  camion:        {1:13000, 2:15000, 3:null},
+};
+let preciosFinAno = JSON.parse(JSON.stringify(PRECIOS_FINANO_DEFAULT));
+function precioFA(pid, plan){
+  const v = preciosFinAno[pid] && preciosFinAno[pid][plan];
+  return (v===null || v===undefined || v==='') ? null : Number(v);
+}
+// Suma del detalle con el plan dado. faltan = productos con cantidad pero sin precio para ese plan
+function calcularFA(items, plan){
+  let total = 0; const faltan = [];
+  Object.entries(items||{}).forEach(([k,q])=>{
+    q = Number(q)||0; if(!q) return;
+    const pr = prodDeClave(k); if(!pr) return;
+    const pu = precioFA(pr.id, plan);
+    if(pu===null){ if(!faltan.includes(pr.nombre)) faltan.push(pr.nombre); return; }
+    total += q*pu;
+  });
+  return {total, faltan};
+}
+function unidadesFA(items){ return Object.values(items||{}).reduce((a,q)=>a+(Number(q)||0),0); }
+
+// ---------- Detector de texto libre ----------
+function normFA(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/\$\s*\d[\d.,]*/g,' ')              // montos con $
+    .replace(/\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b/g,' ') // montos tipo 18.000 / 12.500
+    .replace(/(\d)([a-z])/g,'$1 $2')              // 9mujeres -> 9 mujeres
+    .replace(/([a-z])(\d)/g,'$1 $2')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+const NUM_PAL = {un:1,una:1,uno:1,dos:2,tres:3};
+// Devuelve {plan, frase} si el texto dice en cuántas cuotas paga
+function detectarPlanTexto(texto){
+  const t = normFA(texto);
+  let m = t.match(/\b(\d|un|una|uno|dos|tres)\s+(cuotas?|pagos?)\b/);
+  if(m){
+    const n = NUM_PAL[m[1]] || parseInt(m[1]);
+    if(n>=1 && n<=3) return {plan:n, frase:m[0]};
+  }
+  if(/\bcontado\b/.test(t)) return {plan:1, frase:'contado'};
+  return null;
+}
+const ALIAS_FA = [
+  ['portacarpetas', /^(portacarpetas?|portacarp)$/],
+  ['puff',          /^(puf+s?|puf+es)$/],
+  ['perchero',      /^(percher(o|os)|percherito|percheritos)$/],
+  ['librero',       /^librer(o|os)$/],
+  ['cuna',          /^(cunas?|cunitas?)$/],
+  ['camion',        /^(camion|camiones|camioncito|camioncitos)$/],
+];
+const GEN_FA = [
+  ['nena',  /^(nena|nenas|nina|ninas|mujer|mujeres|mujercita|mujercitas|chica|chicas|femenino|fem)$/],
+  ['varon', /^(varon|varones|varoncito|varoncitos|nene|nenes|nino|ninos|chico|chicos|masculino)$/],
+];
+// Palabras de OTROS productos: si un tramo las tiene, ese número no es de fin de año
+const OTROS_FA = /^(rompecabezas|rc|encastres?|pizarras?|titeres?|atomos|bloques|zapatillas|apilables?|enhebradores?|memotest|domino|tangram|llaveros?|bandejas?|cajas?|cajitas?|figuras?|bibliotecas?|souvenirs?|esferas?)$/;
+
+function parsearFinAno(texto){
+  const items = {}; const avisos = [];
+  // sacamos "en 2 cuotas" para que ese número no se cuente como unidades
+  let t = normFA(texto)
+    .replace(/\b(en\s+)?(\d|un|una|uno|dos|tres)\s+(cuotas?|pagos?)\b/g,' ')
+    .replace(/\s+/g,' ').trim();
+  // "porta carpetas" -> una sola palabra
+  t = t.replace(/\bporta\s+carp(etas?)?\b/g,'portacarpetas');
+  if(!t) return {items, hits:0, avisos};
+  const tok = t.split(' ').map(w=>{
+    if(/^\d+$/.test(w)) return {w, num:parseInt(w)};
+    const pa = ALIAS_FA.find(([,rx])=>rx.test(w));
+    if(pa) return {w, prod:pa[0]};
+    const ge = GEN_FA.find(([,rx])=>rx.test(w));
+    if(ge) return {w, gen:ge[0]};
+    if(OTROS_FA.test(w)) return {w, otro:true};
+    return {w};
+  });
+  if(!tok.some(x=>x.prod)) return {items, hits:0, avisos};
+
+  // ¿El número va antes ("8 percheros") o después ("librero varon 2")?
+  const sig = tok.filter(x=>x.num!==undefined || x.prod || x.gen);
+  const despues = sig.length && sig[sig.length-1].num!==undefined && sig[0].num===undefined;
+
+  // Tramos: cada uno con UN número
+  const tramos = []; let cur = [];
+  if(despues){
+    tok.forEach(x=>{ cur.push(x); if(x.num!==undefined){ tramos.push(cur); cur=[]; } });
+    if(cur.length) tramos.push(cur);
+  } else {
+    tok.forEach(x=>{ if(x.num!==undefined && cur.length){ tramos.push(cur); cur=[]; } cur.push(x); });
+    if(cur.length) tramos.push(cur);
+  }
+
+  const sinNumeros = !tok.some(x=>x.num!==undefined);
+  let ctx = null; let hits = 0;
+  const sumar = (pid, gen, n)=>{
+    const pr = PRODUCTOS_FINANO.find(p=>p.id===pid);
+    const k = (pr.split && gen) ? claveFA(pid, gen) : pid;
+    items[k] = (items[k]||0) + n; hits++;
+  };
+  tramos.forEach((tr, ti)=>{
+    const numTok = tr.find(x=>x.num!==undefined);
+    const prods = tr.filter(x=>x.prod).map(x=>x.prod);
+    const gen = (tr.find(x=>x.gen)||{}).gen || '';
+    const hayOtro = tr.some(x=>x.otro);
+    if(!numTok){
+      // tramo sin número: solo da contexto ("puf para ..."), salvo que no haya ningún número en todo el texto
+      if(prods.length){
+        if(sinNumeros){ prods.forEach(p=>sumar(p, gen, 1)); }
+        ctx = prods[prods.length-1];
+      }
+      return;
+    }
+    const n = numTok.num;
+    if(n<=0 || n>2000) return;
+    if(hayOtro && !prods.length){ avisos.push('tiene otros productos'); return; }
+    let pid = prods[0] || ctx;
+    if(!pid){
+      // "8 varones 9 mujeres percheros": el producto viene después
+      for(let j=ti+1;j<tramos.length && !pid;j++){ const q=tramos[j].find(x=>x.prod); if(q) pid=q.prod; }
+    }
+    if(!pid) return;
+    sumar(pid, gen, n);
+    if(prods.length>1){
+      prods.slice(1).forEach(p=>{
+        const nom = PRODUCTOS_FINANO.find(x=>x.id===p).nombre.toLowerCase();
+        if(!avisos.includes('sin cantidad: '+nom)) avisos.push('sin cantidad: '+nom);
+      });
+    }
+    if(prods.length) ctx = prods[prods.length-1];
+  });
+
+  // "12 percheros 5 nenas y 7 varones": el 12 es el total, no se suma dos veces
+  PRODUCTOS_FINANO.filter(p=>p.split).forEach(p=>{
+    const sd = items[p.id]||0, ne = items[p.id+'_nena']||0, va = items[p.id+'_varon']||0;
+    if(sd && (ne||va)){
+      if(ne+va !== sd) avisos.push(`${p.nombre.toLowerCase()}: dice ${sd} pero nenas+varones da ${ne+va}`);
+      delete items[p.id];
+    }
+  });
+  return {items, hits, avisos};
+}
+
+// Decide el plan de cuotas: 1) lo dice el texto, 2) el precio calza con un plan, 3) supuesto
+function detectarPlanFA(pedido, items){
+  const total = Number(pedido.total)||0;
+  const txt = detectarPlanTexto((pedido.productos||'')+' . '+(pedido.obs||''));
+  const calzan = [1,2,3].filter(pl=>{
+    const c = calcularFA(items, pl);
+    return !c.faltan.length && c.total>0 && Math.abs(c.total-total) < 100;
+  });
+  if(txt) return {plan:txt.plan, fuente:'texto', frase:txt.frase, calzaOtro: calzan.includes(txt.plan) ? null : (calzan[0]||null)};
+  if(calzan.length) return {plan:calzan[0], fuente:'precio'};
+  return {plan:1, fuente:'supuesto'};
+}
+
+
+// ==================== FIN DE AÑO: PANTALLA, CUOTAS, IMPORTADOR Y EXCEL ====================
+let filtroFinAnoActual = 'todos';
+let editandoFinAnoId = null;
+let planFA = 1;
+let pagosFA = [];
+let totalManualFA = false;
+const escFA = s => String(s===undefined||s===null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const PLAN_TXT = {1:'1 pago', 2:'2 cuotas', 3:'3 cuotas'};
+
+// --- Precios: se guardan en el doc de config que ya usa el sistema ---
+function cargarPreciosFALocal(){
+  try{
+    const l = JSON.parse(localStorage.getItem('preciosFinAno')||'null');
+    if(l) aplicarPreciosFA(l);
+  }catch(e){}
+}
+function aplicarPreciosFA(obj){
+  if(!obj || typeof obj!=='object') return;
+  PRODUCTOS_FINANO.forEach(p=>{
+    if(!obj[p.id]) return;
+    [1,2,3].forEach(pl=>{
+      const v = obj[p.id][pl];
+      preciosFinAno[p.id][pl] = (v===null||v===undefined||v==='') ? null : Number(v);
+    });
+  });
+}
+cargarPreciosFALocal();
+function recibirPreciosFA(obj){
+  aplicarPreciosFA(obj);
+  try{ localStorage.setItem('preciosFinAno', JSON.stringify(preciosFinAno)); }catch(e){}
+  if(document.getElementById('tab-finano')?.classList.contains('active')) renderFinAno();
+}
+function faltanPreciosFA(){
+  const f = [];
+  PRODUCTOS_FINANO.forEach(p=>[1,2,3].forEach(pl=>{ if(precioFA(p.id,pl)===null) f.push(p.nombre+' en '+PLAN_TXT[pl]); }));
+  return f;
+}
+
+window.abrirPreciosFA = function(){
+  let h = '<div class="precios-fa-grid"><div></div><div class="h">1 pago</div><div class="h">2 cuotas</div><div class="h">3 cuotas</div>';
+  PRODUCTOS_FINANO.forEach(p=>{
+    h += `<div class="p">${p.emoji} ${p.nombre}</div>`;
+    [1,2,3].forEach(pl=>{
+      const v = precioFA(p.id,pl);
+      h += `<input type="number" min="0" id="pfa-${p.id}-${pl}" value="${v===null?'':v}" placeholder="sin definir">`;
+    });
+  });
+  h += '</div><div style="font-size:11px;color:var(--gris);margin-top:8px">Es el precio por unidad que termina pagando la maestra en total (no el valor de cada cuota).</div>';
+  document.getElementById('precios-fa-tabla').innerHTML = h;
+  document.getElementById('overlay-precios-fa').classList.add('show');
+}
+window.cerrarPreciosFA = function(){ document.getElementById('overlay-precios-fa').classList.remove('show'); }
+window.guardarPreciosFA = async function(){
+  const nuevo = {};
+  PRODUCTOS_FINANO.forEach(p=>{
+    nuevo[p.id] = {};
+    [1,2,3].forEach(pl=>{
+      const raw = document.getElementById(`pfa-${p.id}-${pl}`).value.trim();
+      nuevo[p.id][pl] = raw==='' ? null : Math.max(0, Number(raw)||0);
+    });
+  });
+  try{
+    await db.collection('pedidos').doc(DOC_METAS).set({esConfig:true, preciosFinAno:nuevo, updatedAt:new Date().toISOString()}, {merge:true});
+    recibirPreciosFA(nuevo);
+    toast('✅ Precios guardados');
+    cerrarPreciosFA();
+  }catch(e){ console.error(e); toast('❌ No se pudieron guardar los precios'); }
+}
+
+// --- Cuotas: monto de cada una y cuánto se pagó ---
+function pagadoFA(p){
+  if(!p) return 0;
+  const t = Number(p.total)||0;
+  if(p.estado==='cobrado') return t;
+  if(Array.isArray(p.pagos)) return p.pagos.reduce((a,x)=>a+(Number(x.monto)||0),0);
+  return Number(p.senia)||0;
+}
+function cuotasFA(total, plan, pagado){
+  plan = Math.max(1, Math.min(3, Number(plan)||1));
+  total = Number(total)||0;
+  const base = Math.round(total/plan);
+  const res = []; let acum = Number(pagado)||0;
+  for(let i=1;i<=plan;i++){
+    const monto = i<plan ? base : total - base*(plan-1);
+    let est, cub;
+    if(acum >= monto - 1){ est='paga'; cub=monto; }
+    else if(acum > 0){ est='parcial'; cub=acum; }
+    else { est='debe'; cub=0; }
+    acum = Math.max(0, acum - monto);
+    res.push({n:i, monto, est, cubierto:cub});
+  }
+  return res;
+}
+function dotsFA(cs){
+  return '<span class="fa-dots">'+cs.map(c=>`<i class="${c.est==='paga'?'p':c.est==='parcial'?'h':''}"></i>`).join('')+'</span>';
+}
+const PLURAL_FA = {portacarpetas:'Portacarpetas', puff:'Puff', perchero:'Percheros', librero:'Libreros', cuna:'Cunas', camion:'Camiones'};
+function itemsTextoFA(items, sep){
+  const partes = [];
+  PRODUCTOS_FINANO.forEach(p=>{
+    const v = k => Number((items||{})[k])||0;
+    const nom = n => n>1 ? PLURAL_FA[p.id] : p.nombre;
+    if(p.split){
+      const ne=v(p.id+'_nena'), va=v(p.id+'_varon'), sd=v(p.id), tot=ne+va+sd;
+      if(!tot) return;
+      const det = [ne?ne+' nena':'', va?va+' varón':'', sd&&(ne||va)?sd+' s/definir':''].filter(Boolean);
+      partes.push(`${tot} ${nom(tot)}` + (det.length ? ` (${det.join(', ')})` : ''));
+    } else {
+      const n = v(p.id); if(!n) return;
+      partes.push(`${n} ${nom(n)}`);
+    }
+  });
+  return partes.join(sep||' · ');
+}
+
+// --- Formulario ---
+function renderItemsFormFA(items){
+  items = items || {};
+  document.getElementById('finano-items-form').innerHTML = PRODUCTOS_FINANO.map(p=>{
+    const vars = p.split ? VARIANTES_FINANO : [{k:'',n:'Cantidad'}];
+    return `<div class="fa-prod">
+      <div class="fa-prod-top">
+        <div><span class="fa-prod-nom">${p.emoji} ${p.nombre}</span> <span class="fa-prod-precio" id="fpp-${p.id}"></span></div>
+        <span class="fa-sub" id="fsub-${p.id}"></span>
+      </div>
+      <div class="fa-vars">${vars.map(v=>{
+        const k = claveFA(p.id, v.k), val = Number(items[k])||0;
+        return `<div class="fa-var"><span>${v.n}</span>
+          <button type="button" onclick="cambiarCantFA('${k}',-1)">&minus;</button>
+          <input type="number" min="0" id="fqty-${k}" value="${val}" class="${val?'tiene':''}" oninput="recalcTotalFA()">
+          <button type="button" class="mas" onclick="cambiarCantFA('${k}',1)">+</button></div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+}
+function leerItemsFormFA(){
+  const items = {};
+  FINANO_CLAVES.forEach(c=>{
+    const v = parseInt(document.getElementById('fqty-'+c.id)?.value)||0;
+    if(v>0) items[c.id]=v;
+  });
+  return items;
+}
+window.cambiarCantFA = function(k, d){
+  const el = document.getElementById('fqty-'+k); if(!el) return;
+  el.value = Math.max(0,(parseInt(el.value)||0)+d);
+  recalcTotalFA();
+}
+window.selPlanFA = function(pl){
+  planFA = pl;
+  document.querySelectorAll('#ff-planes .fa-plan').forEach(e=>e.classList.toggle('selected', Number(e.dataset.plan)===pl));
+  totalManualFA = false;   // cambiar de plan = recalcular con los precios de ese plan
+  recalcTotalFA();
+}
+window.marcarTotalManualFA = function(){ totalManualFA = true; recalcTotalFA(true); }
+window.usarDetalleFA = function(){ totalManualFA = false; recalcTotalFA(); }
+
+window.recalcTotalFA = function(desdeTotal){
+  const items = leerItemsFormFA();
+  PRODUCTOS_FINANO.forEach(p=>{
+    const pu = precioFA(p.id, planFA);
+    const ppEl = document.getElementById('fpp-'+p.id);
+    if(ppEl){
+      ppEl.textContent = pu===null ? 'sin precio en '+PLAN_TXT[planFA] : '$'+fmt(pu)+' c/u';
+      ppEl.classList.toggle('falta', pu===null);
+    }
+    let n = 0;
+    Object.entries(items).forEach(([k,q])=>{ if(prodDeClave(k)?.id===p.id) n+=q; });
+    const sEl = document.getElementById('fsub-'+p.id);
+    if(sEl) sEl.textContent = n ? (pu===null ? n+' u.' : n+' u. · $'+fmt(n*pu)) : '';
+  });
+  FINANO_CLAVES.forEach(c=>{ const el=document.getElementById('fqty-'+c.id); if(el) el.classList.toggle('tiene',(parseInt(el.value)||0)>0); });
+  const calc = calcularFA(items, planFA);
+  const inp = document.getElementById('ff-total');
+  if(!totalManualFA && !desdeTotal) inp.value = calc.total;
+  const total = Number(inp.value)||0;
+  let info = '';
+  if(calc.faltan.length) info += `<div style="color:#B91C1C;font-weight:700">⚠️ Falta el precio de ${calc.faltan.join(', ')} en ${PLAN_TXT[planFA]}. Cargalo en ⚙️ Precios o escribí el total a mano.</div>`;
+  if(total !== calc.total && calc.total>0){
+    info += `<div style="color:#B45309;font-weight:700;margin-top:3px">El detalle da $${fmt(calc.total)} (diferencia ${total>calc.total?'+':''}$${fmt(total-calc.total)})
+      <button type="button" onclick="usarDetalleFA()" style="margin-left:6px;font-size:11px;font-weight:700;background:#ECFDF5;color:#047857;border:1.5px solid #6EE7B7;border-radius:100px;padding:3px 10px;cursor:pointer">usar $${fmt(calc.total)}</button></div>`;
+  } else if(total>0 && !calc.faltan.length){
+    info += `<div style="color:#15803D;font-weight:700">✓ Coincide con el detalle (${unidadesFA(items)} unidades)</div>`;
+  }
+  document.getElementById('ff-total-info').innerHTML = info;
+  renderCuotasFormFA();
+}
+
+function renderCuotasFormFA(){
+  const total = Number(document.getElementById('ff-total').value)||0;
+  const pagado = pagosFA.reduce((a,x)=>a+(Number(x.monto)||0),0);
+  const cs = cuotasFA(total, planFA, pagado);
+  document.getElementById('ff-cuotas').innerHTML = `<div class="fa-cuotas">${cs.map(c=>`
+    <div class="fa-cuota ${c.est}">
+      <div class="n">${planFA===1?'Pago único':'Cuota '+c.n+' de '+planFA}</div>
+      <div class="m">$${fmt(c.monto)}</div>
+      <div class="e">${c.est==='paga'?'✅ Pagada':c.est==='parcial'?'◐ Pagó $'+fmt(c.cubierto):'⏳ Debe'}</div>
+    </div>`).join('')}</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:8px">
+      <span style="color:var(--verde)">Pagado: $${fmt(pagado)}</span>
+      <span style="color:${total-pagado>0?'var(--rojo)':'var(--verde)'}">${total-pagado>0?'Saldo: $'+fmt(total-pagado):'✓ Pagó todo'}</span>
+    </div>`;
+  document.getElementById('ff-pagos').innerHTML = pagosFA.length
+    ? pagosFA.map((x,i)=>`<div class="fa-pago-row"><span>💵 <b>$${fmt(x.monto)}</b> · ${x.fecha?x.fecha.split('-').reverse().join('/'):'sin fecha'}${x.metodo?' · '+escFA(x.metodo):''}${x.nota?' · <i>'+escFA(x.nota)+'</i>':''}</span><button type="button" onclick="quitarPagoFA(${i})" title="Quitar pago">✕</button></div>`).join('')
+    : '<div style="font-size:12px;color:var(--gris);margin-bottom:4px">Todavía no registraste pagos.</div>';
+  const prox = cs.find(c=>c.est!=='paga');
+  const inpM = document.getElementById('ff-pago-monto');
+  inpM.placeholder = prox ? 'Monto (cuota: $'+fmt(prox.monto-prox.cubierto)+')' : 'Monto';
+  inpM.dataset.sugerido = prox ? (prox.monto-prox.cubierto) : '';
+}
+window.agregarPagoFA = function(){
+  const inpM = document.getElementById('ff-pago-monto');
+  let monto = Number(inpM.value) || Number(inpM.dataset.sugerido) || 0;
+  if(monto<=0){ toast('Poné el monto del pago'); return; }
+  const total = Number(document.getElementById('ff-total').value)||0;
+  const pagado = pagosFA.reduce((a,x)=>a+(Number(x.monto)||0),0);
+  if(total>0 && pagado+monto > total){ toast('⚠️ Ese pago supera el saldo ($'+fmt(Math.max(0,total-pagado))+')'); return; }
+  pagosFA.push({monto, fecha: document.getElementById('ff-pago-fecha').value || hoy(), metodo: document.getElementById('ff-pago-metodo').value});
+  inpM.value = '';
+  renderCuotasFormFA();
+}
+window.quitarPagoFA = function(i){ pagosFA.splice(i,1); renderCuotasFormFA(); }
+
+function selEstadoFinAno(el){
+  document.querySelectorAll('#ff-estado-opts .estado-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  if(el.dataset.val==='cobrado'){
+    const t = Number(document.getElementById('ff-total').value)||0;
+    const pg = pagosFA.reduce((a,x)=>a+(Number(x.monto)||0),0);
+    if(t>0 && pg<t){
+      pagosFA.push({monto:t-pg, fecha:hoy(), metodo:document.getElementById('ff-pago-metodo').value, nota:'saldo final'});
+      renderCuotasFormFA();
+      toast('💵 Agregué el pago del saldo — pedido cobrado completo');
+    }
+  }
+}
+window.selEstadoFinAno = selEstadoFinAno;
+
+function abrirFormFA(p){
+  editandoFinAnoId = p ? p.id : null;
+  document.getElementById('modal-finano-title').textContent = p ? '✏️ Editar Pedido — Fin de Año' : '🎓 Nuevo Pedido — Fin de Año';
+  document.getElementById('ff-eliminar-wrap').style.display = p ? 'block' : 'none';
+  const set = (id,v)=>{ document.getElementById(id).value = v||''; };
+  set('ff-nombre', p&&p.nombre); set('ff-escuela', p&&p.escuela); set('ff-turno', p&&p.turno);
+  set('ff-tel', p&&p.tel); set('ff-obs', p&&p.obs);
+  document.getElementById('ff-fecha-pedido').value = (p&&p.fechaPedido) || hoy();
+  document.getElementById('ff-fecha-entrega').value = (p&&p.fechaEntrega) || '';
+  document.getElementById('ff-pago-fecha').value = hoy();
+  document.getElementById('ff-pago-monto').value = '';
+  if(p && p.pago) document.getElementById('ff-pago-metodo').value = p.pago;
+  planFA = (p && Number(p.cuotas)) || 1;
+  pagosFA = p ? (Array.isArray(p.pagos) ? p.pagos.map(x=>({...x})) : ((Number(p.senia)||0)>0 ? [{monto:Number(p.senia), fecha:p.fechaPedido||'', metodo:p.pago||'', nota:'seña'}] : [])) : [];
+  document.querySelectorAll('#ff-planes .fa-plan').forEach(e=>e.classList.toggle('selected', Number(e.dataset.plan)===planFA));
+  const items = (p && p.itemsFinAno) || {};
+  renderItemsFormFA(items);
+  if(p){
+    document.getElementById('ff-total').value = Number(p.total)||0;
+    totalManualFA = (Number(p.total)||0) !== calcularFA(items, planFA).total;
+  } else { totalManualFA = false; }
+  recalcTotalFA(!!p);
+  const est = (p && p.estado) || 'pendiente';
+  document.querySelectorAll('#ff-estado-opts .estado-opt').forEach(e=>e.classList.toggle('selected', e.dataset.val===est));
+  document.getElementById('overlay-finano').classList.add('show');
+}
+window.abrirModalFinAno = function(){ abrirFormFA(null); }
+window.abrirEditarFinAno = function(id){ const p = pedidos.find(x=>x.id===id); if(p) abrirFormFA(p); }
+window.cerrarModalFinAno = function(){ document.getElementById('overlay-finano').classList.remove('show'); }
+
+window.guardarPedidoFinAno = async function(){
+  const nombre = document.getElementById('ff-nombre').value.trim();
+  const escuela = document.getElementById('ff-escuela').value.trim();
+  if(!nombre||!escuela){ toast('Completá nombre y escuela'); return; }
+  const items = leerItemsFormFA();
+  if(!Object.keys(items).length){ toast('Agregá al menos un producto'); return; }
+  const total = Number(document.getElementById('ff-total').value)||0;
+  if(total<=0){ toast('⚠️ El total está en $0 — revisá los precios'); return; }
+  const pagado = pagosFA.reduce((a,x)=>a+(Number(x.monto)||0),0);
+  if(pagado > total){ toast('⚠️ Los pagos superan el total'); return; }
+  const fechaPedido = document.getElementById('ff-fecha-pedido').value || hoy();
+  const fechaEntrega = document.getElementById('ff-fecha-entrega').value;
+  if(fechaEntrega && fechaEntrega < fechaPedido){ toast('⚠️ Fecha de entrega inválida'); return; }
+  const estado = document.querySelector('#ff-estado-opts .estado-opt.selected')?.dataset.val || 'pendiente';
+  const preciosAplicados = {};
+  PRODUCTOS_FINANO.forEach(p=>{ if(Object.keys(items).some(k=>prodDeClave(k)?.id===p.id)) preciosAplicados[p.id] = precioFA(p.id, planFA); });
+  const data = {
+    nombre, escuela,
+    turno: document.getElementById('ff-turno').value,
+    tel: document.getElementById('ff-tel').value,
+    obs: document.getElementById('ff-obs').value,
+    pago: pagosFA.length ? (pagosFA[pagosFA.length-1].metodo||'') : '',
+    fechaPedido, fechaEntrega,
+    cuotas: planFA, pagos: pagosFA,
+    total, senia: pagado, saldo: Math.max(0,total-pagado),
+    estado, itemsFinAno: items, preciosAplicados,
+    productos: itemsTextoFA(items, ', ') + (planFA>1 ? ` — en ${planFA} cuotas` : ''),
+    evento: 'finano2026',
+    logistica: 'tucuman',
+    updatedAt: new Date().toISOString()
+  };
+  try{
+    if(editandoFinAnoId){
+      await db.collection('pedidos').doc(editandoFinAnoId).update(data);
+      toast('✅ Pedido actualizado');
+    } else {
+      data.createdAt = new Date().toISOString();
+      data.factura = false; data.facturaEmitida = false;
+      await db.collection('pedidos').add(data);
+      toast('✅ Pedido guardado');
+    }
+    cerrarModalFinAno();
+  }catch(e){ console.error(e); toast('❌ Error al guardar'); }
+}
+window.eliminarPedidoFinAno = function(){
+  if(!editandoFinAnoId) return;
+  const p = pedidos.find(x=>x.id===editandoFinAnoId);
+  mostrarConfirm('¿Eliminar pedido de Fin de Año?', `Se eliminará el pedido de ${p?.nombre||'esta persona'}.`, '🎓', async()=>{
+    try{ await db.collection('pedidos').doc(editandoFinAnoId).delete(); toast('🗑️ Pedido eliminado'); cerrarModalFinAno(); }
+    catch(e){ toast('❌ Error al eliminar'); }
+  });
+}
+
+// --- Lista ---
+window.setFiltroFinAno = function(f, el){
+  filtroFinAnoActual = f;
+  document.querySelectorAll('#finano-filtros .filtro-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderFinAno();
+}
+window.renderFinAno = function(){
+  const busq = (document.getElementById('buscador-finano')?.value||'').toLowerCase();
+  const todos = pedidos.filter(p=>p.evento==='finano2026');
+  const filtrados = todos.filter(p=>{
+    const mb = !busq || (p.nombre||'').toLowerCase().includes(busq) || (p.escuela||'').toLowerCase().includes(busq);
+    const me = filtroFinAnoActual==='todos' ? true : filtroFinAnoActual==='debe' ? saldoReal(p)>0 : p.estado===filtroFinAnoActual;
+    return mb && me;
+  });
+  document.getElementById('badge-finano').textContent = todos.filter(p=>p.estado!=='cobrado').length;
+  document.getElementById('finano-count').textContent = filtrados.length;
+
+  const vendido = todos.reduce((a,p)=>a+(Number(p.total)||0),0);
+  const cobrado = todos.reduce((a,p)=>a+Math.min(Number(p.total)||0, pagadoFA(p)),0);
+  document.getElementById('finano-total-general').textContent = '$'+fmt(vendido);
+  document.getElementById('finano-total-cobrado').textContent = '$'+fmt(cobrado);
+  document.getElementById('finano-total-saldo').textContent = '$'+fmt(Math.max(0,vendido-cobrado));
+  const porPlan = {1:0,2:0,3:0}; todos.forEach(p=>porPlan[Number(p.cuotas)||1]++);
+  document.getElementById('finano-planes').innerHTML = todos.length ? [1,2,3].filter(pl=>porPlan[pl]).map(pl=>`${PLAN_TXT[pl]}: ${porPlan[pl]}`).join('<br>') : '—';
+
+  // Para producir: unidades por producto, con nena / varón / sin definir
+  const tot = {}; todos.forEach(p=>Object.entries(p.itemsFinAno||{}).forEach(([k,q])=>tot[k]=(tot[k]||0)+(Number(q)||0)));
+  const filasRes = PRODUCTOS_FINANO.map(pr=>{
+    if(pr.split){
+      const ne=tot[pr.id+'_nena']||0, va=tot[pr.id+'_varon']||0, sd=tot[pr.id]||0, t=ne+va+sd;
+      if(!t) return '';
+      return `<div class="fa-res-row"><span style="font-weight:700">${pr.emoji} ${pr.nombre}</span>
+        <span><b style="color:#047857">${t} u.</b> <span class="det">${ne} nena · ${va} varón${sd?` · <b style="color:#B45309">${sd} sin definir</b>`:''}</span></span></div>`;
+    }
+    const t = tot[pr.id]||0; if(!t) return '';
+    return `<div class="fa-res-row"><span style="font-weight:700">${pr.emoji} ${pr.nombre}</span><b style="color:#047857">${t} u.</b></div>`;
+  }).join('');
+  document.getElementById('finano-resumen-productos').innerHTML = filasRes || '<div style="color:var(--gris);font-size:12px">Sin pedidos aún. Tocá 🔄 Importar para traer los que cargó tu mamá.</div>';
+
+  const falt = faltanPreciosFA();
+  document.getElementById('finano-aviso-precios').innerHTML = falt.length
+    ? `<div onclick="abrirPreciosFA()" style="cursor:pointer;background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:12px;color:#92400E"><b>⚠️ Faltan ${falt.length} precios</b> (${escFA(falt.slice(0,4).join(', '))}${falt.length>4?'…':''}). Tocá acá para completarlos.</div>`
+    : '';
+
+  const eL={pendiente:'⏳ Pendiente',produccion:'🔧 Producción',listo:'✅ Listo',entregado:'🚚 Entregado',cobrado:'💵 Cobrado'};
+  const cont = document.getElementById('lista-finano');
+  if(!filtrados.length){
+    cont.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gris)"><div style="font-size:40px;margin-bottom:12px">🎓</div><div style="font-weight:700">Sin pedidos${filtroFinAnoActual!=='todos'?' en este filtro':''}</div></div>`;
+    return;
+  }
+  const orden = [...filtrados].sort((a,b)=>(b.fechaPedido||'').localeCompare(a.fechaPedido||''));
+  cont.innerHTML = orden.map(p=>{
+    const plan = Number(p.cuotas)||1;
+    const pagado = Math.min(Number(p.total)||0, pagadoFA(p));
+    const cs = cuotasFA(p.total, plan, pagado);
+    const nPagas = cs.filter(c=>c.est==='paga').length;
+    const prox = cs.find(c=>c.est!=='paga');
+    const sal = saldoReal(p);
+    const badgeCol = {pendiente:'background:var(--amarillo-light);color:var(--amarillo)',produccion:'background:var(--azul-light);color:var(--azul)',listo:'background:var(--verde-light);color:var(--verde)',entregado:'background:var(--crema-dark);color:var(--madera)',cobrado:'background:#F3F4F6;color:#6B7280'}[p.estado]||'';
+    return `<div class="pedido-card finano-card ${p.estado||'pendiente'}" onclick="abrirEditarFinAno('${p.id}')">
+      <div class="pedido-top">
+        <div><div class="pedido-nombre">${escFA(p.nombre)}</div><div class="pedido-escuela">${escFA(p.escuela)}${p.turno?' · '+escFA(p.turno):''}</div></div>
+        <span class="estado-badge" style="${badgeCol}">${eL[p.estado]||''}</span>
+      </div>
+      <div style="margin-bottom:6px">
+        <span class="fa-chip plan">💳 ${PLAN_TXT[plan]}</span>
+        ${plan>1?`<span class="fa-chip ${nPagas===plan?'ok':'info'}">${nPagas}/${plan} pagas${dotsFA(cs)}</span>`:''}
+        ${prox && sal>0 ? `<span class="fa-chip debe">Próx: $${fmt(prox.monto-prox.cubierto)}</span>` : `<span class="fa-chip ok">✓ Pagado</span>`}
+      </div>
+      <div class="pedido-productos">${escFA(p.itemsFinAno ? itemsTextoFA(p.itemsFinAno) : p.productos)}</div>
+      ${p.productosOriginal?`<div style="font-size:11px;color:var(--gris);font-style:italic;margin:-4px 0 8px">📝 "${escFA(p.productosOriginal)}"</div>`:''}
+      ${p.obs?`<div style="font-size:12px;font-weight:700;color:#047857;background:#D1FAE5;border-radius:8px;padding:6px 10px;margin-bottom:8px;">⚠️ ${escFA(p.obs)}</div>`:''}
+      <div class="pedido-montos">
+        <div class="monto-item"><div class="monto-val">$${fmt(p.total||0)}</div><div class="monto-label">Total</div></div>
+        <div class="monto-item"><div class="monto-val">$${fmt(pagado)}</div><div class="monto-label">Pagado</div></div>
+        <div class="monto-item"><div class="monto-val ${sal>0?'saldo':'ok'}">$${fmt(sal)}</div><div class="monto-label">${sal>0?'Saldo':'✓ Pago'}</div></div>
+      </div>
+      <div class="pedido-meta">
+        ${p.fechaEntrega?`<span class="meta-chip">📅 ${p.fechaEntrega}</span>`:''}
+        ${diasChip(p.fechaEntrega,p.estado)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// --- Importador ---
+const KW_FINANO = /porta\s*-?\s*carp|\bpuf+s?\b|\bpuf+es\b|cami[oó]n|camiones|\bpercher|\bcunas?\b|\bcunitas?\b|\blibrer/i;
+let impFA = [];
+
+window.abrirImportadorFA = function(){
+  const viejos = document.getElementById('impfa-viejos')?.checked;
+  const cand = pedidos.filter(p=>
+    !p.evento &&
+    KW_FINANO.test(((p.productos||'')+' '+(p.obs||'')).normalize('NFD').replace(/[̀-ͯ]/g,'')) &&
+    (viejos || (p.estado!=='entregado' && p.estado!=='cobrado'))
+  );
+  impFA = cand.map(p=>{
+    const r = parsearFinAno((p.productos||'') + (KW_FINANO.test(p.productos||'') ? '' : ' '+(p.obs||'')));
+    const pl = detectarPlanFA(p, r.items);
+    return {pedido:p, items:r.items, avisos:r.avisos, plan:pl.plan, planInfo:pl, importar:true, tocado:false};
+  });
+  // Posibles repetidos: misma maestra (primer nombre) y mismo total, entre candidatos o contra los ya importados
+  const yaFA = pedidos.filter(p=>p.evento==='finano2026');
+  const clave = p => normalizarTxt(p.nombre).split(' ')[0]+'|'+(Number(p.total)||0);
+  impFA.forEach((f,i)=>{
+    const k = clave(f.pedido);
+    const otro = impFA.find((g,j)=>j<i && clave(g.pedido)===k) || yaFA.find(g=>clave(g)===k);
+    if(otro){
+      f.repetido = `${otro.pedido ? otro.pedido.escuela : otro.escuela} · ${(otro.pedido||otro).fechaPedido||''}${otro.evento?' (ya importado)':''}`;
+      f.importar = false;
+    }
+  });
+  impFA.sort((a,b)=>(estadoImpFA(a)==='ok'?0:1)-(estadoImpFA(b)==='ok'?0:1) || (b.pedido.fechaPedido||'').localeCompare(a.pedido.fechaPedido||''));
+  renderImportadorFA();
+  document.getElementById('overlay-imp-fa').classList.add('show');
+}
+function estadoImpFA(f, items, total){
+  items = items || f.items;
+  total = total===undefined ? (Number(f.pedido.total)||0) : total;
+  const c = calcularFA(items, f.plan);
+  if(!unidadesFA(items)) return 'nada';
+  if(!c.faltan.length && Math.abs(c.total-total)<100 && (f.tocado || !f.avisos.length)) return 'ok';
+  return 'parcial';
+}
+function resumenImpFA(){
+  const n = impFA.length;
+  const ok = impFA.filter(f=>f.importar && estadoImpFA(f, leerItemsImpFA(impFA.indexOf(f)), Number(document.getElementById('impfa-total-'+impFA.indexOf(f))?.value))==='ok').length;
+  const sel = impFA.filter(f=>f.importar).length;
+  const porPlan = {1:0,2:0,3:0}; impFA.filter(f=>f.importar).forEach(f=>porPlan[f.plan]++);
+  document.getElementById('impfa-resumen').innerHTML = !n
+    ? '<b>No encontré pedidos comunes con esos productos.</b> Si ya los importaste, están en la pestaña.'
+    : `Encontré <b>${n} pedidos</b>. Vas a importar <b>${sel}</b>: <span style="color:#15803D;font-weight:700">✅ ${ok} calzan perfecto</span> · <span style="color:#B45309;font-weight:700">⚠️ ${sel-ok} a revisar</span><br>
+       <span style="font-size:12px">Planes: ${[1,2,3].map(pl=>`${PLAN_TXT[pl]}: <b>${porPlan[pl]}</b>`).join(' · ')}</span>`;
+  document.getElementById('impfa-btn-confirmar').style.display = n ? 'block' : 'none';
+}
+function leerItemsImpFA(idx){
+  const f = impFA[idx]; if(!f) return {};
+  const items = {};
+  FINANO_CLAVES.forEach(c=>{
+    const el = document.getElementById(`impfa-${idx}-${c.id}`);
+    const v = el ? (parseInt(el.value)||0) : (Number(f.items[c.id])||0);
+    if(v>0) items[c.id]=v;
+  });
+  return items;
+}
+function renderImportadorFA(){
+  document.getElementById('impfa-lista').innerHTML = impFA.map((f,idx)=>{
+    const p = f.pedido;
+    const pi = f.planInfo;
+    const fuente = pi.fuente==='texto' ? `<span class="fa-chip info">📝 dice "${escFA(pi.frase)}"</span>`
+                 : pi.fuente==='precio' ? `<span class="fa-chip info">💲 el total calza con ${PLAN_TXT[pi.plan]}</span>`
+                 : `<span class="fa-chip warn">❓ no dice cuotas, supuse 1 pago</span>`;
+    const campo = c => {
+      const v = Number(f.items[c.id])||0;
+      return `<div class="imp-item"><span class="imp-item-nom">${escFA(c.nombre)}</span>
+        <input type="number" min="0" value="${v}" class="${v?'tiene':''}" id="impfa-${idx}-${c.id}" oninput="recalcImpFA(${idx},true)"></div>`;
+    };
+    const con = FINANO_CLAVES.filter(c=>(Number(f.items[c.id])||0)>0);
+    const sin = FINANO_CLAVES.filter(c=>!(Number(f.items[c.id])||0));
+    return `<div class="imp-fila ${f.importar?estadoImpFA(f):'saltar'}" id="impfa-fila-${idx}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div class="imp-nombre">${escFA(p.nombre)}</div>
+          <div class="imp-meta">🏫 ${escFA(p.escuela)} · ${p.fechaPedido||''} · Cargado: <b>$${fmt(Number(p.total)||0)}</b> · Seña: <b>$${fmt(Number(p.senia)||0)}</b></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#047857;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" ${f.importar?'checked':''} onchange="toggleImpFA(${idx},this.checked)" style="width:17px;height:17px"> Importar</label>
+      </div>
+      <div class="imp-texto">"${escFA(p.productos)}"${p.obs?` <span style="font-style:normal;color:var(--gris)">· obs: ${escFA(p.obs)}</span>`:''}</div>
+      ${f.repetido?`<div style="font-size:11px;font-weight:700;color:#B91C1C;margin-bottom:6px">⚠️ Posible repetido de otro pedido de la misma maestra con el mismo total (${escFA(f.repetido)}). Lo dejé sin tildar.</div>`:''}
+      ${f.avisos.length?`<div style="font-size:11px;font-weight:700;color:#B45309;margin-bottom:6px">⚠️ ${escFA(f.avisos.join(' · '))}</div>`:''}
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="impfa-planes" id="impfa-planes-${idx}">${[1,2,3].map(pl=>`<button type="button" class="${pl===f.plan?'on':''}" onclick="planImpFA(${idx},${pl})">${PLAN_TXT[pl]}</button>`).join('')}</span>
+        ${fuente}
+      </div>
+      <div class="imp-items">${con.map(campo).join('')}</div>
+      <div class="imp-items" id="impfa-extra-${idx}" style="display:none">${sin.map(campo).join('')}</div>
+      <button class="imp-mas" onclick="const e=document.getElementById('impfa-extra-${idx}');e.style.display=e.style.display==='none'?'grid':'none'">+ agregar / cambiar producto</button>
+      <div class="imp-pie">
+        <span class="imp-tot" id="impfa-det-${idx}" style="color:#047857"></span>
+        <div class="imp-total-box">
+          <label>Total a guardar</label>
+          <input type="number" id="impfa-total-${idx}" value="${Number(p.total)||0}" oninput="recalcImpFA(${idx})">
+          <button class="imp-btn-usar" id="impfa-usar-${idx}" onclick="usarDetalleImpFA(${idx})"></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  impFA.forEach((f,i)=>recalcImpFA(i));
+}
+window.recalcImpFA = function(idx, tocado){
+  const f = impFA[idx]; if(!f) return;
+  if(tocado) f.tocado = true;
+  const items = leerItemsImpFA(idx);
+  FINANO_CLAVES.forEach(c=>{ const el=document.getElementById(`impfa-${idx}-${c.id}`); if(el) el.classList.toggle('tiene',(parseInt(el.value)||0)>0); });
+  const c = calcularFA(items, f.plan);
+  const inpT = document.getElementById('impfa-total-'+idx);
+  const total = Number(inpT?.value)||0;
+  const det = document.getElementById('impfa-det-'+idx);
+  if(det){
+    det.innerHTML = c.faltan.length
+      ? `<span style="color:#B91C1C">Sin precio de ${escFA(c.faltan.join(', '))} en ${PLAN_TXT[f.plan]}</span>`
+      : `Detalle ${PLAN_TXT[f.plan]}: $${fmt(c.total)} · ${unidadesFA(items)} u.` + (Math.abs(c.total-total)<100 ? ' ✓' : '');
+    det.style.color = Math.abs(c.total-total)<100 && !c.faltan.length ? '#15803D' : '#B45309';
+  }
+  const btn = document.getElementById('impfa-usar-'+idx);
+  if(btn){
+    btn.classList.toggle('oculto', c.faltan.length>0 || c.total===total || !c.total);
+    btn.textContent = 'usar $'+fmt(c.total);
+    btn.dataset.val = c.total;
+  }
+  if(inpT) inpT.classList.toggle('cambiado', total!==(Number(f.pedido.total)||0));
+  const fila = document.getElementById('impfa-fila-'+idx);
+  if(fila) fila.className = 'imp-fila ' + (f.importar ? estadoImpFA(f, items, total) : 'saltar');
+  resumenImpFA();
+}
+window.planImpFA = function(idx, pl){
+  impFA[idx].plan = pl; impFA[idx].tocado = true;
+  document.querySelectorAll(`#impfa-planes-${idx} button`).forEach((b,i)=>b.classList.toggle('on', i+1===pl));
+  recalcImpFA(idx);
+}
+window.toggleImpFA = function(idx, v){ impFA[idx].importar = v; recalcImpFA(idx); }
+window.usarDetalleImpFA = function(idx){
+  const btn = document.getElementById('impfa-usar-'+idx), inp = document.getElementById('impfa-total-'+idx);
+  if(btn && inp){ inp.value = Number(btn.dataset.val)||0; recalcImpFA(idx); }
+}
+window.cerrarImportadorFA = function(){ document.getElementById('overlay-imp-fa').classList.remove('show'); }
+
+window.confirmarImportacionFA = async function(){
+  const lote = [];
+  impFA.forEach((f,idx)=>{
+    if(!f.importar) return;
+    const items = leerItemsImpFA(idx);
+    if(!unidadesFA(items)) return;
+    const total = Number(document.getElementById('impfa-total-'+idx)?.value)||0;
+    lote.push({f, items, total});
+  });
+  if(!lote.length){ toast('No hay nada tildado para importar'); return; }
+  const btn = document.getElementById('impfa-btn-confirmar');
+  btn.disabled = true; btn.textContent = 'Importando...';
+  let ok = 0; const fallaron = [];
+  for(const {f, items, total} of lote){
+    const p = f.pedido;
+    try{
+      const snap = await db.collection('pedidos').doc(p.id).get();
+      if(!snap.exists){ fallaron.push({nombre:p.nombre, motivo:'el pedido ya no existe'}); continue; }
+      const d = snap.data();
+      if(d.evento){ fallaron.push({nombre:p.nombre, motivo:'ya estaba en una pestaña especial, no lo toqué'}); continue; }
+      const senia = Number(d.senia)||0;
+      const pagos = Array.isArray(d.pagos) ? d.pagos : (senia>0 ? [{monto:senia, fecha:d.fechaPedido||hoy(), metodo:d.pago||'', nota:'seña'}] : []);
+      const pagado = d.estado==='cobrado' ? total : pagos.reduce((a,x)=>a+(Number(x.monto)||0),0);
+      const preciosAplicados = {};
+      PRODUCTOS_FINANO.forEach(pr=>{ if(Object.keys(items).some(k=>prodDeClave(k)?.id===pr.id)) preciosAplicados[pr.id] = precioFA(pr.id, f.plan); });
+      await db.collection('pedidos').doc(p.id).update({
+        evento: 'finano2026',
+        itemsFinAno: items,
+        cuotas: f.plan,
+        pagos,
+        preciosAplicados,
+        productosOriginal: d.productos || '',
+        productos: itemsTextoFA(items, ', ') + (f.plan>1 ? ` — en ${f.plan} cuotas` : ''),
+        total,
+        senia: Math.min(pagado, total),
+        saldo: Math.max(0, total - pagado),
+        updatedAt: new Date().toISOString()
+      });
+      ok++;
+    }catch(e){ console.error('import FA', p.id, e); fallaron.push({nombre:p.nombre, motivo:(e&&e.message)||'error de conexión'}); }
+  }
+  btn.disabled = false; btn.textContent = '✅ Confirmar e importar';
+  cerrarImportadorFA();
+  if(fallaron.length){
+    document.getElementById('impres-ok').textContent = ok;
+    document.getElementById('impres-detalle').innerHTML = fallaron.map(x=>`<div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px"><b>${escFA(x.nombre||'(sin nombre)')}</b><br><span style="color:#B91C1C">${escFA(x.motivo)}</span></div>`).join('');
+    document.getElementById('overlay-impres').classList.add('show');
+  } else toast(`✅ ${ok} pedidos importados a Fin de Año`);
+  setTab('finano');
+}
+
+// --- Excel: General + una hoja por producto + Cobranza ---
+window.exportarFinAno = function(){
+  const todos = pedidos.filter(p=>p.evento==='finano2026');
+  if(!todos.length){ toast('No hay pedidos de Fin de Año'); return; }
+  const eL={pendiente:'Pendiente',produccion:'En producción',listo:'Listo',entregado:'Entregado',cobrado:'Cobrado'};
+  const ord = [...todos].sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  const fF = f => f ? f.split('-').reverse().join('/') : '';
+  const estilos = {}; let n = 1;
+  const S = (bg,fg,b,al,fs,it)=>{ const k=[bg,fg,b,al,fs,it].join('|'); if(!estilos[k]) estilos[k]={id:'s'+n++,bg,fg,b,al,fs:fs||11,it}; return estilos[k].id; };
+  const C = (s,v,num)=> num ? `<Cell ss:StyleID="${s}"><Data ss:Type="Number">${Number(v)||0}</Data></Cell>` : `<Cell ss:StyleID="${s}"><Data ss:Type="String">${escFA(v)}</Data></Cell>`;
+  const CM = (s,v,m)=>`<Cell ss:StyleID="${s}" ss:MergeAcross="${m-1}"><Data ss:Type="String">${escFA(v)}</Data></Cell>`;
+  const hojas = [];
+  const PAL = {portacarpetas:['7C3AED','F5F3FF'], puff:['BE185D','FCE7F3'], perchero:['0369A1','E0F2FE'], librero:['B45309','FEF3C7'], cuna:['A21CAF','FDF4FF'], camion:['C2410C','FFEDD5']};
+  const VERDE='047857', VLT='ECFDF5';
+  const cab = (bg, cols)=>`<Row ss:Height="18">${cols.map(c=>C(S(bg,'FFFFFF',1,'Center',11),c)).join('')}</Row>`;
+
+  // GENERAL
+  {
+    const N=13, f=[];
+    const gT=ord.reduce((a,p)=>a+(Number(p.total)||0),0), gP=ord.reduce((a,p)=>a+Math.min(Number(p.total)||0,pagadoFA(p)),0);
+    f.push(`<Row ss:Height="22">${CM(S(VERDE,'FFFFFF',1,'Left',14),'🎓  FIN DE AÑO 2026 — LISTADO GENERAL',N)}</Row>`);
+    f.push(`<Row>${CM(S(VLT,'065F46',0,'Left',9,1),ord.length+' pedidos · Vendido $'+fmt(gT)+' · Cobrado $'+fmt(gP)+' · Saldo $'+fmt(gT-gP)+' · '+new Date().toLocaleString('es-AR'),N)}</Row>`);
+    f.push(cab(VERDE,['#','Maestra','Escuela','Teléfono','F.Pedido','F.Entrega','Productos','Uds','Plan','Total','Pagado','Saldo','Estado']));
+    ord.forEach((p,i)=>{
+      const lt=i%2?'FFFFFF':VLT, t=Number(p.total)||0, pg=Math.min(t,pagadoFA(p)), sal=saldoReal(p);
+      f.push(`<Row>${C(S(lt,'6B7280',0,'Center'),i+1)}${C(S(lt,'1C1008',1,'Left'),p.nombre)}${C(S(lt,'1C1008',0,'Left'),p.escuela)}${C(S(lt,'1C1008',0,'Left'),p.tel)}${C(S(lt,'6B7280',0,'Center'),fF(p.fechaPedido))}${C(S(lt,'6B7280',0,'Center'),fF(p.fechaEntrega))}${C(S(lt,'1C1008',0,'Left'),itemsTextoFA(p.itemsFinAno,' / ')+(p.obs?' — '+p.obs:''))}${C(S(lt,VERDE,1,'Center'),unidadesFA(p.itemsFinAno),1)}${C(S(lt,'1C1008',0,'Center'),PLAN_TXT[Number(p.cuotas)||1])}${C(S(lt,'1C1008',1,'Right'),t,1)}${C(S(lt,'15803D',1,'Right'),pg,1)}${C(S(lt,sal>0?'B91C1C':'15803D',1,'Right'),sal,1)}${C(S(lt,'6B7280',0,'Center'),eL[p.estado]||'')}</Row>`);
+    });
+    f.push(`<Row>${CM(S(VERDE,'FFFFFF',1,'Left'),'TOTAL',9)}${C(S(VERDE,'FFFFFF',1,'Right'),gT,1)}${C(S(VERDE,'FFFFFF',1,'Right'),gP,1)}${C(S(VERDE,'FCA5A5',1,'Right'),gT-gP,1)}${C(S(VERDE,'FFFFFF',1,'Left'),'')}</Row>`);
+    hojas.push({n:'General', f, w:[4,22,24,14,11,11,46,7,10,12,12,12,13]});
+  }
+  // POR PRODUCTO
+  PRODUCTOS_FINANO.forEach(pr=>{
+    const claves = pr.split ? [pr.id+'_nena', pr.id+'_varon', pr.id] : [pr.id];
+    const con = ord.filter(p=>claves.some(k=>(Number((p.itemsFinAno||{})[k])||0)>0));
+    if(!con.length) return;
+    const [BG,LT] = PAL[pr.id], f=[];
+    const cols = pr.split ? ['#','Maestra','Escuela','F.Entrega','Nenas','Varones','Sin definir','Total uds','Observaciones'] : ['#','Maestra','Escuela','F.Entrega','Cantidad','Observaciones'];
+    const sumas = claves.map(k=>con.reduce((a,p)=>a+(Number(p.itemsFinAno[k])||0),0));
+    f.push(`<Row ss:Height="22">${CM(S(BG,'FFFFFF',1,'Left',14),pr.emoji+'  '+pr.nombre.toUpperCase()+' — FIN DE AÑO 2026',cols.length)}</Row>`);
+    f.push(`<Row>${CM(S(LT,BG,0,'Left',9,1),con.length+' maestras · '+sumas.reduce((a,b)=>a+b,0)+' unidades'+(pr.split?` (${sumas[0]} nena · ${sumas[1]} varón${sumas[2]?' · '+sumas[2]+' sin definir':''})`:''),cols.length)}</Row>`);
+    f.push(cab(BG, cols));
+    con.forEach((p,i)=>{
+      const lt=i%2?'FFFFFF':LT, it=p.itemsFinAno;
+      const qs = claves.map(k=>Number(it[k])||0);
+      f.push(`<Row>${C(S(lt,'6B7280',0,'Center'),i+1)}${C(S(lt,'1C1008',1,'Left'),p.nombre)}${C(S(lt,'1C1008',0,'Left'),p.escuela)}${C(S(lt,'6B7280',0,'Center'),fF(p.fechaEntrega))}${qs.map((q,j)=>C(S(lt,(pr.split&&j===2&&q)?'B45309':BG,1,'Center',13),q,1)).join('')}${pr.split?C(S(lt,'1C1008',1,'Center',13),qs.reduce((a,b)=>a+b,0),1):''}${C(S(lt,'1C1008',0,'Left'),p.obs)}</Row>`);
+    });
+    f.push(`<Row>${CM(S(BG,'FFFFFF',1,'Left'),'TOTAL',4)}${sumas.map(s=>C(S(BG,'FFFFFF',1,'Center'),s,1)).join('')}${pr.split?C(S(BG,'FFFFFF',1,'Center'),sumas.reduce((a,b)=>a+b,0),1):''}${C(S(BG,'FFFFFF',1,'Left'),'')}</Row>`);
+    hojas.push({n:pr.nombre, f, w: pr.split ? [4,22,24,11,9,9,11,10,36] : [4,22,24,11,10,36]});
+  });
+  // COBRANZA
+  {
+    const BG='B91C1C', LT='FEF2F2', f=[];
+    const cols=['Maestra','Escuela','Teléfono','Plan','Total','Cuota 1','Cuota 2','Cuota 3','Pagado','Saldo','Próxima a cobrar'];
+    const conDeuda = [...ord].sort((a,b)=>saldoReal(b)-saldoReal(a));
+    f.push(`<Row ss:Height="22">${CM(S(BG,'FFFFFF',1,'Left',14),'💳  COBRANZA DE CUOTAS — FIN DE AÑO 2026',cols.length)}</Row>`);
+    f.push(`<Row>${CM(S(LT,BG,0,'Left',9,1),'En cada cuota: el monto y si está PAGA / DEBE. Ordenado por saldo, de mayor a menor.',cols.length)}</Row>`);
+    f.push(cab(BG, cols));
+    conDeuda.forEach((p,i)=>{
+      const lt=i%2?'FFFFFF':LT, plan=Number(p.cuotas)||1, t=Number(p.total)||0, pg=Math.min(t,pagadoFA(p)), cs=cuotasFA(t,plan,pg), sal=saldoReal(p);
+      const prox = cs.find(c=>c.est!=='paga');
+      const cel = k => { const c=cs[k]; if(!c) return C(S(lt,'9CA3AF',0,'Center'),'—'); return C(S(lt,c.est==='paga'?'15803D':c.est==='parcial'?'B45309':'B91C1C',1,'Center'),'$'+fmt(c.monto)+' '+(c.est==='paga'?'PAGA':c.est==='parcial'?'PARCIAL':'DEBE')); };
+      f.push(`<Row>${C(S(lt,'1C1008',1,'Left'),p.nombre)}${C(S(lt,'1C1008',0,'Left'),p.escuela)}${C(S(lt,'1C1008',0,'Left'),p.tel)}${C(S(lt,'1C1008',0,'Center'),PLAN_TXT[plan])}${C(S(lt,'1C1008',1,'Right'),t,1)}${cel(0)}${cel(1)}${cel(2)}${C(S(lt,'15803D',1,'Right'),pg,1)}${C(S(lt,sal>0?'B91C1C':'15803D',1,'Right'),sal,1)}${C(S(lt,'1C1008',1,'Center'),prox&&sal>0?'$'+fmt(prox.monto-prox.cubierto):'✓')}</Row>`);
+    });
+    hojas.push({n:'Cobranza', f, w:[22,24,14,10,12,17,17,17,12,12,15]});
+  }
+  const stXML = Object.values(estilos).map(s=>`<Style ss:ID="${s.id}"><Alignment ss:Horizontal="${s.al}" ss:Vertical="Center"/><Font ss:Bold="${s.b?1:0}" ss:Color="#${s.fg}" ss:Size="${s.fs}"${s.it?' ss:Italic="1"':''}/><Interior ss:Color="#${s.bg}" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/></Borders></Style>`).join('');
+  const shXML = hojas.map(h=>`<Worksheet ss:Name="${escFA(h.n.substring(0,31))}"><Table>${h.w.map(w=>`<Column ss:Width="${w*7}"/>`).join('')}${h.f.join('')}</Table></Worksheet>`).join('');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel"><Styles>${stXML}</Styles>${shXML}</Workbook>`;
+  const blob = new Blob([xml],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = `fin-de-ano-2026-${new Date().toLocaleDateString('es-AR').replace(/\//g,'-')}.xls`; a.click();
+  URL.revokeObjectURL(url);
+  toast('📥 Excel de Fin de Año descargado!');
+}
+// ==================== FIN FIN DE AÑO ====================
 
 
 function fmtK(n){return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':fmt(n);}
