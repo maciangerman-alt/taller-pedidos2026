@@ -1,0 +1,8 @@
+name = "consulta-taller"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://tallerartesanal.com.ar,https://maciangerman-alt.github.io"
+FIREBASE_API_KEY = "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc"
+# El secreto ANTHROPIC_API_KEY se carga con:  npx wrangler secret put ANTHROPIC_API_KEY

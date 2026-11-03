@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Costos y Producción · Taller</title>
+<meta name="robots" content="noindex">
+<style>
+:root{
+  --bg:#f3f4f1; --card:#ffffff; --ink:#1d2421; --muted:#5f6b66; --line:#d9ddd8;
+  --acc:#2f6b55; --acc-ink:#ffffff; --warn:#a9581c; --warn-bg:#fbefe3; --bad:#b3382c; --ok:#2f6b55; --chip:#e9ece8;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#141917; --card:#1d2421; --ink:#e6ebe8; --muted:#9aa7a1; --line:#33403b;
+  --acc:#6cc2a0; --acc-ink:#0f1a15; --warn:#e7a46b; --warn-bg:#3a2a1c; --bad:#ef8a7e; --ok:#6cc2a0; --chip:#26302c;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px max(14px,env(safe-area-inset-left)) 0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.top h1{font-size:17px;margin:0}
+.top .who{font-size:12px;color:var(--muted)}
+nav{display:flex;gap:4px;overflow-x:auto;margin-top:8px}
+nav button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:8px 12px;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--ink);border-bottom-color:var(--acc)}
+main{max-width:1100px;margin:0 auto;padding:14px max(14px,env(safe-area-inset-left)) 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 10px}
+h3{font-size:14px;margin:14px 0 6px}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+textarea{width:100%;min-height:70px}
+button.b{font:inherit;font-weight:600;border:0;border-radius:7px;padding:9px 14px;background:var(--acc);color:var(--acc-ink);cursor:pointer}
+button.s{font:inherit;border:1px solid var(--line);border-radius:7px;padding:7px 12px;background:var(--card);color:var(--ink);cursor:pointer}
+button:disabled{opacity:.5}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600}
+.chip{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--chip);font-size:12px}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.ok{color:var(--ok)}
+.alert{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.msg{padding:10px 12px;border-radius:9px;margin:8px 0;max-width:820px}
+.msg.u{background:var(--chip);margin-left:auto}
+.msg.a{background:var(--card);border:1px solid var(--line)}
+details.calc{font-size:12px;color:var(--muted);margin-top:6px}
+details.calc pre{white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
+.est{display:flex;gap:4px;flex-wrap:wrap}
+.est button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;cursor:pointer}
+.est button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc)}
+.req{border-left:4px solid var(--line);padding-left:10px;margin:10px 0}
+.req.tarde{border-left-color:var(--bad)}
+.req.listo{opacity:.6}
+#login{max-width:380px;margin:60px auto}
+[hidden]{display:none!important}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div id="login" class="card" hidden>
+  <h2>Costos y Producción</h2>
+  <p class="muted">Entrá con el mismo usuario del sistema de pedidos.</p>
+  <div style="display:grid;gap:8px">
+    <input id="lg-mail" type="email" autocomplete="username" placeholder="Correo">
+    <input id="lg-pass" type="password" autocomplete="current-password" placeholder="Contraseña">
+    <button class="b" id="lg-btn">Entrar</button>
+    <div id="lg-err" class="muted"></div>
+  </div>
+</div>
+
+<div id="app" hidden>
+<header>
+  <div class="top"><h1>Costos y Producción</h1><div class="who"><span id="who"></span> · <a href="#" id="salir">Salir</a></div></div>
+  <nav id="nav"></nav>
+</header>
+<main>
+  <div id="avisos-banner"></div>
+
+  <!-- CONSULTAR -->
+  <section id="t-consultar">
+    <div class="card">
+      <h2>Consultar el modelo</h2>
+      <p class="muted">Preguntá en palabras. La IA elige qué cálculo hacer; los números los calcula el modelo de costeo, no la IA. Cada respuesta muestra el cálculo que la respalda.</p>
+      <div class="row" id="sugeridas"></div>
+      <div id="chat"></div>
+      <div class="row" style="margin-top:8px"><textarea id="q" placeholder="Ej.: ¿Conviene fabricar o comprar el 9×14? ¿Qué pasa si la placa sube a $30.000?"></textarea></div>
+      <div class="row"><button class="b" id="q-btn">Preguntar</button><span class="muted" id="q-estado"></span></div>
+    </div>
+  </section>
+
+  <!-- MODELO -->
+  <section id="t-modelo" hidden>
+    <div class="card">
+      <h2>Costo por familia</h2>
+      <p class="muted" id="m-fecha"></p>
+      <div class="tbl"><table id="m-costos"></table></div>
+    </div>
+    <div class="card">
+      <h2>Fabricar o comprar (análisis diferencial, por año)</h2>
+      <div class="tbl"><table id="m-dif"></table></div>
+    </div>
+    <div class="card">
+      <h2>Mezcla óptima (programación lineal)</h2>
+      <div class="row">
+        <label>Compra <select id="o-esc"><option value="libre">libre</option><option value="actual">sólo la actual</option></select></label>
+        <label>Anticipar <select id="o-ant"><option>sí</option><option>no</option></select></label>
+        <label>Máquina en pico <select id="o-pico"><option value="0.5">50%</option><option value="0.45">45%</option><option value="0.4">40%</option></select></label>
+        <button class="s" id="o-btn">Resolver</button>
+      </div>
+      <div id="o-res" style="margin-top:10px"></div>
+    </div>
+  </section>
+
+  <!-- PRECIOS -->
+  <section id="t-precios" hidden>
+    <div class="card">
+      <h2>Insumos y costos del modelo</h2>
+      <p class="muted">Al cambiar un valor y guardar, se recalcula todo el modelo y se registra la fecha. Pasados 30 días sin actualizar, aparece un aviso.</p>
+      <div class="tbl"><table id="p-params"></table></div>
+      <div class="row" style="margin-top:8px"><button class="b" id="p-guardar">Guardar cambios</button><span class="muted" id="p-estado"></span></div>
+    </div>
+    <div class="card">
+      <h2>Importados de los mayoristas</h2>
+      <div class="row"><input id="i-buscar" placeholder="Buscar producto"><select id="i-prov"><option value="">Todos</option></select></div>
+      <div class="tbl" style="margin-top:8px"><table id="i-tabla"></table></div>
+      <h3>Cargar o actualizar una lista</h3>
+      <p class="muted">Pegá una línea por producto: <b>proveedor;código;producto;medidas;precio</b>. Si el código ya existe, se actualiza el precio y la fecha.</p>
+      <textarea id="i-pegar" placeholder="Mayorista A;T10;Tangram 10x10;10x10 cm;858"></textarea>
+      <div class="row"><button class="s" id="i-importar">Importar</button><span class="muted" id="i-estado"></span></div>
+    </div>
+  </section>
+
+  <!-- CORTE -->
+  <section id="t-corte" hidden>
+    <div class="card" id="corte-nueva">
+      <h2>Nueva requisición de corte</h2>
+      <div class="grid2">
+        <div style="display:grid;gap:8px">
+          <label>Producto <select id="c-prod"></select></label>
+          <input id="c-otro" placeholder="Otro producto (si no está en la lista)" hidden>
+          <div class="row"><label>Unidades <input id="c-cant" type="number" min="1" style="width:110px"></label><span class="muted" id="c-hojas"></span></div>
+          <div class="row"><label>Para el <input id="c-fecha" type="date"></label><label>Prioridad <select id="c-prio"><option>normal</option><option>urgente</option></select></label></div>
+          <input id="c-obs" placeholder="Observaciones (color, modelo, máquina)">
+          <button class="b" id="c-crear">Crear requisición</button>
+        </div>
+        <div>
+          <h3 style="margin-top:0">Pendiente en los pedidos</h3>
+          <p class="muted">Suma de los pedidos de eventos que todavía no se entregaron. Tocá una fila para cargarla.</p>
+          <div class="tbl"><table id="c-pend"></table></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Requisiciones</h2>
+        <select id="c-filtro"><option value="activas">Activas</option><option value="todas">Todas</option></select></div>
+      <div id="c-lista"></div>
+    </div>
+  </section>
+
+  <!-- VALIDACIÓN -->
+  <section id="t-validacion" hidden>
+    <div class="card">
+      <h2>Protocolo de validación</h2>
+      <p class="muted">Cada consulta queda registrada con el cálculo que la respaldó. Contrastala con la planilla de Excel y marcá el resultado.</p>
+      <div class="tbl"><table id="v-tabla"></table></div>
+    </div>
+    <div class="card">
+      <h2>Configuración</h2>
+      <label>Dirección del servidor de la IA <input id="cfg-worker" style="width:100%" placeholder="https://consulta-taller.<tu-cuenta>.workers.dev"></label>
+      <label style="display:block;margin-top:8px">Correos con acceso completo (separados por coma; el resto del personal ve sólo Corte) <input id="cfg-admins" style="width:100%"></label>
+      <div class="row" style="margin-top:8px"><button class="s" id="cfg-guardar">Guardar</button><span class="muted">La clave de la IA no se carga acá: vive en el servidor.</span></div>
+    </div>
+  </section>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/javascript-lp-solver@0.4.24/prod/solver.js"></script>
+<script src="engine.js"></script>
+<script>
+// Configuración pública del proyecto de Firebase (la misma del sistema de pedidos; no es una clave secreta).
+firebase.initializeApp({
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777"
+});
+const db=firebase.firestore(), auth=firebase.auth();
+const $=id=>document.getElementById(id);
+const n0=v=>Math.round(v).toLocaleString('es-AR'), n2=v=>(+v).toLocaleString('es-AR',{maximumFractionDigits:2}), pct=v=>Math.round(v*100)+'%';
+const hoyISO=()=>new Date().toISOString().slice(0,10);
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+// ---------- estado ----------
+let M=ModeloJD.base();          // modelo vigente (se reemplaza con el guardado en Firestore)
+let fechas={};                   // fecha de actualización por parámetro
+let config={admins:[],worker:''};
+let rol='personal', usuario=null, importados=[], requisiciones=[], pedidosPend=[];
+
+// Parámetros que se actualizan seguido (los demás quedan en la planilla)
+const EDITABLES=[
+ ['placa','Placa entera de MDF 3 mm','$'],['pint','Pintura','$/litro'],['barn','Barniz','$/litro'],['adh','Adhesivo','$/litro'],['pack','Packaging por unidad','$'],
+ ['vh','Valor hora de la mano de obra','$/hora'],['cmp','Régimen simplificado por persona','$/mes'],['e_rop','Retribución de la responsable operativa','$/mes'],['e_adm','Retribución de la administración','$/mes'],
+ ['kwh','Costo marginal del kWh','$/kWh'],['tubo','Tubo láser','$'],['opt','Juego de ópticas','$'],['alq','Alquiler de referencia del galpón','$/mes'],
+ ['e_hon','Honorarios profesionales','$/mes'],['e_soft','Suscripciones de software','$/mes'],['e_pub','Publicidad','$/mes'],['e_fer','Eventos y ferias','$/mes'],['e_iibb','Ingresos brutos (promedio mensual)','$/mes']
+];
+const PRECIOS_VENTA=M.F.map((f,i)=>['pv'+i,'Precio de venta '+f.n,'$']);
+const COMPRA=M.compra.map((c,i)=>['pc'+i,'Compra '+M.F[i].n+' · '+c.ref,'$']);
+
+function getVal(k){ if(k.startsWith('pv')) return M.F[+k.slice(2)].pv; if(k.startsWith('pc')) return M.compra[+k.slice(2)].pc; return M.P[k]; }
+function setVal(k,v){ if(k.startsWith('pv')) M.F[+k.slice(2)].pv=v; else if(k.startsWith('pc')) M.compra[+k.slice(2)].pc=v; else M.P[k]=v; }
+function diasDesde(f){ if(!f) return 999; return Math.floor((Date.now()-new Date(f+'T12:00:00').getTime())/864e5); }
+
+// ---------- login ----------
+$('lg-btn').onclick=async()=>{ $('lg-err').textContent=''; try{ await auth.signInWithEmailAndPassword($('lg-mail').value.trim(),$('lg-pass').value); }catch(e){ $('lg-err').textContent='No se pudo entrar: revisá el correo y la contraseña.'; } };
+$('salir').onclick=e=>{e.preventDefault();auth.signOut();};
+auth.onAuthStateChanged(async u=>{
+  usuario=u; $('login').hidden=!!u; $('app').hidden=!u; if(!u) return;
+  $('who').textContent=u.email;
+  try{ const c=await db.collection('costos_config').doc('general').get(); if(c.exists) config=Object.assign(config,c.data()); }catch(e){ console.warn(e); }
+  rol=(config.admins||[]).map(x=>x.toLowerCase()).includes(u.email.toLowerCase()) || !(config.admins||[]).length ? 'admin':'personal';
+  armarNav(); escuchar();
+});
+
+const TABS=[['consultar','Consultar','admin'],['modelo','Modelo','admin'],['precios','Precios','admin'],['corte','Corte','todos'],['validacion','Validación','admin']];
+function armarNav(){
+  const vis=TABS.filter(t=>t[2]==='todos'||rol==='admin');
+  $('nav').innerHTML=vis.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
+  $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.t));
+  $('corte-nueva').hidden=rol!=='admin';
+  ir(rol==='admin'?'consultar':'corte');
+}
+function ir(t){ TABS.forEach(x=>{ const s=$('t-'+x[0]); if(s) s.hidden=x[0]!==t; }); $('nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); if(t==='modelo') pintarModelo(); }
+
+// ---------- datos en Firestore ----------
+function escuchar(){
+  db.collection('costos_modelo').doc('vigente').onSnapshot(d=>{
+    if(d.exists){ const x=d.data(); if(x.modelo){ M=Object.assign(ModeloJD.base(),x.modelo); } fechas=x.fechas||{}; }
+    else { const f={}; [...EDITABLES,...PRECIOS_VENTA,...COMPRA].forEach(e=>f[e[0]]=M.fechaDatos); fechas=f; }
+    pintarParametros(); pintarAvisos(); if(!$('t-modelo').hidden) pintarModelo(); prodOptions();
+  },e=>console.warn('modelo',e));
+  db.collection('costos_importados').onSnapshot(s=>{ importados=[]; s.forEach(d=>importados.push({id:d.id,...d.data()})); if(!importados.length && rol==='admin') sembrarImportados(); pintarImportados(); pintarAvisos(); },e=>console.warn('importados',e));
+  db.collection('costos_corte').orderBy('fecha').onSnapshot(s=>{ requisiciones=[]; s.forEach(d=>requisiciones.push({id:d.id,...d.data()})); pintarCorte(); },e=>console.warn('corte',e));
+  if(rol==='admin'){
+    db.collection('pedidos').onSnapshot(s=>{ pedidosPend=[]; s.forEach(d=>{ const p=d.data(); if(p.esConfig) return; if(['entregado','cobrado'].includes(p.estado)) return; pedidosPend.push({id:d.id,...p}); }); pintarPendientes(); },e=>console.warn('pedidos',e));
+    db.collection('costos_consultas').orderBy('fecha','desc').limit(100).onSnapshot(s=>{ const v=[]; s.forEach(d=>v.push({id:d.id,...d.data()})); pintarValidacion(v); },e=>console.warn('consultas',e));
+    $('cfg-worker').value=config.worker||''; $('cfg-admins').value=(config.admins||[]).join(', ');
+  }
+}
+async function sembrarImportados(){
+  try{
+    const r=await fetch('importados_semilla.json'); const lista=await r.json();
+    const b=db.batch(); lista.forEach(it=>b.set(db.collection('costos_importados').doc(it.proveedor.replace(/\s/g,'')+'_'+it.codigo),it)); await b.commit();
+  }catch(e){ console.warn('semilla',e); }
+}
+
+// ---------- avisos (30 días) ----------
+function vencidos(){
+  const v=[];
+  [...EDITABLES,...PRECIOS_VENTA,...COMPRA].forEach(([k,l])=>{ const d=diasDesde(fechas[k]); if(d>30) v.push({tipo:'parámetro',nombre:l,dias:d}); });
+  const prov={}; importados.forEach(i=>{ const d=diasDesde(i.fecha); if(d>30) prov[i.proveedor]=Math.max(prov[i.proveedor]||0,d); });
+  Object.entries(prov).forEach(([p,d])=>v.push({tipo:'lista',nombre:'Lista de '+p,dias:d}));
+  return v;
+}
+function pintarAvisos(){
+  if(rol!=='admin'){ $('avisos-banner').innerHTML=''; return; }
+  const v=vencidos();
+  $('avisos-banner').innerHTML=v.length?`<div class="alert"><b>${v.length} dato${v.length>1?'s':''} sin actualizar hace más de 30 días.</b> ${v.slice(0,4).map(x=>esc(x.nombre)).join(', ')}${v.length>4?'…':''}. Actualizalos en Precios.</div>`:'';
+}
+
+// ---------- precios ----------
+function pintarParametros(){
+  const rows=[...EDITABLES,...PRECIOS_VENTA,...COMPRA];
+  $('p-params').innerHTML='<tr><th>Dato</th><th>Valor</th><th>Unidad</th><th>Actualizado</th></tr>'+rows.map(([k,l,u])=>{
+    const d=diasDesde(fechas[k]); const ch=d>30?`<span class="chip warn">hace ${d} días</span>`:`<span class="chip ok">${esc(fechas[k]||'—')}</span>`;
+    return `<tr><td>${esc(l)}</td><td><input data-k="${k}" type="number" step="any" value="${getVal(k)}" style="width:120px;text-align:right"></td><td>${u}</td><td>${ch}</td></tr>`;}).join('');
+}
+$('p-guardar').onclick=async()=>{
+  const cambios=[];
+  $('p-params').querySelectorAll('input[data-k]').forEach(i=>{ const k=i.dataset.k, v=parseFloat(i.value); if(!isNaN(v) && v!==getVal(k)){ setVal(k,v); cambios.push(k);} });
+  // marcar como revisados también los que se confirman sin cambio
+  const f=Object.assign({},fechas); $('p-params').querySelectorAll('input[data-k]').forEach(i=>{ if(cambios.includes(i.dataset.k)) f[i.dataset.k]=hoyISO(); });
+  try{ await db.collection('costos_modelo').doc('vigente').set({modelo:M,fechas:f,actualizadoPor:usuario.email,actualizado:new Date().toISOString(),historial:firebase.firestore.FieldValue.arrayUnion({fecha:new Date().toISOString(),por:usuario.email,cambios})},{merge:true});
+    $('p-estado').textContent=cambios.length?`Guardado: ${cambios.length} cambio(s). El modelo se recalculó.`:'Sin cambios.'; toast('Guardado'); }
+  catch(e){ $('p-estado').textContent='No se pudo guardar. Revisá la conexión o los permisos de la base.'; console.error(e); }
+};
+function pintarImportados(){
+  const provs=[...new Set(importados.map(i=>i.proveedor))].sort();
+  const sel=$('i-prov'), cur=sel.value; sel.innerHTML='<option value="">Todos</option>'+provs.map(p=>`<option ${p===cur?'selected':''}>${esc(p)}</option>`).join('');
+  const q=$('i-buscar').value.toLowerCase();
+  const l=importados.filter(i=>(!sel.value||i.proveedor===sel.value)&&(!q||(i.producto+' '+(i.medidas||'')).toLowerCase().includes(q))).sort((a,b)=>a.producto.localeCompare(b.producto));
+  $('i-tabla').innerHTML='<tr><th>Producto</th><th>Proveedor</th><th>Medidas</th><th>Precio</th><th>Actualizado</th></tr>'+l.map(i=>`<tr><td>${esc(i.producto)}</td><td>${esc(i.proveedor)}</td><td>${esc(i.medidas||'')}</td><td>${i.precio!=null?'$'+n0(i.precio):'<span class="muted">sin precio</span>'}</td><td>${diasDesde(i.fecha)>30?'<span class="chip warn">'+esc(i.fecha)+'</span>':esc(i.fecha||'')}</td></tr>`).join('');
+}
+$('i-buscar').oninput=pintarImportados; $('i-prov').onchange=pintarImportados;
+$('i-importar').onclick=async()=>{
+  const lineas=$('i-pegar').value.split('\n').map(s=>s.trim()).filter(Boolean); let ok=0,mal=0; const b=db.batch();
+  lineas.forEach(s=>{ const p=s.split(/;|\t/); if(p.length<5){mal++;return;} const precio=parseFloat(String(p[4]).replace(/\./g,'').replace(',','.'));
+    if(isNaN(precio)){mal++;return;} const it={proveedor:p[0].trim(),codigo:p[1].trim()||p[2].trim(),producto:p[2].trim(),medidas:p[3].trim(),precio,fecha:hoyISO(),cargadoPor:usuario.email};
+    b.set(db.collection('costos_importados').doc(it.proveedor.replace(/\s/g,'')+'_'+it.codigo.replace(/[\/\s]/g,'')),it,{merge:true}); ok++; });
+  try{ if(ok) await b.commit(); $('i-estado').textContent=`${ok} producto(s) cargados${mal?`, ${mal} línea(s) con formato incorrecto`:''}.`; if(ok) $('i-pegar').value=''; }
+  catch(e){ $('i-estado').textContent='No se pudo guardar.'; console.error(e); }
+};
+
+// ---------- modelo ----------
+function pintarModelo(){
+  const c=ModeloJD.costeo(M);
+  $('m-fecha').textContent=`Tasa fija por hora de máquina $${n2(c.tasaFijaHoraMaquina)} · por hora de personal $${n2(c.tasaFijaHoraPersonal)} · tarifa variable de corte $${n2(c.tarifaVariableHora)} por hora.`;
+  $('m-costos').innerHTML='<tr><th>Familia</th><th>Costo variable</th><th>Absorción</th><th>Costo total</th><th>Precio</th><th>Margen</th><th>Margen por hora de máquina</th></tr>'+
+    c.familias.map(f=>`<tr><td>${f.familia}</td><td>${n0(f.costoVariable)}</td><td>${n0(f.costoAbsorcion)}</td><td>${n0(f.costoTotal)}</td><td>${n0(f.precio)}</td><td>${n0(f.margen)}</td><td>${n0(f.margenPorHoraMaquina)}</td></tr>`).join('');
+  const d=ModeloJD.diferencial(M,c);
+  $('m-dif').innerHTML='<tr><th>Familia</th><th>Unidades</th><th>Ahorro al fabricar</th><th>Ingreso adicional al comprar</th><th>A favor de fabricar</th><th>Conviene</th></tr>'+
+    d.map(x=>`<tr><td>${x.familia}</td><td>${n0(x.unidades)}</td><td>${n0(x.ahorroFabricar)}</td><td>${n0(x.ingresoAdicionalComprar)}</td><td>${n0(x.diferenciaAFavorDeFabricar)}</td><td><b>${x.conviene}</b></td></tr>`).join('');
+  resolver();
+}
+function resolver(){
+  const m=JSON.parse(JSON.stringify(M)); m.S.shm[0]=parseFloat($('o-pico').value);
+  const o={escenario:$('o-esc').value,stock:$('o-ant').value};
+  const s=ModeloJD.solver(m,o), sp=ModeloJD.precioSombra(m,Object.assign({temporada:0,recurso:'maquina'},o));
+  $('o-res').innerHTML=`<p><b>Contribución total del año: $${n0(s.contribucionTotal)}</b> · precio sombra de la hora de máquina en semanas pico: $${n0(sp.precioSombra)}</p>
+  <div class="tbl"><table><tr><th>Familia</th><th>Fabricar</th><th>Comprar</th><th>Anticipar</th></tr>${s.familias.map(f=>`<tr><td>${f.familia}</td><td>${n0(f.fabricarAno)}</td><td>${n0(f.comprarAno)}</td><td>${n0(f.anticipar.reduce((a,b)=>a+b,0))}</td></tr>`).join('')}</table></div>
+  <div class="tbl"><table><tr><th>Temporada</th><th>Máquina</th><th>Personal</th></tr>${s.temporadas.map(t=>`<tr><td>${t.temporada}</td><td>${n0(t.horasMaquinaUsadas)} de ${n0(t.horasMaquinaDisponibles)} h (${pct(t.usoMaquina)})</td><td>${n0(t.horasPersonalUsadas)} de ${n0(t.horasPersonalDisponibles)} h (${pct(t.usoPersonal)})</td></tr>`).join('')}</table></div>`;
+}
+$('o-btn').onclick=resolver;
+
+// ---------- herramientas que puede usar la IA (todas determinísticas) ----------
+const FAMS=M.F.map(f=>f.n);
+function modeloCon(cambios){
+  const m=JSON.parse(JSON.stringify(M));
+  (cambios||[]).forEach(c=>{ const k=c.parametro, v=+c.valor;
+    if(k==='tiempos_pct'){ /* se aplica en la capacidad: ver fx() */ }
+    else if(k==='parte_maquina_pico') m.S.shm[0]=v;
+    else if(/^precio_venta_/.test(k)){ const i=FAMS.indexOf(k.replace('precio_venta_','')); if(i>=0) m.F[i].pv=v; }
+    else if(/^precio_compra_/.test(k)){ const i=FAMS.indexOf(k.replace('precio_compra_','')); if(i>=0) m.compra[i].pc=v; }
+    else if(k in m.P) m.P[k]=v; });
+  return m;
+}
+const fx=c=>1+((c||[]).filter(x=>x.parametro==='tiempos_pct').reduce((a,x)=>a+(+x.valor||0),0))/100;
+const HERRAMIENTAS={
+  costeo:({familia,cambios})=>{ const c=ModeloJD.costeo(modeloCon(cambios)); const fs=familia?c.familias.filter(f=>f.familia===familia):c.familias;
+    return {tasas:{maquina:c.tasaFijaHoraMaquina,personal:c.tasaFijaHoraPersonal,cuartoPintado:c.tasaCuartoPintado,variableCorte:c.tarifaVariableHora},familias:fs.map(f=>({familia:f.familia,costoVariable:f.costoVariable,detalleVariable:{madera:f.madera,pintura:f.pintura,adhesivo:f.adhesivo,manoObra:f.manoObra,maquina:f.maquinaVar,packaging:f.packaging},costoAbsorcion:f.costoAbsorcion,costoTotal:f.costoTotal,precio:f.precio,margen:f.margen,margenPorHoraMaquina:f.margenPorHoraMaquina,minutosMaquina:f.minOcupacion,minutosManoObra:f.minManoObra}))}; },
+  diferencial:({cambios})=>ModeloJD.diferencial(modeloCon(cambios)),
+  mezcla_optima:({escenario,anticipacion,cambios})=>{ const s=ModeloJD.solver(modeloCon(cambios),{escenario:escenario||'libre',stock:anticipacion||'sí',factorMinutos:fx(cambios)});
+    return {contribucionTotal:s.contribucionTotal,familias:s.familias.map(f=>({familia:f.familia,fabricarAno:f.fabricarAno,comprarAno:f.comprarAno,anticiparAno:f.anticipar.reduce((a,b)=>a+b,0)})),temporadas:s.temporadas}; },
+  precio_sombra:({recurso,temporada,escenario,anticipacion,cambios})=>ModeloJD.precioSombra(modeloCon(cambios),{recurso:recurso||'maquina',temporada:Math.max(0,ModeloJD.SEAS.indexOf(temporada||'Semanas pico')),escenario:escenario||'libre',stock:anticipacion||'sí',factorMinutos:fx(cambios)}),
+  buscar_importados:({texto})=>importados.filter(i=>(i.producto+' '+(i.medidas||'')).toLowerCase().includes(String(texto||'').toLowerCase())).slice(0,15).map(i=>({producto:i.producto,proveedor:i.proveedor,medidas:i.medidas,precio:i.precio,actualizado:i.fecha})),
+  datos_vencidos:()=>vencidos(),
+  requisiciones:()=>requisiciones.filter(r=>r.estado!=='listo').map(r=>({producto:r.producto,unidades:r.cantidad,para:r.fecha,estado:r.estado,prioridad:r.prioridad}))
+};
+
+// ---------- consulta ----------
+const SUG=['¿Qué conviene fabricar y qué comprar?','¿Cuánto cuesta fabricar un 15×15?','¿Qué pasa si la placa sube a $30.000?','Si sólo compramos lo de siempre, ¿alcanza la máquina en las semanas pico?','¿Cuánto vale una hora más de máquina en las semanas pico si no se anticipa?','¿Qué datos hay que actualizar?'];
+$('sugeridas').innerHTML=SUG.map(s=>`<button class="s" data-q="${esc(s)}">${esc(s)}</button>`).join('');
+$('sugeridas').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('q').value=b.dataset.q;preguntar();});
+let historial=[];
+function agregar(rolm,html){ const d=document.createElement('div'); d.className='msg '+(rolm==='user'?'u':'a'); d.innerHTML=html; $('chat').appendChild(d); d.scrollIntoView({block:'end'}); return d; }
+$('q-btn').onclick=preguntar;
+async function preguntar(){
+  const q=$('q').value.trim(); if(!q) return;
+  if(!config.worker){ toast('Falta configurar el servidor de la IA (pestaña Validación).'); return; }
+  $('q').value=''; agregar('user',esc(q)); $('q-btn').disabled=true; $('q-estado').textContent='Calculando…';
+  historial.push({role:'user',content:q});
+  const llamadas=[];
+  try{
+    const token=await usuario.getIdToken();
+    for(let vuelta=0;vuelta<6;vuelta++){
+      const r=await fetch(config.worker.replace(/\/$/,'')+'/consulta',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({messages:historial,fechaDatos:M.fechaDatos})});
+      if(!r.ok) throw new Error('servidor '+r.status);
+      const res=await r.json();
+      historial.push({role:'assistant',content:res.content});
+      const usos=res.content.filter(c=>c.type==='tool_use');
+      if(!usos.length){
+        const texto=res.content.filter(c=>c.type==='text').map(c=>c.text).join('\n');
+        const d=agregar('assistant',esc(texto).replace(/\n/g,'<br>')+(llamadas.length?`<details class="calc"><summary>Ver el cálculo (${llamadas.length})</summary><pre>${esc(JSON.stringify(llamadas,null,1))}</pre></details>`:''));
+        db.collection('costos_consultas').add({fecha:new Date().toISOString(),usuario:usuario.email,pregunta:q,respuesta:texto,calculos:JSON.stringify(llamadas),verificado:'pendiente'}).catch(e=>console.warn(e));
+        break;
+      }
+      const resultados=usos.map(u=>{ let out; try{ out=HERRAMIENTAS[u.name]?HERRAMIENTAS[u.name](u.input||{}):{error:'herramienta desconocida'}; }catch(e){ out={error:String(e)}; }
+        llamadas.push({herramienta:u.name,datos:u.input,resultado:out}); return {type:'tool_result',tool_use_id:u.id,content:JSON.stringify(out)}; });
+      historial.push({role:'user',content:resultados});
+    }
+  }catch(e){ agregar('assistant','No pude completar la consulta ('+esc(e.message)+'). Probá de nuevo en un momento.'); console.error(e); historial=[]; }
+  $('q-btn').disabled=false; $('q-estado').textContent='';
+}
+
+// ---------- validación ----------
+function pintarValidacion(v){
+  $('v-tabla').innerHTML='<tr><th>Fecha</th><th>Pregunta</th><th>Respuesta</th><th>Contraste con la planilla</th></tr>'+v.map(x=>`<tr><td>${esc(x.fecha.slice(0,16).replace('T',' '))}</td><td style="white-space:normal;text-align:left;min-width:180px">${esc(x.pregunta)}</td><td style="white-space:normal;text-align:left;min-width:240px">${esc((x.respuesta||'').slice(0,300))}</td>
+   <td><select data-id="${x.id}">${['pendiente','coincide','no coincide'].map(o=>`<option ${x.verificado===o?'selected':''}>${o}</option>`).join('')}</select></td></tr>`).join('');
+  $('v-tabla').querySelectorAll('select').forEach(s=>s.onchange=()=>db.collection('costos_consultas').doc(s.dataset.id).update({verificado:s.value,verificadoPor:usuario.email}).then(()=>toast('Registrado')));
+}
+$('cfg-guardar').onclick=async()=>{ config.worker=$('cfg-worker').value.trim(); config.admins=$('cfg-admins').value.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
+  if(config.admins.length && !config.admins.includes(usuario.email.toLowerCase())) config.admins.push(usuario.email.toLowerCase());
+  try{ await db.collection('costos_config').doc('general').set({worker:config.worker,admins:config.admins},{merge:true}); toast('Guardado'); }catch(e){ toast('No se pudo guardar'); } };
+
+// ---------- requisición de corte ----------
+const ESTADOS=['pendiente','cortado','pintado','armado','listo'];
+function prodOptions(){
+  const c=ModeloJD.costeo(M);
+  $('c-prod').innerHTML=c.familias.map(f=>`<option value="${f.familia}" data-u="${f.unidadesPorHoja}">Rompecabezas ${f.familia}</option>`).join('')+'<option value="otro">Otro producto…</option>';
+  calcHojas();
+}
+function calcHojas(){
+  const o=$('c-prod').selectedOptions[0]; $('c-otro').hidden=$('c-prod').value!=='otro';
+  const u=+(o&&o.dataset.u||0), q=+$('c-cant').value||0;
+  $('c-hojas').textContent=u&&q?`${Math.ceil(q/u)} hoja(s) de caras y ${Math.ceil(q/u)} de bases (${u} por hoja)`:'';
+}
+$('c-prod').onchange=calcHojas; $('c-cant').oninput=calcHojas;
+$('c-crear').onclick=async()=>{
+  const prod=$('c-prod').value==='otro'?$('c-otro').value.trim():'Rompecabezas '+$('c-prod').value;
+  const cant=parseInt($('c-cant').value), fecha=$('c-fecha').value;
+  if(!prod||!cant||!fecha){ toast('Completá producto, unidades y fecha'); return; }
+  const u=+($('c-prod').selectedOptions[0].dataset.u||0);
+  try{ await db.collection('costos_corte').add({producto:prod,cantidad:cant,hojas:u?Math.ceil(cant/u):null,fecha,prioridad:$('c-prio').value,obs:$('c-obs').value.trim(),estado:'pendiente',creado:new Date().toISOString(),creadoPor:usuario.email,historial:[{estado:'pendiente',por:usuario.email,fecha:new Date().toISOString()}]});
+    toast('Requisición creada'); $('c-cant').value=''; $('c-obs').value=''; calcHojas(); }
+  catch(e){ toast('No se pudo guardar'); console.error(e); }
+};
+function pintarCorte(){
+  const fil=$('c-filtro').value, hoy=hoyISO();
+  const l=requisiciones.filter(r=>fil==='todas'||r.estado!=='listo').sort((a,b)=>(a.prioridad==='urgente'?-1:0)-(b.prioridad==='urgente'?-1:0)||a.fecha.localeCompare(b.fecha));
+  $('c-lista').innerHTML=l.length?l.map(r=>{ const tarde=r.estado!=='listo'&&r.fecha<hoy;
+    return `<div class="req ${tarde?'tarde':''} ${r.estado==='listo'?'listo':''}"><div class="row" style="justify-content:space-between"><b>${esc(r.producto)} · ${n0(r.cantidad)} u.${r.hojas?` · ${r.hojas} hojas`:''}</b>
+    <span class="muted">para el ${esc(r.fecha.split('-').reverse().join('/'))}${r.prioridad==='urgente'?' · <span class="chip warn">urgente</span>':''}${tarde?' · <span class="chip warn">atrasada</span>':''}</span></div>
+    ${r.obs?`<div class="muted">${esc(r.obs)}</div>`:''}
+    <div class="est" data-id="${r.id}">${ESTADOS.map(e=>`<button data-e="${e}" class="${r.estado===e?'on':''}">${e}</button>`).join('')}</div>
+    <div class="muted" style="font-size:12px">${esc((r.historial||[]).slice(-1).map(h=>h.estado+' · '+h.por.split('@')[0]+' · '+h.fecha.slice(0,16).replace('T',' ')).join(''))}</div></div>`;}).join(''):'<p class="muted">No hay requisiciones.</p>';
+  $('c-lista').querySelectorAll('.est button').forEach(b=>b.onclick=async()=>{ const id=b.parentElement.dataset.id, e=b.dataset.e;
+    try{ await db.collection('costos_corte').doc(id).update({estado:e,historial:firebase.firestore.FieldValue.arrayUnion({estado:e,por:usuario.email,fecha:new Date().toISOString()})}); }catch(err){ toast('No se pudo actualizar'); } });
+}
+$('c-filtro').onchange=pintarCorte;
+function pintarPendientes(){
+  const suma={};
+  pedidosPend.forEach(p=>{ Object.keys(p).filter(k=>/^items[A-Z]/.test(k)&&p[k]&&typeof p[k]==='object').forEach(k=>{ Object.entries(p[k]).forEach(([id,q])=>{ q=+q||0; if(!q) return;
+      const s=suma[id]||(suma[id]={id,cant:0,pedidos:0,entrega:null}); s.cant+=q; s.pedidos++; if(p.fechaEntrega&&(!s.entrega||p.fechaEntrega<s.entrega)) s.entrega=p.fechaEntrega; }); }); });
+  const l=Object.values(suma).sort((a,b)=>(a.entrega||'9').localeCompare(b.entrega||'9'));
+  $('c-pend').innerHTML='<tr><th>Producto (código del pedido)</th><th>Unidades</th><th>Pedidos</th><th>Primera entrega</th></tr>'+(l.length?l.map(s=>`<tr data-id="${esc(s.id)}" data-q="${s.cant}" data-f="${esc(s.entrega||'')}" style="cursor:pointer"><td>${esc(s.id)}</td><td>${n0(s.cant)}</td><td>${s.pedidos}</td><td>${esc((s.entrega||'').split('-').reverse().join('/'))}</td></tr>`).join(''):'<tr><td colspan="4" class="muted">No hay pedidos de eventos pendientes.</td></tr>');
+  $('c-pend').querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{ const id=tr.dataset.id; const fam={rompe10:'10×10',importado:null}[id];
+    if(fam){ $('c-prod').value=fam; } else { $('c-prod').value='otro'; $('c-otro').value=id; }
+    $('c-cant').value=tr.dataset.q; if(tr.dataset.f) $('c-fecha').value=tr.dataset.f; calcHojas(); window.scrollTo({top:0,behavior:'smooth'}); });
+}
+</script>
+</body>
+</html>
