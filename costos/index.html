@@ -74,6 +74,12 @@ svg.ch .bar{fill:var(--acc)} svg.ch .bar2{fill:var(--line)} svg.ch .meta{stroke:
 .msg.a ul{margin:6px 0;padding-left:20px}
 .fuentes{font-size:12px;color:var(--muted);margin-top:6px}
 #sugeridas{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}#sugeridas button{white-space:nowrap;font-size:13px}
+.ayuda{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:0 0 12px;font-size:14px}
+.ayuda summary{cursor:pointer;font-weight:600;color:var(--acc)}
+.ayuda ol,.ayuda ul{margin:6px 0 4px 18px;padding:0}.ayuda li{margin:3px 0}
+#letra{background:none;border:1px solid var(--line);border-radius:6px;padding:1px 8px;cursor:pointer;color:var(--ink);font:inherit}
+html.grande body{font-size:18px}html.grande table{font-size:15px}html.grande .muted{font-size:15px}html.grande h2{font-size:19px}
+html.grande button,html.grande input,html.grande select,html.grande textarea{font-size:17px}html.grande .ayuda{font-size:16px}
 .prop{border:1px dashed var(--acc);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
 </style>
 </head>
@@ -91,7 +97,7 @@ svg.ch .bar{fill:var(--acc)} svg.ch .bar2{fill:var(--line)} svg.ch .meta{stroke:
 
 <div id="app" hidden>
 <header>
-  <div class="top"><h1>Costos y Producción</h1><div class="who"><span id="who"></span> · <a href="#" id="salir">Salir</a></div></div>
+  <div class="top"><h1>Costos y Producción</h1><div class="who"><button id="letra" title="Agrandar o achicar la letra">A+</button> <span id="who"></span> · <a href="#" id="salir">Salir</a></div></div>
   <nav id="nav"></nav>
 </header>
 <main>
@@ -114,6 +120,16 @@ svg.ch .bar{fill:var(--acc)} svg.ch .bar2{fill:var(--line)} svg.ch .meta{stroke:
   <section id="t-consultar" hidden>
     <div class="card">
       <h2>Asesor comercial</h2>
+      <details class="ayuda"><summary>¿Cómo se usa?</summary><ol>
+        <li>Escribí la pregunta abajo, como se la harías a una persona. Por ejemplo: «¿Cuánto me cuesta hacer un 15×15?».</li>
+        <li>Tocá <b>Preguntar</b> y esperá unos segundos.</li>
+        <li>Si querés ver de dónde sale cada número, tocá <b>Ver el cálculo</b>.</li>
+        <li>Si no entendés algo, preguntale de nuevo: «explicámelo más simple».</li></ol>
+        <b>Preguntas frecuentes</b><ul>
+        <li><b>¿Puede equivocarse con los números?</b> Los números no los inventa: los calcula el programa del modelo, y en «Ver el cálculo» está la cuenta.</li>
+        <li><b>¿Sabe de otros juguetes?</b> El modelo tiene sólo los rompecabezas. Lo que sepas de otros productos cargalo en la pestaña Memoria.</li>
+        <li><b>¿Qué significa «contribución»?</b> Lo que queda de cada venta después de pagar lo que cuesta hacer o comprar el producto.</li></ul></details>
+      <div class="row"><label>Explicación <select id="q-modo"><option value="simple">Simple</option><option value="tecnica">Con detalle técnico</option></select></label></div>
       <p class="muted">Preguntale como a un gerente comercial: planificar un evento, decidir la mezcla entre producción e importados, ver cómo vienen las ventas o qué pasa si cambia un precio. Los números salen del modelo, de tus pedidos y de la memoria del taller; el contexto económico lo busca en internet y cita la fuente. Cada respuesta muestra de dónde sale.</p>
       <div class="row" id="sugeridas"></div>
       <div id="chat"></div>
@@ -149,6 +165,11 @@ svg.ch .bar{fill:var(--acc)} svg.ch .bar2{fill:var(--line)} svg.ch .meta{stroke:
   <section id="t-precios" hidden>
     <div class="card">
       <h2>Insumos y costos del modelo</h2>
+      <details class="ayuda"><summary>¿Cómo actualizo un precio?</summary><ol>
+        <li>Buscá en la tabla la fila del insumo. Por ejemplo, «Placa entera de MDF 3 mm».</li>
+        <li>En la columna del valor, borrá el número y escribí el precio de la última factura, sin puntos ni signo $. Por ejemplo: 21500.</li>
+        <li>Tocá <b>Guardar cambios</b>, abajo de la tabla. Aparece «Guardado» y la fecha de hoy al lado del precio.</li></ol>
+        Si un precio lleva más de 30 días sin actualizar, aparece un aviso amarillo arriba de la página.</details>
       <p class="muted">Al cambiar un valor y guardar, se recalcula todo el modelo y se registra la fecha. Pasados 30 días sin actualizar, aparece un aviso.</p>
       <div class="tbl"><table id="p-params"></table></div>
       <div class="row" style="margin-top:8px"><button class="b" id="p-guardar">Guardar cambios</button><span class="muted" id="p-estado"></span></div>
@@ -168,6 +189,12 @@ svg.ch .bar{fill:var(--acc)} svg.ch .bar2{fill:var(--line)} svg.ch .meta{stroke:
   <section id="t-corte" hidden>
     <div class="card" id="corte-nueva">
       <h2>Nueva requisición de corte</h2>
+      <details class="ayuda"><summary>¿Cómo pido un corte?</summary><ol>
+        <li><b>Producto:</b> elegí qué hay que cortar. Si no está en la lista, elegí «Otro» y escribilo.</li>
+        <li><b>Unidades:</b> cuántas hacen falta. Al lado aparece cuántas hojas son.</li>
+        <li><b>Para el:</b> el día en que tiene que estar listo. Si es para ya, poné prioridad «urgente».</li>
+        <li>Tocá <b>Crear requisición</b>. Aparece en la lista de abajo.</li></ol>
+        <b>Para marcar el avance</b> (operarios): en la lista de abajo, en cada requisición, tocá el paso que ya se terminó: cortado, pintado, armado o listo. Queda registrado quién lo marcó y cuándo.</details>
       <div class="grid2">
         <div style="display:grid;gap:8px">
           <label>Producto <select id="c-prod"></select></label>
@@ -458,9 +485,17 @@ const REGLAS_MODELO=`REGLAS DEL MODELO (fijas):
 - Para saber a partir de qué valor cambia una decisión (un umbral), no extrapoles: probá valores con el parámetro cambios y mostrá el resultado de cada prueba.
 - En toda simulación (mezcla óptima, precio sombra, cambios) informá también la contribución total del escenario; en el precio sombra es contribucionActual.
 - Los parámetros vigentes (precio de la placa, pintura, sueldos, etc.) los devuelve la herramienta costeo en «parametros»: no los deduzcas.`;
-function textoMemoria(){ return REGLAS_MODELO+'\n\nNOTAS:\n'+memoria.map(x=>`- [${x.tema}] (${(x.fecha||'').slice(0,10)}) ${x.texto}`).join('\n'); }
+const MODO_SIMPLE=`MODO DE EXPLICACIÓN: SIMPLE. Quien pregunta no tiene formación en costos. Empezá con la respuesta en dos o tres oraciones, con palabras de todos los días, como se la explicarías a alguien del taller. Evitá los términos técnicos (contribución, precio sombra, costeo por absorción, análisis diferencial, escenario); si tenés que usar uno, explicalo entre paréntesis en pocas palabras. Pocas cifras: las que responden la pregunta. Después, si hace falta, un detalle breve. No cambia ninguna regla de números.`;
+const MODO_TECNICO=`MODO DE EXPLICACIÓN: CON DETALLE TÉCNICO. Podés usar los términos del modelo y mostrar las cifras de cada paso.`;
+function modoExplicacion(){ return ($('q-modo')&&$('q-modo').value==='tecnica')?MODO_TECNICO:MODO_SIMPLE; }
+function textoMemoria(){ return modoExplicacion()+'\n\n'+REGLAS_MODELO+'\n\nNOTAS:\n'+memoria.map(x=>`- [${x.tema}] (${(x.fecha||'').slice(0,10)}) ${x.texto}`).join('\n'); }
 function agregar(rolm,html){ const d=document.createElement('div'); d.className='msg '+(rolm==='user'?'u':'a'); d.innerHTML=html; $('chat').appendChild(d); d.scrollIntoView({block:'end'}); return d; }
 $('q-btn').onclick=preguntar;
+const pref=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } };
+if(pref('cp-letra')==='grande') document.documentElement.classList.add('grande');
+$('letra').onclick=()=>{ const g=document.documentElement.classList.toggle('grande'); pref('cp-letra',g?'grande':'normal'); $('letra').textContent=g?'A−':'A+'; };
+if(document.documentElement.classList.contains('grande')) $('letra').textContent='A−';
+if(pref('cp-modo')) $('q-modo').value=pref('cp-modo'); $('q-modo').onchange=()=>pref('cp-modo',$('q-modo').value);
 async function preguntar(){
   const q=$('q').value.trim(); if(!q) return; propuestas=[];
   if(!config.worker){ toast('Falta configurar el servidor de la IA (pestaña Validación).'); return; }
