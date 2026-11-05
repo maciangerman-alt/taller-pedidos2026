@@ -47,6 +47,10 @@ th{color:var(--muted);font-weight:600}
 .msg.a{background:var(--card);border:1px solid var(--line)}
 details.calc{font-size:12px;color:var(--muted);margin-top:6px}
 details.calc pre{white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto}
+details.calc .paso{margin:8px 0;padding:8px;border-left:3px solid var(--line,#ddd);color:var(--ink)}
+details.calc .eq{margin:4px 0;line-height:1.5}
+details.calc .sup{font-style:italic;color:var(--muted);margin:2px 0}
+details.tec{margin-top:8px}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:14px}
 .est{display:flex;gap:4px;flex-wrap:wrap}
 .est button{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;cursor:pointer}
@@ -389,7 +393,7 @@ const fx=c=>1+((c||[]).filter(x=>x.parametro==='tiempos_pct').reduce((a,x)=>a+(+
 const HERRAMIENTAS={
   costeo:({familia,cambios})=>{ const c=ModeloJD.costeo(modeloCon(cambios)); const fs=familia?c.familias.filter(f=>f.familia===familia):c.familias;
     const mm=modeloCon(cambios); const par={}; [...EDITABLES,...PRECIOS_VENTA,...COMPRA].forEach(([k,l,u])=>{ par[l]={valor:(k.startsWith('pv')?mm.F[+k.slice(2)].pv:k.startsWith('pc')?mm.compra[+k.slice(2)].pc:mm.P[k]),unidad:u,actualizado:fechas[k]||null}; });
-    return {parametros:par,tasas:{maquina:c.tasaFijaHoraMaquina,personal:c.tasaFijaHoraPersonal,cuartoPintado:c.tasaCuartoPintado,variableCorte:c.tarifaVariableHora},familias:fs.map(f=>({familia:f.familia,costoVariable:f.costoVariable,detalleVariable:{madera:f.madera,pintura:f.pintura,adhesivo:f.adhesivo,manoObra:f.manoObra,maquina:f.maquinaVar,packaging:f.packaging},costoAbsorcion:f.costoAbsorcion,costoTotal:f.costoTotal,precio:f.precio,margen:f.margen,margenPorHoraMaquina:f.margenPorHoraMaquina,minutosMaquina:f.minOcupacion,minutosManoObra:f.minManoObra}))}; },
+    return {parametros:par,tasas:{maquina:c.tasaFijaHoraMaquina,personal:c.tasaFijaHoraPersonal,cuartoPintado:c.tasaCuartoPintado,variableCorte:c.tarifaVariableHora},familias:fs.map(f=>({familia:f.familia,costoVariable:f.costoVariable,detalleVariable:{madera:f.madera,pintura:f.pintura,adhesivo:f.adhesivo,manoObra:f.manoObra,maquina:f.maquinaVar,packaging:f.packaging},fijosMaquina:f.maqFija,fijosPersonal:f.persFijo,cuartoPintado:f.cuarto,costoAbsorcion:f.costoAbsorcion,estructura:f.estructura,costoTotal:f.costoTotal,precio:f.precio,margen:f.margen,margenPorHoraMaquina:f.margenPorHoraMaquina,minutosMaquina:f.minOcupacion,minutosManoObra:f.minManoObra}))}; },
   diferencial:({cambios})=>({criterio:'Conviene fabricar si diferenciaAFavorDeFabricar > 0. Incluye el ahorro de costos (costoComprar − costoFabricar) y la diferencia de ingresos por el precio de venta del importado (ingresoAdicionalComprar). No decidir por costos solos.',familias:ModeloJD.diferencial(modeloCon(cambios))}),
   mezcla_optima:({escenario,anticipacion,cambios})=>{ const s=ModeloJD.solver(modeloCon(cambios),{escenario:escenario||'libre',stock:anticipacion||'sí',factorMinutos:fx(cambios)});
     return {contribucionTotal:s.contribucionTotal,familias:s.familias.map(f=>({familia:f.familia,fabricarAno:f.fabricarAno,comprarAno:f.comprarAno,anticiparAno:f.anticipar.reduce((a,b)=>a+b,0)})),temporadas:s.temporadas}; },
@@ -415,9 +419,44 @@ function md(t){ let h=esc(t); h=h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(
     if(/^\|.*\|$/.test(t)){ if(inl){out+='</ul>';inl=false;} if(/^\|[\s:|-]+\|$/.test(t)) return; (tb=tb||[]).push(t.slice(1,-1).split('|').map(c=>c.trim())); return; }
     cierraT(); const m=l.match(/^\s*[-*•] (.+)/); if(m){ if(!inl){out+='<ul>';inl=true;} out+='<li>'+m[1]+'</li>'; } else { if(inl){out+='</ul>';inl=false;} out+=l+'<br>'; } });
   cierraT(); if(inl) out+='</ul>'; return out; }
+
+// ---------- «Ver el cálculo»: las cuentas escritas, no el código ----------
+const $p=v=>(v<-0.5?'−$':'$')+n0(Math.abs(v)), $c=v=>'$'+(+v).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}), u0=v=>n0(v)+' u.';
+const NOMBRE_H={costeo:'Costo por unidad',diferencial:'Fabricar o comprar (análisis diferencial, por año)',mezcla_optima:'Mezcla óptima (programación lineal)',precio_sombra:'Valor de una hora más (precio sombra)',planificar_evento:'Plan del evento',buscar_importados:'Importados encontrados',datos_vencidos:'Datos sin actualizar',requisiciones:'Requisiciones de corte',ventas_periodo:'Ventas del período',ventas_por_mes:'Ventas por mes',proponer_memoria:'Propuesta para la memoria'};
+function supuestos(d){ const x=[]; if(d.escenario) x.push('escenario: '+(d.escenario==='actual'?'sólo lo que hoy se compra':d.escenario==='libre'?'se puede comprar toda la demanda':d.escenario));
+  if(d.anticipacion) x.push('anticipar producción: '+d.anticipacion); if(d.temporada) x.push('temporada: '+d.temporada); if(d.recurso) x.push('recurso: '+(d.recurso==='maquina'?'máquina':'personal'));
+  (d.cambios||[]).forEach(c=>x.push(c.parametro==='tiempos_pct'?`tiempos +${n2(c.valor)}%`:c.parametro==='parte_maquina_pico'?`máquina para rompecabezas en semanas pico: ${pct(c.valor)}`:`${c.parametro} = ${n2(c.valor)}`));
+  return x.length?`<div class="sup">Supuestos: ${esc(x.join(' · '))}${(d.cambios||[]).length?' (simulación)':''}</div>`:''; }
+function tabla(cab,filas){ return '<div class="tbl"><table><tr>'+cab.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr>'+filas.map(r=>'<tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr>').join('')+'</table></div>'; }
+function cuenta(h,d,r){
+  if(r&&r.error) return `<div class="eq">Error: ${esc(r.error)}</div>`;
+  if(h==='costeo') return (r.familias||[]).map(f=>{ const v=f.detalleVariable;
+    return `<div class="eq"><b>${esc(f.familia)}</b><br>
+Costo variable = madera ${$c(v.madera)} + pintura ${$c(v.pintura)} + adhesivo ${$c(v.adhesivo)} + mano de obra ${$c(v.manoObra)} + máquina ${$c(v.maquina)} + packaging ${$c(v.packaging)} = <b>${$c(f.costoVariable)}</b><br>
+Costo por absorción = costo variable ${$c(f.costoVariable)} + fijos de máquina ${$c(f.fijosMaquina)} + fijos de personal ${$c(f.fijosPersonal)} + cuarto de pintado ${$c(f.cuartoPintado)} = <b>${$c(f.costoAbsorcion)}</b><br>
+Costo total = absorción ${$c(f.costoAbsorcion)} + estructura ${$c(f.estructura)} = <b>${$c(f.costoTotal)}</b><br>
+Margen de contribución = precio ${$c(f.precio)} − costo variable ${$c(f.costoVariable)} = <b>${$c(f.margen)}</b><br>
+Margen por hora de máquina = ${$c(f.margen)} ÷ (${n2(f.minutosMaquina)} min ÷ 60) = <b>${$p(f.margenPorHoraMaquina)}</b></div>`; }).join('')
+    +`<div class="eq">Tasas por hora: máquina ${$c(r.tasas.maquina)} · personal ${$c(r.tasas.personal)} · cuarto de pintado ${$c(r.tasas.cuartoPintado)}</div>`;
+  if(h==='diferencial') return (r.familias||[]).map(f=>`<div class="eq"><b>${esc(f.familia)}</b> (${u0(f.unidades)} por año)<br>
+Ahorro por fabricar = comprar ${$p(f.costoComprar)} − fabricar ${$p(f.costoFabricar)} = ${$p(f.ahorroFabricar)}<br>
+Diferencia de ingresos si se compra = ${$p(f.ingresoAdicionalComprar)}<br>
+Diferencia a favor de fabricar = ${$p(f.ahorroFabricar)} − ${$p(f.ingresoAdicionalComprar)} = <b>${$p(f.diferenciaAFavorDeFabricar)}</b> → <b>${esc(f.conviene)}</b></div>`).join('');
+  if(h==='mezcla_optima') return tabla(['Familia','Fabricar','Comprar','Anticipar'],(r.familias||[]).map(f=>[f.familia,n0(f.fabricarAno),n0(f.comprarAno),n0(f.anticiparAno)]))
+    +(r.temporadas||[]).map(t=>`<div class="eq">${esc(t.temporada)}: máquina ${n0(t.horasMaquinaUsadas)} h ÷ ${n0(t.horasMaquinaDisponibles)} h = ${pct(t.usoMaquina)} · personal ${n0(t.horasPersonalUsadas)} h ÷ ${n0(t.horasPersonalDisponibles)} h = ${pct(t.usoPersonal)}</div>`).join('')
+    +`<div class="eq">Contribución total del año = <b>${$p(r.contribucionTotal)}</b></div>`;
+  if(h==='precio_sombra') return `<div class="eq">Contribución con una hora más ${$p(r.contribucionConUnaHoraMas)} − contribución actual ${$p(r.contribucionActual)} = <b>${$p(r.precioSombra)}</b> por hora</div>`;
+  if(h==='planificar_evento') return tabla(['Familia','Meta','Fabricar antes','Fabricar en la semana','Comprar','Sin cubrir','Placas','Contribución'],(r.familias||[]).map(f=>[f.familia,n0(f.meta),n0(f.fabricarAntes),n0(f.fabricarSemanaEvento),n0(f.comprar),n0(f.sinCubrir),n2(f.placasAprox),$p(f.contribucion)]))
+    +Object.entries(r.horas||{}).map(([k,v])=>`<div class="eq">${({maquinaEvento:'Máquina, semana del evento',maquinaAntes:'Máquina, semanas previas',personalEvento:'Personal, semana del evento',personalAntes:'Personal, semanas previas'})[k]||k}: ${n0(v.usadas)} h de ${n0(v.disponibles)} h</div>`).join('')
+    +`<div class="eq">Contribución total = suma de las familias = <b>${$p(r.contribucionTotal)}</b></div>`;
+  if(h==='buscar_importados') return Array.isArray(r)&&r.length?tabla(['Producto','Proveedor','Precio','Actualizado'],r.map(i=>[i.producto,i.proveedor,$p(i.precio),i.actualizado||''])):'<div class="eq">Sin resultados.</div>';
+  return `<div class="eq">${esc(typeof r==='object'?Object.entries(r).filter(([k,v])=>typeof v!=='object').map(([k,v])=>k+': '+(typeof v==='number'?n2(v):v)).join(' · ')||'Ver datos técnicos.':String(r))}</div>`;
+}
+function cuentas(ll){ return ll.map((l,i)=>`<div class="paso"><b>${i+1}. ${esc(NOMBRE_H[l.herramienta]||l.herramienta)}</b>${supuestos(l.datos||{})}${cuenta(l.herramienta,l.datos||{},l.resultado||{})}</div>`).join(''); }
 const REGLAS_MODELO=`REGLAS DEL MODELO (fijas):
 - Fabricar o comprar se decide con diferenciaAFavorDeFabricar de la herramienta diferencial, que suma el ahorro de costos y la diferencia de precio de venta entre el producto propio y el importado. Nunca concluyas comparando sólo costos: en el 15×15 el propio se vende a un precio mayor que el importado, y en el 9×14 y los 25×25 a uno menor.
 - Para saber a partir de qué valor cambia una decisión (un umbral), no extrapoles: probá valores con el parámetro cambios y mostrá el resultado de cada prueba.
+- En toda simulación (mezcla óptima, precio sombra, cambios) informá también la contribución total del escenario; en el precio sombra es contribucionActual.
 - Los parámetros vigentes (precio de la placa, pintura, sueldos, etc.) los devuelve la herramienta costeo en «parametros»: no los deduzcas.`;
 function textoMemoria(){ return REGLAS_MODELO+'\n\nNOTAS:\n'+memoria.map(x=>`- [${x.tema}] (${(x.fecha||'').slice(0,10)}) ${x.texto}`).join('\n'); }
 function agregar(rolm,html){ const d=document.createElement('div'); d.className='msg '+(rolm==='user'?'u':'a'); d.innerHTML=html; $('chat').appendChild(d); d.scrollIntoView({block:'end'}); return d; }
@@ -441,7 +480,7 @@ async function preguntar(){
         const texto=res.content.filter(c=>c.type==='text').map(c=>c.text).join('');
         const citas=[]; res.content.forEach(c=>(c.citations||[]).forEach(ci=>{ if(ci.url&&!citas.some(x=>x.url===ci.url)) citas.push({url:ci.url,title:ci.title||ci.url}); }));
         const busq=res.content.filter(c=>c.type==='server_tool_use').length;
-        const d=agregar('assistant',md(texto)+(citas.length?`<div class="fuentes">Fuentes en internet: ${citas.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>`).join(' · ')}</div>`:'')+(llamadas.length?`<details class="calc"><summary>Ver el cálculo (${llamadas.length})</summary><pre>${esc(JSON.stringify(llamadas,null,1))}</pre></details>`:''));
+        const d=agregar('assistant',md(texto)+(citas.length?`<div class="fuentes">Fuentes en internet: ${citas.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>`).join(' · ')}</div>`:'')+(llamadas.length?`<details class="calc"><summary>Ver el cálculo (${llamadas.length})</summary>${cuentas(llamadas)}<details class="tec"><summary>Datos técnicos (para auditar)</summary><pre>${esc(JSON.stringify(llamadas,null,1))}</pre></details></details>`:''));
         propuestas.splice(0).forEach(pr=>{ const b=document.createElement('div'); b.className='prop'; b.innerHTML=`<b>¿Guardo esto en la memoria?</b><br>[${esc(pr.tema)}] ${esc(pr.texto)}<div class="row" style="margin-top:6px"><button class="s">Guardar</button><button class="s">No</button></div>`;
           const [ok,no]=b.querySelectorAll('button'); ok.onclick=async()=>{ await guardarMemoria(pr.tema,pr.texto,'asesor'); b.innerHTML='Guardado en la memoria.'; }; no.onclick=()=>b.remove(); d.appendChild(b); });
         db.collection('costos_consultas').add({fecha:new Date().toISOString(),usuario:usuario.email,pregunta:q,respuesta:texto,calculos:JSON.stringify(llamadas),verificado:'pendiente'}).catch(e=>console.warn(e));

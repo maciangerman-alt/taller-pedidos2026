@@ -167,7 +167,8 @@
     const b = solver(m, opts).contribucionTotal;
     const e = [0, 0, 0, 0]; e[k] = 1;
     const o2 = Object.assign({}, opts, rec === 'maquina' ? { extraHorasMaquina: e } : { extraHorasPersonal: e });
-    return { temporada: SEAS[k], recurso: rec, precioSombra: solver(m, o2).contribucionTotal - b };
+    const b1 = solver(m, o2).contribucionTotal;
+    return { temporada: SEAS[k], recurso: rec, contribucionActual: b, contribucionConUnaHoraMas: b1, precioSombra: b1 - b };
   }
 
   // Planificador de un evento: cuántos rompecabezas fabricar antes, fabricar en la semana del evento y comprar,
