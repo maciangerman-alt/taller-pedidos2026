@@ -495,8 +495,9 @@ async function preguntar(){
 }
 
 // ---------- validación ----------
+const plano=t=>String(t||'').replace(/\*\*|`|^#{1,4} /gm,'').replace(/^\|[\s:|-]+\|$/gm,'').replace(/\|/g,' ').replace(/\s+/g,' ').trim();
 function pintarValidacion(v){
-  $('v-tabla').innerHTML='<tr><th>Fecha</th><th>Pregunta</th><th>Respuesta</th><th>Contraste con la planilla</th></tr>'+v.map(x=>`<tr><td>${esc(x.fecha.slice(0,16).replace('T',' '))}</td><td style="white-space:normal;text-align:left;min-width:180px">${esc(x.pregunta)}</td><td style="white-space:normal;text-align:left;min-width:240px">${esc((x.respuesta||'').slice(0,300))}</td>
+  $('v-tabla').innerHTML='<tr><th>Fecha</th><th>Pregunta</th><th>Respuesta</th><th>Contraste con la planilla</th></tr>'+v.map(x=>`<tr><td>${esc(new Date(x.fecha).toLocaleString('es-AR',{dateStyle:'short',timeStyle:'short'}))}</td><td style="white-space:normal;text-align:left;min-width:180px">${esc(x.pregunta)}</td><td style="white-space:normal;text-align:left;min-width:240px"><details><summary>${esc(plano(x.respuesta).slice(0,220))}…</summary><div style="margin-top:6px">${md(x.respuesta||'')}</div></details></td>
    <td><select data-id="${x.id}">${['pendiente','coincide','no coincide'].map(o=>`<option ${x.verificado===o?'selected':''}>${o}</option>`).join('')}</select></td></tr>`).join('');
   $('v-tabla').querySelectorAll('select').forEach(s=>s.onchange=()=>db.collection('costos_consultas').doc(s.dataset.id).update({verificado:s.value,verificadoPor:usuario.email}).then(()=>toast('Registrado')));
 }
