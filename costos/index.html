@@ -388,8 +388,9 @@ function modeloCon(cambios){
 const fx=c=>1+((c||[]).filter(x=>x.parametro==='tiempos_pct').reduce((a,x)=>a+(+x.valor||0),0))/100;
 const HERRAMIENTAS={
   costeo:({familia,cambios})=>{ const c=ModeloJD.costeo(modeloCon(cambios)); const fs=familia?c.familias.filter(f=>f.familia===familia):c.familias;
-    return {tasas:{maquina:c.tasaFijaHoraMaquina,personal:c.tasaFijaHoraPersonal,cuartoPintado:c.tasaCuartoPintado,variableCorte:c.tarifaVariableHora},familias:fs.map(f=>({familia:f.familia,costoVariable:f.costoVariable,detalleVariable:{madera:f.madera,pintura:f.pintura,adhesivo:f.adhesivo,manoObra:f.manoObra,maquina:f.maquinaVar,packaging:f.packaging},costoAbsorcion:f.costoAbsorcion,costoTotal:f.costoTotal,precio:f.precio,margen:f.margen,margenPorHoraMaquina:f.margenPorHoraMaquina,minutosMaquina:f.minOcupacion,minutosManoObra:f.minManoObra}))}; },
-  diferencial:({cambios})=>ModeloJD.diferencial(modeloCon(cambios)),
+    const mm=modeloCon(cambios); const par={}; [...EDITABLES,...PRECIOS_VENTA,...COMPRA].forEach(([k,l,u])=>{ par[l]={valor:(k.startsWith('pv')?mm.F[+k.slice(2)].pv:k.startsWith('pc')?mm.compra[+k.slice(2)].pc:mm.P[k]),unidad:u,actualizado:fechas[k]||null}; });
+    return {parametros:par,tasas:{maquina:c.tasaFijaHoraMaquina,personal:c.tasaFijaHoraPersonal,cuartoPintado:c.tasaCuartoPintado,variableCorte:c.tarifaVariableHora},familias:fs.map(f=>({familia:f.familia,costoVariable:f.costoVariable,detalleVariable:{madera:f.madera,pintura:f.pintura,adhesivo:f.adhesivo,manoObra:f.manoObra,maquina:f.maquinaVar,packaging:f.packaging},costoAbsorcion:f.costoAbsorcion,costoTotal:f.costoTotal,precio:f.precio,margen:f.margen,margenPorHoraMaquina:f.margenPorHoraMaquina,minutosMaquina:f.minOcupacion,minutosManoObra:f.minManoObra}))}; },
+  diferencial:({cambios})=>({criterio:'Conviene fabricar si diferenciaAFavorDeFabricar > 0. Incluye el ahorro de costos (costoComprar − costoFabricar) y la diferencia de ingresos por el precio de venta del importado (ingresoAdicionalComprar). No decidir por costos solos.',familias:ModeloJD.diferencial(modeloCon(cambios))}),
   mezcla_optima:({escenario,anticipacion,cambios})=>{ const s=ModeloJD.solver(modeloCon(cambios),{escenario:escenario||'libre',stock:anticipacion||'sí',factorMinutos:fx(cambios)});
     return {contribucionTotal:s.contribucionTotal,familias:s.familias.map(f=>({familia:f.familia,fabricarAno:f.fabricarAno,comprarAno:f.comprarAno,anticiparAno:f.anticipar.reduce((a,b)=>a+b,0)})),temporadas:s.temporadas}; },
   precio_sombra:({recurso,temporada,escenario,anticipacion,cambios})=>ModeloJD.precioSombra(modeloCon(cambios),{recurso:recurso||'maquina',temporada:Math.max(0,ModeloJD.SEAS.indexOf(temporada||'Semanas pico')),escenario:escenario||'libre',stock:anticipacion||'sí',factorMinutos:fx(cambios)}),
@@ -408,8 +409,17 @@ $('sugeridas').innerHTML=SUG.map(s=>`<button class="s" data-q="${esc(s)}">${esc(
 $('sugeridas').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('q').value=b.dataset.q;preguntar();});
 let historial=[], propuestas=[];
 function md(t){ let h=esc(t); h=h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,4} (.+)$/gm,'<b>$1</b>');
-  const L=h.split('\n'); let out='', inl=false; L.forEach(l=>{ const m=l.match(/^\s*[-*•] (.+)/); if(m){ if(!inl){out+='<ul>';inl=true;} out+='<li>'+m[1]+'</li>'; } else { if(inl){out+='</ul>';inl=false;} out+=l+'<br>'; } }); if(inl) out+='</ul>'; return out; }
-function textoMemoria(){ return memoria.map(x=>`- [${x.tema}] (${(x.fecha||'').slice(0,10)}) ${x.texto}`).join('\n'); }
+  const L=h.split('\n'); let out='', inl=false, tb=null;
+  const cierraT=()=>{ if(tb){ out+='<div class="tbl"><table>'+tb.map((r,i)=>'<tr>'+r.map(c=>i===0?`<th>${c}</th>`:`<td>${c}</td>`).join('')+'</tr>').join('')+'</table></div>'; tb=null; } };
+  L.forEach(l=>{ const t=l.trim();
+    if(/^\|.*\|$/.test(t)){ if(inl){out+='</ul>';inl=false;} if(/^\|[\s:|-]+\|$/.test(t)) return; (tb=tb||[]).push(t.slice(1,-1).split('|').map(c=>c.trim())); return; }
+    cierraT(); const m=l.match(/^\s*[-*•] (.+)/); if(m){ if(!inl){out+='<ul>';inl=true;} out+='<li>'+m[1]+'</li>'; } else { if(inl){out+='</ul>';inl=false;} out+=l+'<br>'; } });
+  cierraT(); if(inl) out+='</ul>'; return out; }
+const REGLAS_MODELO=`REGLAS DEL MODELO (fijas):
+- Fabricar o comprar se decide con diferenciaAFavorDeFabricar de la herramienta diferencial, que suma el ahorro de costos y la diferencia de precio de venta entre el producto propio y el importado. Nunca concluyas comparando sólo costos: en el 15×15 el propio se vende a un precio mayor que el importado, y en el 9×14 y los 25×25 a uno menor.
+- Para saber a partir de qué valor cambia una decisión (un umbral), no extrapoles: probá valores con el parámetro cambios y mostrá el resultado de cada prueba.
+- Los parámetros vigentes (precio de la placa, pintura, sueldos, etc.) los devuelve la herramienta costeo en «parametros»: no los deduzcas.`;
+function textoMemoria(){ return REGLAS_MODELO+'\n\nNOTAS:\n'+memoria.map(x=>`- [${x.tema}] (${(x.fecha||'').slice(0,10)}) ${x.texto}`).join('\n'); }
 function agregar(rolm,html){ const d=document.createElement('div'); d.className='msg '+(rolm==='user'?'u':'a'); d.innerHTML=html; $('chat').appendChild(d); d.scrollIntoView({block:'end'}); return d; }
 $('q-btn').onclick=preguntar;
 async function preguntar(){
