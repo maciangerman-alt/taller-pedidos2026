@@ -170,6 +170,51 @@
     return { temporada: SEAS[k], recurso: rec, precioSombra: solver(m, o2).contribucionTotal - b };
   }
 
-  const api = { base, costeo, diferencial, solver, precioSombra, SEAS };
+  // Planificador de un evento: cuántos rompecabezas fabricar antes, fabricar en la semana del evento y comprar,
+  // para una meta de unidades. Capacidad semanal tomada de la hoja Capacidad (semana pico y semana de temporada alta).
+  function planEvento(m, opts) {
+    opts = opts || {};
+    const lp = root.solver || (typeof require === 'function' ? require('javascript-lp-solver') : null);
+    const c = costeo(m), P = m.P, S = m.S, NF = m.F.length;
+    const total = +opts.unidades || 0;
+    let rep = opts.reparto;
+    if (!rep) { const s = c.familias.reduce((a, f) => a + f.demandaAnual, 0); rep = {}; c.familias.forEach(f => rep[f.familia] = f.demandaAnual / s); }
+    const sr = Object.values(rep).reduce((a, b) => a + (+b || 0), 0) || 1;
+    const D = c.familias.map(f => total * (+rep[f.familia] || 0) / sr);
+    const semAntes = Math.max(0, opts.semanasAntes == null ? 4 : +opts.semanasAntes), semEv = Math.max(1, +opts.semanasEvento || 1);
+    const semPico = S.jornadas[0] / 5.5 || 4, semAlta = S.jornadas[1] / 5.5;
+    const pMaqEv = opts.parteMaquinaEvento != null ? +opts.parteMaquinaEvento : S.shm[0];
+    const pMaqAn = opts.parteMaquinaAntes != null ? +opts.parteMaquinaAntes : S.shm[1];
+    const HMe = c.horasTurno[0] / (S.jornadas[0] / 5) * semEv * pMaqEv;            // 5 jornadas por semana pico
+    const HMa = c.horasTurno[1] / semAlta * semAntes * pMaqAn;
+    const HPe = c.horasPersonal[0] / (S.jornadas[0] / 5) * semEv * S.shp[0];
+    const HPa = c.horasPersonal[1] / semAlta * semAntes * S.shp[1];
+    const esc = opts.escenario || 'libre';
+    const model = { optimize: 'z', opType: 'max', constraints: { me: { max: HMe }, ma: { max: HMa }, pe: { max: HPe }, pa: { max: HPa } }, variables: {} };
+    c.familias.forEach((f, i) => {
+      const mm = (P.modo === 'corte' ? f.minCorte : f.minOcupacion) / 60, mp = f.minManoObra / 60;
+      model.constraints['d' + i] = { max: D[i] };
+      const cmax = esc === 'libre' ? D[i] : esc === 'sin compras' ? 0 : (i === 2 ? D[i] * m.imp15 / f.demandaAnual : 0);
+      model.constraints['c' + i] = { max: cmax };
+      model.variables['Fe' + i] = { z: f.margen, ['d' + i]: 1, me: mm, pe: mp };
+      model.variables['Fa' + i] = { z: f.margen - 1, ['d' + i]: 1, ma: mm, pa: mp };
+      model.variables['C' + i] = { z: f.contribucionCompra, ['d' + i]: 1, ['c' + i]: 1 };
+    });
+    const r = lp.Solve(model), g = v => r[v] || 0;
+    const fam = c.familias.map((f, i) => {
+      const fe = g('Fe' + i), fa = g('Fa' + i), co = g('C' + i), hojas = 2 * Math.ceil((fe + fa) / f.unidadesPorHoja);
+      return { familia: f.familia, meta: D[i], fabricarAntes: fa, fabricarSemanaEvento: fe, comprar: co, sinCubrir: Math.max(0, D[i] - fe - fa - co),
+        hojasCarasYBases: hojas, placasAprox: hojas / P.hojas, contribucion: (fe + fa) * f.margen + co * f.contribucionCompra };
+    });
+    const uso = (k, list) => c.familias.reduce((s, f, i) => s + g(k + i) * list(f), 0);
+    return { factible: !!r.feasible, unidadesMeta: total, escenario: esc, semanasAntes: semAntes, semanasEvento: semEv,
+      contribucionTotal: fam.reduce((s, x) => s + x.contribucion, 0), familias: fam,
+      horas: { maquinaEvento: { usadas: uso('Fe', f => (P.modo === 'corte' ? f.minCorte : f.minOcupacion) / 60), disponibles: HMe },
+        maquinaAntes: { usadas: uso('Fa', f => (P.modo === 'corte' ? f.minCorte : f.minOcupacion) / 60), disponibles: HMa },
+        personalEvento: { usadas: uso('Fe', f => f.minManoObra / 60), disponibles: HPe }, personalAntes: { usadas: uso('Fa', f => f.minManoObra / 60), disponibles: HPa } },
+      nota: 'Sólo rompecabezas. Capacidad por semana con la parte máxima declarada; no incluye costo de mantener stock.' };
+  }
+
+  const api = { base, costeo, diferencial, solver, precioSombra, planEvento, SEAS };
   if (typeof module === 'object' && module.exports) module.exports = api; else root.ModeloJD = api;
 })(typeof window !== 'undefined' ? window : globalThis);

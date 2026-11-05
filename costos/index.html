@@ -58,6 +58,19 @@ details.calc pre{white-space:pre-wrap;word-break:break-word;max-height:260px;ove
 [hidden]{display:none!important}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+.kpi .l{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted)}
+.kpi.alerta .v{color:var(--warn)}
+svg.ch{width:100%;height:auto;display:block}
+svg.ch text{fill:var(--muted);font-size:11px;font-family:system-ui,sans-serif}
+svg.ch .bar{fill:var(--acc)} svg.ch .bar2{fill:var(--line)} svg.ch .meta{stroke:var(--warn);stroke-width:2} svg.ch .ax{stroke:var(--line)}
+.msg.a ul{margin:6px 0;padding-left:20px}
+.fuentes{font-size:12px;color:var(--muted);margin-top:6px}
+#sugeridas{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}#sugeridas button{white-space:nowrap;font-size:13px}
+.prop{border:1px dashed var(--acc);border-radius:8px;padding:8px 10px;margin-top:8px;font-size:13px}
 </style>
 </head>
 <body>
@@ -80,11 +93,24 @@ details.calc pre{white-space:pre-wrap;word-break:break-word;max-height:260px;ove
 <main>
   <div id="avisos-banner"></div>
 
-  <!-- CONSULTAR -->
-  <section id="t-consultar">
+  <!-- TABLERO -->
+  <section id="t-tablero" hidden>
+    <div class="kpis" id="k-kpis"></div>
+    <div class="grid2">
+      <div class="card"><h2>Ventas por mes y meta</h2><div id="k-mes"></div></div>
+      <div class="card"><h2>Ventas de las últimas 12 semanas</h2><div id="k-sem"></div></div>
+      <div class="card"><h2>Pedidos abiertos por estado</h2><div id="k-est"></div></div>
+      <div class="card"><h2>Margen por hora de máquina</h2><p class="muted">Rompecabezas fabricados, en pesos por hora de máquina.</p><div id="k-mg"></div></div>
+      <div class="card"><h2>Producción</h2><div id="k-prod"></div></div>
+      <div class="card"><h2>Decisión de fabricar o comprar</h2><div id="k-dec"></div></div>
+    </div>
+  </section>
+
+  <!-- ASESOR -->
+  <section id="t-consultar" hidden>
     <div class="card">
-      <h2>Consultar el modelo</h2>
-      <p class="muted">Preguntá en palabras. La IA elige qué cálculo hacer; los números los calcula el modelo de costeo, no la IA. Cada respuesta muestra el cálculo que la respalda.</p>
+      <h2>Asesor comercial</h2>
+      <p class="muted">Preguntale como a un gerente comercial: planificar un evento, decidir la mezcla entre producción e importados, ver cómo vienen las ventas o qué pasa si cambia un precio. Los números salen del modelo, de tus pedidos y de la memoria del taller; el contexto económico lo busca en internet y cita la fuente. Cada respuesta muestra de dónde sale.</p>
       <div class="row" id="sugeridas"></div>
       <div id="chat"></div>
       <div class="row" style="margin-top:8px"><textarea id="q" placeholder="Ej.: ¿Conviene fabricar o comprar el 9×14? ¿Qué pasa si la placa sube a $30.000?"></textarea></div>
@@ -161,6 +187,20 @@ details.calc pre{white-space:pre-wrap;word-break:break-word;max-height:260px;ove
     </div>
   </section>
 
+  <!-- MEMORIA -->
+  <section id="t-memoria" hidden>
+    <div class="card">
+      <h2>Memoria del taller</h2>
+      <p class="muted">Todo lo que el asesor tiene que saber y no está en el modelo: costos y márgenes de otros productos, proveedores, decisiones tomadas, lo que funcionó y lo que no en cada evento, clientes, metas. El asesor la lee en cada consulta. También te propone guardar cosas que surgen en la charla.</p>
+      <div style="display:grid;gap:8px">
+        <input id="mem-tema" placeholder="Tema (ej.: Día del Niño 2026, Labubu, proveedor de MDF)">
+        <textarea id="mem-texto" placeholder="Ej.: En el Día del Niño 2026 se vendieron unos 900 Labubu; margen aproximado $600 por unidad; el importado de pesca magnética rotó muy rápido."></textarea>
+        <div class="row"><button class="b" id="mem-guardar">Guardar en la memoria</button><input id="mem-buscar" placeholder="Buscar en la memoria"></div>
+      </div>
+      <div id="mem-lista" style="margin-top:12px"></div>
+    </div>
+  </section>
+
   <!-- VALIDACIÓN -->
   <section id="t-validacion" hidden>
     <div class="card">
@@ -205,7 +245,7 @@ function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt
 let M=ModeloJD.base();          // modelo vigente (se reemplaza con el guardado en Firestore)
 let fechas={};                   // fecha de actualización por parámetro
 let config={admins:[],worker:''};
-let rol='personal', usuario=null, importados=[], requisiciones=[], pedidosPend=[];
+let rol='personal', usuario=null, importados=[], requisiciones=[], pedidosPend=[], pedidosAll=[], metas={}, memoria=[];
 
 // Parámetros que se actualizan seguido (los demás quedan en la planilla)
 const EDITABLES=[
@@ -232,15 +272,15 @@ auth.onAuthStateChanged(async u=>{
   armarNav(); escuchar();
 });
 
-const TABS=[['consultar','Consultar','admin'],['modelo','Modelo','admin'],['precios','Precios','admin'],['corte','Corte','todos'],['validacion','Validación','admin']];
+const TABS=[['tablero','Tablero','admin'],['consultar','Asesor','admin'],['modelo','Modelo','admin'],['precios','Precios','admin'],['corte','Corte','todos'],['memoria','Memoria','admin'],['validacion','Validación','admin']];
 function armarNav(){
   const vis=TABS.filter(t=>t[2]==='todos'||rol==='admin');
   $('nav').innerHTML=vis.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
   $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.t));
   $('corte-nueva').hidden=rol!=='admin';
-  ir(rol==='admin'?'consultar':'corte');
+  ir(rol==='admin'?'tablero':'corte');
 }
-function ir(t){ TABS.forEach(x=>{ const s=$('t-'+x[0]); if(s) s.hidden=x[0]!==t; }); $('nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); if(t==='modelo') pintarModelo(); }
+function ir(t){ TABS.forEach(x=>{ const s=$('t-'+x[0]); if(s) s.hidden=x[0]!==t; }); $('nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); if(t==='modelo') pintarModelo(); if(t==='tablero') pintarTablero(); }
 
 // ---------- datos en Firestore ----------
 function escuchar(){
@@ -252,7 +292,8 @@ function escuchar(){
   db.collection('costos_importados').onSnapshot(s=>{ importados=[]; s.forEach(d=>importados.push({id:d.id,...d.data()})); if(!importados.length && rol==='admin') sembrarImportados(); pintarImportados(); pintarAvisos(); },e=>console.warn('importados',e));
   db.collection('costos_corte').orderBy('fecha').onSnapshot(s=>{ requisiciones=[]; s.forEach(d=>requisiciones.push({id:d.id,...d.data()})); pintarCorte(); },e=>console.warn('corte',e));
   if(rol==='admin'){
-    db.collection('pedidos').onSnapshot(s=>{ pedidosPend=[]; s.forEach(d=>{ const p=d.data(); if(p.esConfig) return; if(['entregado','cobrado'].includes(p.estado)) return; pedidosPend.push({id:d.id,...p}); }); pintarPendientes(); },e=>console.warn('pedidos',e));
+    db.collection('pedidos').onSnapshot(s=>{ pedidosPend=[]; pedidosAll=[]; s.forEach(d=>{ const p=d.data(); if(p.esConfig||d.id==='_config_metas'){ if(p.valores) metas=p.valores; return; } pedidosAll.push({id:d.id,...p}); if(['entregado','cobrado'].includes(p.estado)) return; pedidosPend.push({id:d.id,...p}); }); pintarPendientes(); if(!$('t-tablero').hidden) pintarTablero(); },e=>console.warn('pedidos',e));
+    db.collection('costos_memoria').orderBy('fecha','desc').onSnapshot(s=>{ memoria=[]; s.forEach(d=>memoria.push({id:d.id,...d.data()})); pintarMemoria(); },e=>console.warn('memoria',e));
     db.collection('costos_consultas').orderBy('fecha','desc').limit(100).onSnapshot(s=>{ const v=[]; s.forEach(d=>v.push({id:d.id,...d.data()})); pintarValidacion(v); },e=>console.warn('consultas',e));
     $('cfg-worker').value=config.worker||''; $('cfg-admins').value=(config.admins||[]).join(', ');
   }
@@ -354,33 +395,45 @@ const HERRAMIENTAS={
   precio_sombra:({recurso,temporada,escenario,anticipacion,cambios})=>ModeloJD.precioSombra(modeloCon(cambios),{recurso:recurso||'maquina',temporada:Math.max(0,ModeloJD.SEAS.indexOf(temporada||'Semanas pico')),escenario:escenario||'libre',stock:anticipacion||'sí',factorMinutos:fx(cambios)}),
   buscar_importados:({texto})=>importados.filter(i=>(i.producto+' '+(i.medidas||'')).toLowerCase().includes(String(texto||'').toLowerCase())).slice(0,15).map(i=>({producto:i.producto,proveedor:i.proveedor,medidas:i.medidas,precio:i.precio,actualizado:i.fecha})),
   datos_vencidos:()=>vencidos(),
-  requisiciones:()=>requisiciones.filter(r=>r.estado!=='listo').map(r=>({producto:r.producto,unidades:r.cantidad,para:r.fecha,estado:r.estado,prioridad:r.prioridad}))
+  requisiciones:()=>requisiciones.filter(r=>r.estado!=='listo').map(r=>({producto:r.producto,unidades:r.cantidad,para:r.fecha,estado:r.estado,prioridad:r.prioridad})),
+  ventas_periodo:({desde,hasta,evento})=>resumenVentas(pedidosAll.filter(p=>(p.fechaPedido||'')>=desde&&(p.fechaPedido||'')<=hasta&&(!evento||p.evento===evento))),
+  ventas_por_mes:({desde,hasta})=>ventasPorMes(desde,hasta),
+  planificar_evento:({unidades,semanasAntes,semanasEvento,escenario,reparto,cambios})=>ModeloJD.planEvento(modeloCon(cambios),{unidades,semanasAntes,semanasEvento,escenario,reparto}),
+  proponer_memoria:({tema,texto})=>{ propuestas.push({tema,texto}); return {estado:'Propuesta mostrada al usuario; se guarda sólo si la confirma.'}; }
 };
 
 // ---------- consulta ----------
-const SUG=['¿Qué conviene fabricar y qué comprar?','¿Cuánto cuesta fabricar un 15×15?','¿Qué pasa si la placa sube a $30.000?','Si sólo compramos lo de siempre, ¿alcanza la máquina en las semanas pico?','¿Cuánto vale una hora más de máquina en las semanas pico si no se anticipa?','¿Qué datos hay que actualizar?'];
+const SUG=['Es abril y quiero planificar el Día del Niño: vender 4.000 rompecabezas. ¿Cómo armo la mezcla entre producción e importados?','¿Cómo vienen las ventas de este mes contra la meta?','¿Qué conviene fabricar y qué comprar?','¿Cuánto cuesta fabricar un 15×15?','¿Qué pasa si la placa sube a $30.000?','Si sólo compramos lo de siempre, ¿alcanza la máquina en las semanas pico?','¿Cuánto vale una hora más de máquina en las semanas pico si no se anticipa?','¿Qué datos hay que actualizar?'];
 $('sugeridas').innerHTML=SUG.map(s=>`<button class="s" data-q="${esc(s)}">${esc(s)}</button>`).join('');
 $('sugeridas').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('q').value=b.dataset.q;preguntar();});
-let historial=[];
+let historial=[], propuestas=[];
+function md(t){ let h=esc(t); h=h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,4} (.+)$/gm,'<b>$1</b>');
+  const L=h.split('\n'); let out='', inl=false; L.forEach(l=>{ const m=l.match(/^\s*[-*•] (.+)/); if(m){ if(!inl){out+='<ul>';inl=true;} out+='<li>'+m[1]+'</li>'; } else { if(inl){out+='</ul>';inl=false;} out+=l+'<br>'; } }); if(inl) out+='</ul>'; return out; }
+function textoMemoria(){ return memoria.map(x=>`- [${x.tema}] (${(x.fecha||'').slice(0,10)}) ${x.texto}`).join('\n'); }
 function agregar(rolm,html){ const d=document.createElement('div'); d.className='msg '+(rolm==='user'?'u':'a'); d.innerHTML=html; $('chat').appendChild(d); d.scrollIntoView({block:'end'}); return d; }
 $('q-btn').onclick=preguntar;
 async function preguntar(){
-  const q=$('q').value.trim(); if(!q) return;
+  const q=$('q').value.trim(); if(!q) return; propuestas=[];
   if(!config.worker){ toast('Falta configurar el servidor de la IA (pestaña Validación).'); return; }
   $('q').value=''; agregar('user',esc(q)); $('q-btn').disabled=true; $('q-estado').textContent='Calculando…';
   historial.push({role:'user',content:q});
   const llamadas=[];
   try{
     const token=await usuario.getIdToken();
-    for(let vuelta=0;vuelta<6;vuelta++){
-      const r=await fetch(config.worker.replace(/\/$/,'')+'/consulta',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({messages:historial,fechaDatos:M.fechaDatos})});
+    for(let vuelta=0;vuelta<8;vuelta++){
+      const r=await fetch(config.worker.replace(/\/$/,'')+'/consulta',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({messages:historial,fechaDatos:M.fechaDatos,hoy:hoyISO(),memoria:textoMemoria()})});
       if(!r.ok) throw new Error('servidor '+r.status);
       const res=await r.json();
       historial.push({role:'assistant',content:res.content});
+      if(res.stop_reason==='pause_turn') continue;
       const usos=res.content.filter(c=>c.type==='tool_use');
       if(!usos.length){
-        const texto=res.content.filter(c=>c.type==='text').map(c=>c.text).join('\n');
-        const d=agregar('assistant',esc(texto).replace(/\n/g,'<br>')+(llamadas.length?`<details class="calc"><summary>Ver el cálculo (${llamadas.length})</summary><pre>${esc(JSON.stringify(llamadas,null,1))}</pre></details>`:''));
+        const texto=res.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+        const citas=[]; res.content.forEach(c=>(c.citations||[]).forEach(ci=>{ if(ci.url&&!citas.some(x=>x.url===ci.url)) citas.push({url:ci.url,title:ci.title||ci.url}); }));
+        const busq=res.content.filter(c=>c.type==='server_tool_use').length;
+        const d=agregar('assistant',md(texto)+(citas.length?`<div class="fuentes">Fuentes en internet: ${citas.map(c=>`<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a>`).join(' · ')}</div>`:'')+(llamadas.length?`<details class="calc"><summary>Ver el cálculo (${llamadas.length})</summary><pre>${esc(JSON.stringify(llamadas,null,1))}</pre></details>`:''));
+        propuestas.splice(0).forEach(pr=>{ const b=document.createElement('div'); b.className='prop'; b.innerHTML=`<b>¿Guardo esto en la memoria?</b><br>[${esc(pr.tema)}] ${esc(pr.texto)}<div class="row" style="margin-top:6px"><button class="s">Guardar</button><button class="s">No</button></div>`;
+          const [ok,no]=b.querySelectorAll('button'); ok.onclick=async()=>{ await guardarMemoria(pr.tema,pr.texto,'asesor'); b.innerHTML='Guardado en la memoria.'; }; no.onclick=()=>b.remove(); d.appendChild(b); });
         db.collection('costos_consultas').add({fecha:new Date().toISOString(),usuario:usuario.email,pregunta:q,respuesta:texto,calculos:JSON.stringify(llamadas),verificado:'pendiente'}).catch(e=>console.warn(e));
         break;
       }
@@ -437,6 +490,68 @@ function pintarCorte(){
     try{ await db.collection('costos_corte').doc(id).update({estado:e,historial:firebase.firestore.FieldValue.arrayUnion({estado:e,por:usuario.email,fecha:new Date().toISOString()})}); }catch(err){ toast('No se pudo actualizar'); } });
 }
 $('c-filtro').onchange=pintarCorte;
+// ---------- ventas (sistema de pedidos) ----------
+function resumenVentas(l){
+  const tot=l.reduce((s,p)=>s+(+p.total||0),0), saldo=l.reduce((s,p)=>s+(p.estado==='cobrado'?0:Math.max(0,(+p.total||0)-(+p.senia||0))),0);
+  const est={}, ev={}, prod={};
+  l.forEach(p=>{ est[p.estado||'sin estado']=(est[p.estado||'sin estado']||0)+1; const e=p.evento||'común'; ev[e]=(ev[e]||0)+(+p.total||0);
+    Object.keys(p).filter(k=>/^items[A-Z]/.test(k)&&p[k]&&typeof p[k]==='object').forEach(k=>Object.entries(p[k]).forEach(([id,q])=>prod[id]=(prod[id]||0)+(+q||0))); });
+  return {pedidos:l.length,monto:tot,ticketPromedio:l.length?tot/l.length:0,saldoACobrar:saldo,pedidosPorEstado:est,montoPorEvento:ev,unidadesPorProducto:prod,nota:'Los pedidos comunes registran los productos como texto libre; las unidades por producto salen sólo de los pedidos de eventos.'};
+}
+function ventasPorMes(desde,hasta){
+  const m={}; pedidosAll.forEach(p=>{ const k=(p.fechaPedido||'').slice(0,7); if(!k) return; if(desde&&k<desde) return; if(hasta&&k>hasta) return; const x=m[k]||(m[k]={mes:k,monto:0,pedidos:0}); x.monto+=(+p.total||0); x.pedidos++; });
+  return Object.values(m).sort((a,b)=>a.mes.localeCompare(b.mes)).map(x=>({...x,meta:metas[x.mes]||null,cumplimiento:metas[x.mes]?x.monto/metas[x.mes]:null}));
+}
+// ---------- memoria ----------
+async function guardarMemoria(tema,texto,origen){ await db.collection('costos_memoria').add({tema,texto,fecha:new Date().toISOString(),autor:usuario.email,origen:origen||'manual'}); }
+$('mem-guardar').onclick=async()=>{ const t=$('mem-tema').value.trim(), x=$('mem-texto').value.trim(); if(!t||!x){ toast('Completá el tema y el texto'); return; }
+  try{ await guardarMemoria(t,x); $('mem-texto').value=''; toast('Guardado'); }catch(e){ toast('No se pudo guardar'); } };
+$('mem-buscar').oninput=()=>pintarMemoria();
+function pintarMemoria(){
+  const q=($('mem-buscar').value||'').toLowerCase();
+  const l=memoria.filter(x=>!q||(x.tema+' '+x.texto).toLowerCase().includes(q));
+  $('mem-lista').innerHTML=l.length?l.map(x=>`<div class="req"><b>${esc(x.tema)}</b> <span class="muted">· ${esc((x.fecha||'').slice(0,10))}${x.origen==='asesor'?' · propuesto por el asesor':''}</span><div>${esc(x.texto)}</div><button class="s" data-del="${x.id}" style="margin-top:4px;font-size:12px">Borrar</button></div>`).join(''):'<p class="muted">Todavía no hay notas.</p>';
+  $('mem-lista').querySelectorAll('button[data-del]').forEach(b=>{ let arm=false; b.onclick=async()=>{ if(!arm){ arm=true; b.textContent='Tocá de nuevo para borrar'; return; } await db.collection('costos_memoria').doc(b.dataset.del).delete(); }; });
+}
+// ---------- tablero ----------
+function barras(datos,{meta,fmt}={}){
+  if(!datos.length) return '<p class="muted">Sin datos.</p>';
+  const W=520,H=210,L=8,B=34,T=10,pw=W-2*L,ph=H-B-T, mx=Math.max(...datos.map(d=>Math.max(d.v,meta?(d.meta||0):0)))||1, bw=pw/datos.length;
+  let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img"><line class="ax" x1="${L}" y1="${T+ph}" x2="${W-L}" y2="${T+ph}"/>`;
+  datos.forEach((d,i)=>{ const h=d.v/mx*ph, x=L+i*bw+bw*0.15, w=bw*0.7; g+=`<rect class="bar" x="${x}" y="${T+ph-h}" width="${w}" height="${h}" rx="2"><title>${esc(d.k)}: ${fmt?fmt(d.v):n0(d.v)}</title></rect>`;
+    if(meta&&d.meta){ const y=T+ph-d.meta/mx*ph; g+=`<line class="meta" x1="${x-2}" x2="${x+w+2}" y1="${y}" y2="${y}"/>`; }
+    if(datos.length<=14||i%2===0) g+=`<text x="${x+w/2}" y="${H-18}" text-anchor="middle">${esc(d.k)}</text>`; });
+  return g+`</svg>`+(meta?'<p class="muted">La línea naranja es la meta del mes.</p>':'');
+}
+const mill=v=>v>=1e6?'$'+(v/1e6).toLocaleString('es-AR',{maximumFractionDigits:1})+' M':'$'+n0(v);
+function pintarTablero(){
+  const hoy=hoyISO(), mes=hoy.slice(0,7);
+  const delMes=pedidosAll.filter(p=>(p.fechaPedido||'').startsWith(mes)), rv=resumenVentas(delMes), meta=metas[mes];
+  const abiertos=pedidosAll.filter(p=>!['entregado','cobrado'].includes(p.estado));
+  const saldo=pedidosAll.reduce((s,p)=>s+(p.estado==='cobrado'?0:Math.max(0,(+p.total||0)-(+p.senia||0))),0);
+  const en7=new Date(Date.now()+7*864e5).toISOString().slice(0,10), entregas=abiertos.filter(p=>p.fechaEntrega&&p.fechaEntrega>=hoy&&p.fechaEntrega<=en7).length;
+  const atras=requisiciones.filter(r=>r.estado!=='listo'&&r.fecha<hoy).length, venc=vencidos().length;
+  const K=[['Ventas del mes',mill(rv.monto),meta?`${Math.round(rv.monto/meta*100)}% de la meta (${mill(meta)})`:'Sin meta cargada',false],
+    ['Pedidos del mes',n0(rv.pedidos),'Ticket promedio '+mill(rv.ticketPromedio),false],
+    ['Saldo a cobrar',mill(saldo),abiertos.length+' pedidos abiertos',false],
+    ['Entregas próximos 7 días',n0(entregas),'Pedidos con fecha de entrega',false],
+    ['Requisiciones atrasadas',n0(atras),requisiciones.filter(r=>r.estado!=='listo').length+' activas',atras>0],
+    ['Datos sin actualizar',n0(venc),'Más de 30 días',venc>0]];
+  $('k-kpis').innerHTML=K.map(k=>`<div class="kpi ${k[3]?'alerta':''}"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${esc(k[2])}</div></div>`).join('');
+  const d0=new Date(); d0.setMonth(d0.getMonth()-11); const vm=ventasPorMes(d0.toISOString().slice(0,7),mes);
+  $('k-mes').innerHTML=barras(vm.map(x=>({k:x.mes.slice(5)+'/'+x.mes.slice(2,4),v:x.monto,meta:x.meta})),{meta:true,fmt:mill});
+  const sem=[]; for(let i=11;i>=0;i--){ const a=new Date(Date.now()-(i*7+6)*864e5).toISOString().slice(0,10), b=new Date(Date.now()-i*7*864e5).toISOString().slice(0,10);
+    sem.push({k:b.slice(8,10)+'/'+b.slice(5,7),v:pedidosAll.filter(p=>(p.fechaPedido||'')>=a&&(p.fechaPedido||'')<=b).reduce((s,p)=>s+(+p.total||0),0)}); }
+  $('k-sem').innerHTML=barras(sem,{fmt:mill});
+  const est={}; abiertos.forEach(p=>est[p.estado||'sin estado']=(est[p.estado||'sin estado']||0)+1);
+  $('k-est').innerHTML=barras(Object.entries(est).map(([k,v])=>({k,v})));
+  const c=ModeloJD.costeo(M); $('k-mg').innerHTML=barras(c.familias.map(f=>({k:f.familia.replace(' simple',' s').replace(' complejo',' c'),v:f.margenPorHoraMaquina})),{fmt:v=>'$'+n0(v)});
+  const act=requisiciones.filter(r=>r.estado!=='listo'), hojas=act.reduce((s,r)=>s+(r.hojas||0),0), porEst={}; act.forEach(r=>porEst[r.estado]=(porEst[r.estado]||0)+1);
+  $('k-prod').innerHTML=`<p><b>${n0(hojas)}</b> hojas de caras por cortar en ${act.length} requisiciones activas.</p>`+barras(ESTADOS.filter(e=>e!=='listo').map(e=>({k:e,v:porEst[e]||0})));
+  const sa=ModeloJD.solver(M,{escenario:'actual'}), so=ModeloJD.solver(M,{escenario:'libre'}), dif=ModeloJD.diferencial(M,c);
+  $('k-dec').innerHTML=`<p>Contribución anual de la mezcla actual: <b>$${n0(sa.contribucionTotal)}</b>; de la mezcla óptima: <b>$${n0(so.contribucionTotal)}</b> (${so.contribucionTotal>=sa.contribucionTotal?'+':''}$${n0(so.contribucionTotal-sa.contribucionTotal)}).</p><div class="tbl"><table><tr><th>Familia</th><th>Conviene</th></tr>${dif.map(x=>`<tr><td>${x.familia}</td><td><b>${x.conviene}</b></td></tr>`).join('')}</table></div><p class="muted">Máquina en semanas pico con la mezcla actual: ${pct(sa.temporadas[0].usoMaquina)}.</p>`;
+}
+
 function pintarPendientes(){
   const suma={};
   pedidosPend.forEach(p=>{ Object.keys(p).filter(k=>/^items[A-Z]/.test(k)&&p[k]&&typeof p[k]==='object').forEach(k=>{ Object.entries(p[k]).forEach(([id,q])=>{ q=+q||0; if(!q) return;

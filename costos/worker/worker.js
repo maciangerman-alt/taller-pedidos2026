@@ -19,15 +19,31 @@ const TOOLS = [
   { name: 'precio_sombra', description: 'Cuánto sube la contribución total con una hora más de máquina o de personal en una temporada.', input_schema: { type: 'object', properties: { recurso: { type: 'string', enum: ['maquina', 'personal'] }, temporada: { type: 'string', enum: ['Semanas pico', 'Alta (resto)', 'General', 'Baja'] }, escenario: ESC, anticipacion: ANT, cambios: CAMBIOS } } },
   { name: 'buscar_importados', description: 'Busca productos importados de los mayoristas por nombre o medida, con su precio y fecha de actualización.', input_schema: { type: 'object', properties: { texto: { type: 'string' } }, required: ['texto'] } },
   { name: 'datos_vencidos', description: 'Lista los precios y datos del modelo que no se actualizan hace más de 30 días.', input_schema: { type: 'object', properties: {} } },
-  { name: 'requisiciones', description: 'Requisiciones de corte que todavía no están listas, con unidades, fecha y estado.', input_schema: { type: 'object', properties: {} } }
+  { name: 'requisiciones', description: 'Requisiciones de corte que todavía no están listas, con unidades, fecha y estado.', input_schema: { type: 'object', properties: {} } },
+  { name: 'ventas_periodo', description: 'Ventas registradas en el sistema de pedidos entre dos fechas (AAAA-MM-DD): cantidad de pedidos, monto, ticket promedio, saldo a cobrar, pedidos por estado y por evento, y unidades por producto de los pedidos de eventos.', input_schema: { type: 'object', properties: { desde: { type: 'string' }, hasta: { type: 'string' }, evento: { type: 'string', description: 'Opcional: código de evento del sistema de pedidos (jardin2026, padre2026, estudiante2026, madre2026, finano2026).' } }, required: ['desde', 'hasta'] } },
+  { name: 'ventas_por_mes', description: 'Monto vendido y cantidad de pedidos por mes, con la meta mensual cargada en el sistema de pedidos.', input_schema: { type: 'object', properties: { desde: { type: 'string', description: 'AAAA-MM' }, hasta: { type: 'string', description: 'AAAA-MM' } } } },
+  { name: 'planificar_evento', description: 'Planifica la mezcla de rompecabezas para un evento: para una meta de unidades, cuántas fabricar en las semanas previas, cuántas en la semana del evento y cuántas comprar, con la capacidad de máquina y personal, la contribución y las placas necesarias. Sólo cubre rompecabezas.', input_schema: { type: 'object', properties: { unidades: { type: 'number' }, semanasAntes: { type: 'number', description: 'Semanas disponibles antes de la semana del evento para fabricar por adelantado.' }, semanasEvento: { type: 'number' }, escenario: { type: 'string', enum: ['libre', 'actual', 'sin compras'] }, reparto: { type: 'object', description: 'Opcional: proporción por familia, por ejemplo {"10×10":0.6,"15×15":0.4}. Si falta, usa la mezcla histórica.' }, cambios: CAMBIOS }, required: ['unidades'] } },
+  { name: 'proponer_memoria', description: 'Propone guardar en la memoria del taller un dato, una decisión o un aprendizaje que surgió en la conversación. El usuario confirma antes de que se guarde.', input_schema: { type: 'object', properties: { tema: { type: 'string' }, texto: { type: 'string' } }, required: ['tema', 'texto'] } },
+  { type: 'web_search_20250305', name: 'web_search', max_uses: 3, user_location: { type: 'approximate', city: 'San Miguel de Tucumán', region: 'Tucumán', country: 'AR', timezone: 'America/Argentina/Tucuman' } }
 ];
-const SYSTEM = (fecha) => `Sos el asistente de consulta del modelo de costos del taller. Respondés en español rioplatense, breve y claro, para la responsable operativa y el responsable comercial.
-Reglas:
-- Todo número que digas tiene que salir de una herramienta. Nunca calcules ni estimes cifras por tu cuenta, ni redondees de otra forma que a la unidad de peso.
-- Si la pregunta pide un escenario («qué pasa si…»), usá el parámetro cambios; aclarás que es una simulación y no cambia los datos guardados.
-- Si la pregunta no se puede responder con las herramientas, decilo y sugerí qué dato haría falta.
-- Al final, en una línea, decí qué cálculo usaste (por ejemplo: «Cálculo: mezcla óptima, compra libre, con anticipación»).
-- Los datos vigentes del modelo son al ${fecha || 'último guardado'}. Los costos fijos no cambian con la mezcla: no los sumes a la comparación de fabricar o comprar.`;
+const SYSTEM = (fecha, hoy, memoria) => `Sos el gerente comercial senior del taller: un ejecutivo con experiencia en ventas mayoristas y minoristas de juguetes didácticos, en planificación de temporadas y en la decisión de fabricar o comprar. Hablás en español rioplatense, directo y concreto, como un asesor que conoce el negocio por dentro. Hoy es ${hoy || 'la fecha actual'}.
+
+Qué hacés:
+- Ayudás a decidir: planificar eventos (Día de los Jardines, Día del Niño, Día del Estudiante, fin de año), definir la mezcla entre producción propia e importados, fijar precios y metas, y anticipar la producción.
+- Combinás tres fuentes y siempre decís de cuál sale cada cosa: (1) los cálculos del modelo y los datos del taller, que obtenés con las herramientas; (2) la memoria del taller, que figura abajo; (3) el contexto económico y las tendencias, que buscás en internet con web_search cuando la pregunta lo pide (consumo, inflación, importaciones, juguetería, fechas comerciales), citando la fuente.
+- Cuando das tu criterio de ejecutivo, lo marcás como recomendación y das las alternativas con sus pros y contras. La decisión es del usuario.
+- Si falta un dato para responder bien (por ejemplo, el costo de un producto que no es rompecabezas), lo decís y pedís que se cargue en la memoria.
+- Cuando surge un dato, una decisión o un aprendizaje que conviene recordar, usás proponer_memoria.
+
+Reglas de números:
+- Toda cifra del taller sale de una herramienta o de la memoria. Nunca inventes ni estimes costos, ventas o capacidades por tu cuenta; si hacés una cuenta simple con cifras de las herramientas, mostrala.
+- Para «qué pasa si…», usá el parámetro cambios y aclarás que es una simulación.
+- El modelo de costeo y el planificador cubren sólo los rompecabezas. Los costos fijos no cambian con la mezcla.
+- Datos del modelo vigentes al ${fecha || 'último guardado'}.
+- Cerrá con una línea «Fuentes:» que diga qué herramientas, notas de la memoria o sitios usaste.
+
+MEMORIA DEL TALLER (cargada por el usuario):
+${memoria || '(vacía)'}`;
 
 const cors = (origin, env) => ({
   'Access-Control-Allow-Origin': (env.ALLOWED_ORIGINS || 'https://tallerartesanal.com.ar').split(',').includes(origin) ? origin : 'null',
@@ -53,7 +69,7 @@ export default {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: env.MODELO_IA || MODELO_IA, max_tokens: 1500, system: SYSTEM(body.fechaDatos), tools: TOOLS, messages })
+      body: JSON.stringify({ model: env.MODELO_IA || MODELO_IA, max_tokens: 3000, system: SYSTEM(body.fechaDatos, body.hoy, String(body.memoria || '').slice(0, 20000)), tools: TOOLS, messages })
     });
     const data = await r.json();
     if (!r.ok) return new Response(JSON.stringify({ error: data.error?.message || 'error de la IA' }), { status: 502, headers: { ...h, 'Content-Type': 'application/json' } });
