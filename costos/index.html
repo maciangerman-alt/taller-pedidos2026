@@ -136,7 +136,7 @@ html.grande button,html.grande input,html.grande select,html.grande textarea{fon
 .composer{position:sticky;bottom:0;background:linear-gradient(to top,var(--card) 75%,transparent);padding:10px 0 max(6px,env(safe-area-inset-bottom))}
 .composer-box{display:flex;gap:8px;align-items:flex-end;border:1px solid var(--line2);border-radius:16px;background:var(--bg);padding:6px 6px 6px 14px}
 .composer-box:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
-.composer-box textarea{border:0;background:none;box-shadow:none!important;padding:8px 0;min-height:24px;max-height:200px;resize:none;line-height:1.5}
+.composer-box textarea{border:0;background:none;box-shadow:none!important;padding:8px 0;min-height:24px;max-height:200px;resize:none;line-height:1.5;overflow-y:hidden}
 .composer-box button.b{border-radius:12px;padding:10px 16px;flex:none}
 .composer .muted{font-size:12px;margin:6px 4px 0}
 .btn-ico{display:inline-flex;align-items:center;gap:6px}
@@ -506,7 +506,7 @@ const HERRAMIENTAS={
 // ---------- consulta ----------
 const SUG=[['Eventos','Es abril y quiero planificar el Día del Niño: vender 4.000 rompecabezas. ¿Cómo armo la mezcla entre producción e importados?'],['Ventas','¿Cómo vienen las ventas de este mes contra la meta?'],['Decisión','¿Qué conviene fabricar y qué comprar?'],['Costos','¿Cuánto cuesta fabricar un 15×15?'],['Simulación','¿Qué pasa si la placa sube a $30.000?'],['Datos','¿Qué datos hay que actualizar?']];
 let historial=[], propuestas=[], memoriaConv=null, consultas=[], ocupado=false;
-function md(t){ let h=esc(t); h=h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#{1,4} (.+)$/gm,'<b>$1</b>');
+function md(t){ let h=esc(t); h=h.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/(^|[^*\w])\*(?!\s)([^*\n]+?)\*(?!\w)/g,'$1<i>$2</i>').replace(/^#{1,4} (.+)$/gm,'<b>$1</b>');
   const L=h.split('\n'); let out='', inl=false, tb=null;
   const cierraT=()=>{ if(tb){ out+='<div class="tbl"><table>'+tb.map((r,i)=>'<tr>'+r.map(c=>i===0?`<th>${c}</th>`:`<td>${c}</td>`).join('')+'</tr>').join('')+'</table></div>'; tb=null; } };
   L.forEach(l=>{ const t=l.trim();
@@ -570,7 +570,7 @@ ponerModo(pref('cp-modo')||'simple');
 $('q-modo').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ponerModo(b.dataset.v); pref('cp-modo',modoActual); });
 
 // ---------- caja de texto ----------
-function autoAlto(){ const t=$('q'); t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,200)+'px'; }
+function autoAlto(){ const t=$('q'); t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,200)+'px'; t.style.overflowY=t.scrollHeight>200?'auto':'hidden'; }
 $('q').addEventListener('input',autoAlto);
 $('q').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); preguntar(); } });
 $('q-btn').onclick=()=>preguntar();
