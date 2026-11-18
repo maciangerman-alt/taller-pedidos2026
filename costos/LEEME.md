@@ -10,13 +10,17 @@ Página: https://tallerartesanal.com.ar/costos/ (mismo usuario y misma base de F
 - **Precios**: insumos, sueldos y precios de compra y de venta, con la fecha de la última actualización; importados de los mayoristas; importador de listas.
 - **Avisos**: cartel arriba cuando un dato lleva más de 30 días sin actualizar.
 - **Corte**: requisiciones de corte con estados (pendiente → cortado → pintado → armado → listo) y la suma de lo pendiente en los pedidos de eventos.
-- **Validación**: cada consulta con su resultado, para marcar si coincide con la planilla.
+- **Validación**: cada consulta con su resultado, para marcar si coincide con la planilla y escribir la corrección.
+- **Aprendizaje**: debajo de cada respuesta del asesor hay 👍 *Útil* y 👎 *Tiene un error* (con la corrección). En cada pregunta nueva, la página busca las consultas calificadas más parecidas y se las pasa al asesor: no repite los errores marcados y sigue el formato de las respuestas aprobadas. «Coincide / no coincide» en Validación cuenta igual. Lo aprendido se ve (y se puede olvidar) en Memoria → *Lo que aprendió de tus calificaciones*. Las preguntas que más se repiten aparecen como sugerencias.
+- **Rapidez**: la respuesta aparece mientras se escribe (streaming), la parte fija de las instrucciones queda en la caché de la IA y la sesión se verifica una vez cada 5 minutos.
 
 ## Pasos para dejarla funcionando
 1. **Servidor de la IA (Cloudflare Worker).** En Cloudflare → Workers → Crear → pegar `worker/worker.js`.
    - Variables: `FIREBASE_API_KEY` (la de `wrangler.toml`) y `ALLOWED_ORIGINS`.
    - Secreto: `ANTHROPIC_API_KEY` (la clave de la API de Claude). Se carga como *secret* en Cloudflare; no va en la página ni en el chat.
-   - Opcional: variable `MODELO_IA` = `claude-haiku-5-5` para gastar menos (por defecto usa `claude-sonnet-5-5`). La búsqueda en internet cuesta aparte (USD 10 cada 1.000 búsquedas; máximo 3 por consulta).
+   - Opcional: variable `MODELO_IA` = `claude-haiku-5-5` para gastar menos (por defecto usa `claude-sonnet-5-5`).
+   - Opcional: variable `ESFUERZO_IA` = `low` (más rápido), `medium` (por defecto) o `high` (piensa más antes de responder).
+   - **Al actualizar el worker** (por ejemplo, para tener la respuesta en vivo): Cloudflare → Workers → `consulta-taller` → Editar código → pegar el `worker/worker.js` nuevo → Implementar. La página sigue funcionando con el worker anterior, pero sin streaming ni caché. La búsqueda en internet cuesta aparte (USD 10 cada 1.000 búsquedas; máximo 3 por consulta).
    - Copiar la dirección del Worker (termina en `.workers.dev`).
 2. **En la página**, pestaña Validación → Configuración: pegar la dirección del Worker y los correos con acceso completo (Germán y la responsable operativa). El resto del personal ve sólo Corte.
 3. **Usuarios del personal**: crearlos en Firebase → Authentication (correo y contraseña).
