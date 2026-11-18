@@ -3,6 +3,7 @@
 // en el sistema del Taller y define las herramientas. La IA nunca calcula: pide a la página que ejecute
 // el modelo de costeo y redacta la respuesta con esos resultados.
 const MODELO_IA = 'claude-sonnet-5-5';
+const ESFUERZO_IA = 'medium'; // low = más rápido; high = piensa más. Se cambia con la variable ESFUERZO_IA.
 const FAMILIAS = ['10×10', '9×14', '15×15', '20×20', '25×25 simple', '25×25 complejo'];
 const PARAMETROS = ['placa', 'pint', 'barn', 'adh', 'pack', 'vh', 'cmp', 'e_rop', 'kwh', 'tubo', 'opt', 'alq', 'tiempos_pct', 'parte_maquina_pico',
   ...FAMILIAS.map(f => 'precio_venta_' + f), ...FAMILIAS.map(f => 'precio_compra_' + f)];
@@ -24,9 +25,10 @@ const TOOLS = [
   { name: 'ventas_por_mes', description: 'Monto vendido y cantidad de pedidos por mes, con la meta mensual cargada en el sistema de pedidos.', input_schema: { type: 'object', properties: { desde: { type: 'string', description: 'AAAA-MM' }, hasta: { type: 'string', description: 'AAAA-MM' } } } },
   { name: 'planificar_evento', description: 'Planifica la mezcla de rompecabezas para un evento: para una meta de unidades, cuántas fabricar en las semanas previas, cuántas en la semana del evento y cuántas comprar, con la capacidad de máquina y personal, la contribución y las placas necesarias. Sólo cubre rompecabezas.', input_schema: { type: 'object', properties: { unidades: { type: 'number' }, semanasAntes: { type: 'number', description: 'Semanas disponibles antes de la semana del evento para fabricar por adelantado.' }, semanasEvento: { type: 'number' }, escenario: { type: 'string', enum: ['libre', 'actual', 'sin compras'] }, reparto: { type: 'object', description: 'Opcional: proporción por familia, por ejemplo {"10×10":0.6,"15×15":0.4}. Si falta, usa la mezcla histórica.' }, cambios: CAMBIOS }, required: ['unidades'] } },
   { name: 'proponer_memoria', description: 'Propone guardar en la memoria del taller un dato, una decisión o un aprendizaje que surgió en la conversación. El usuario confirma antes de que se guarde.', input_schema: { type: 'object', properties: { tema: { type: 'string' }, texto: { type: 'string' } }, required: ['tema', 'texto'] } },
-  { type: 'web_search_20250305', name: 'web_search', max_uses: 3, user_location: { type: 'approximate', city: 'San Miguel de Tucumán', region: 'Tucumán', country: 'AR', timezone: 'America/Argentina/Tucuman' } }
 ];
-const SYSTEM = (fecha, hoy, memoria) => `Sos el gerente comercial senior del taller: un ejecutivo con experiencia en ventas mayoristas y minoristas de juguetes didácticos, en planificación de temporadas y en la decisión de fabricar o comprar. Hablás en español rioplatense, directo y concreto, como un asesor que conoce el negocio por dentro. Hoy es ${hoy || 'la fecha actual'}.
+const BUSQUEDA = modelo => ({ type: /haiku/.test(modelo) ? 'web_search_20250305' : 'web_search_20260209', name: 'web_search', max_uses: 3, user_location: { type: 'approximate', city: 'San Miguel de Tucumán', region: 'Tucumán', country: 'AR', timezone: 'America/Argentina/Tucuman' } });
+// Parte fija del sistema: no cambia nunca, así la IA la toma de la caché (más rápido y más barato).
+const SYSTEM_FIJO = `Sos el gerente comercial senior del taller: un ejecutivo con experiencia en ventas mayoristas y minoristas de juguetes didácticos, en planificación de temporadas y en la decisión de fabricar o comprar. Hablás en español rioplatense, directo y concreto, como un asesor que conoce el negocio por dentro.
 
 Qué hacés:
 - Ayudás a decidir: planificar eventos (Día de los Jardines, Día del Niño, Día del Estudiante, fin de año), definir la mezcla entre producción propia e importados, fijar precios y metas, y anticipar la producción.
@@ -39,8 +41,13 @@ Reglas de números:
 - Toda cifra del taller sale de una herramienta o de la memoria. Nunca inventes ni estimes costos, ventas o capacidades por tu cuenta; si hacés una cuenta simple con cifras de las herramientas, mostrala.
 - Para «qué pasa si…», usá el parámetro cambios y aclarás que es una simulación.
 - El modelo de costeo y el planificador cubren sólo los rompecabezas. Los costos fijos no cambian con la mezcla.
-- Datos del modelo vigentes al ${fecha || 'último guardado'}.
 - Cerrá con una línea «Fuentes:» que diga qué herramientas, notas de la memoria o sitios usaste.
+
+Aprendizaje:
+- Cada pregunta puede traer un bloque <contexto_de_esta_pregunta> con el modo de explicación y con aprendizajes de consultas anteriores que el usuario calificó. Las correcciones del usuario tienen prioridad sobre tu criterio: no repitas un error que ya te marcó. Las respuestas aprobadas te muestran el enfoque y el formato que le sirven. Las cifras igual se calculan de nuevo con las herramientas.
+- No menciones ese bloque salvo que te pregunten; si una corrección cambió tu respuesta, decilo en una frase.`;
+// Parte variable: fecha y memoria del taller (queda fija durante cada conversación).
+const SYSTEM_VARIABLE = (fecha, hoy, memoria) => `Hoy es ${hoy || 'la fecha actual'}. Datos del modelo vigentes al ${fecha || 'último guardado'}.
 
 MEMORIA DEL TALLER (cargada por el usuario):
 ${memoria || '(vacía)'}`;
@@ -50,29 +57,58 @@ const cors = (origin, env) => ({
   'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 });
 
+// Sesiones ya verificadas (se guardan unos minutos para no consultar a Firebase en cada vuelta).
+const sesiones = new Map();
+async function sesionValida(token, env) {
+  if (!token) return false;
+  const t = sesiones.get(token);
+  if (t && t > Date.now()) return true;
+  const chk = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + env.FIREBASE_API_KEY, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: token })
+  });
+  if (!chk.ok) return false;
+  if (sesiones.size > 500) sesiones.clear();
+  sesiones.set(token, Date.now() + 5 * 60 * 1000);
+  return true;
+}
+
 export default {
   async fetch(req, env) {
     const origin = req.headers.get('Origin') || '';
     const h = cors(origin, env);
+    const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { ...h, 'Content-Type': 'application/json' } });
     if (req.method === 'OPTIONS') return new Response(null, { headers: h });
     const url = new URL(req.url);
     if (req.method !== 'POST' || url.pathname !== '/consulta') return new Response('No encontrado', { status: 404, headers: h });
     // 1. ¿Inició sesión en el sistema del Taller?
     const token = (req.headers.get('Authorization') || '').replace('Bearer ', '');
-    const chk = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + env.FIREBASE_API_KEY, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: token })
-    });
-    if (!chk.ok) return new Response(JSON.stringify({ error: 'sesión no válida' }), { status: 401, headers: { ...h, 'Content-Type': 'application/json' } });
-    // 2. Consulta a la IA con las herramientas fijas
+    if (!(await sesionValida(token, env))) return json({ error: 'sesión no válida' }, 401);
+    // 2. Consulta a la IA con las herramientas fijas.
+    // El historial no se recorta acá: la página empieza una conversación nueva cuando se alarga
+    // (recortarlo separaba pedidos de cálculo de sus resultados y la consulta fallaba).
     const body = await req.json();
-    const messages = (body.messages || []).slice(-30);
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({ model: env.MODELO_IA || MODELO_IA, max_tokens: 3000, system: SYSTEM(body.fechaDatos, body.hoy, String(body.memoria || '').slice(0, 20000)), tools: TOOLS, messages })
-    });
+    const messages = body.messages || [];
+    const modelo = env.MODELO_IA || MODELO_IA;
+    const conRespaldo = !/haiku/.test(modelo); // si el modelo rechaza una consulta, la reintenta otro modelo
+    const pedido = {
+      model: modelo, max_tokens: 16000, stream: !!body.stream,
+      output_config: { effort: env.ESFUERZO_IA || ESFUERZO_IA },
+      cache_control: { type: 'ephemeral' }, // caché de la conversación que va creciendo
+      system: [
+        { type: 'text', text: SYSTEM_FIJO, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: SYSTEM_VARIABLE(body.fechaDatos, body.hoy, String(body.memoria || '').slice(0, 30000)), cache_control: { type: 'ephemeral' } }
+      ],
+      tools: [...TOOLS, BUSQUEDA(modelo)],
+      messages
+    };
+    if (conRespaldo) pedido.fallbacks = 'default';
+    const headers = { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' };
+    if (conRespaldo) headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+    const r = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers, body: JSON.stringify(pedido) });
+    if (!r.ok) { let m = 'error de la IA'; try { m = (await r.json()).error?.message || m; } catch (e) {} return json({ error: m }, 502); }
+    // 3. Respuesta en vivo: se reenvía tal cual a la página a medida que llega.
+    if (pedido.stream) return new Response(r.body, { headers: { ...h, 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-cache' } });
     const data = await r.json();
-    if (!r.ok) return new Response(JSON.stringify({ error: data.error?.message || 'error de la IA' }), { status: 502, headers: { ...h, 'Content-Type': 'application/json' } });
-    return new Response(JSON.stringify({ content: data.content, stop_reason: data.stop_reason }), { headers: { ...h, 'Content-Type': 'application/json' } });
+    return json({ content: data.content, stop_reason: data.stop_reason });
   }
 };
