@@ -43,7 +43,7 @@
   const API_KEY = 'AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc';
   const qs = new URLSearchParams(location.search);
   const id = qs.get('id') || '';
-  const servidor = qs.get('s') || '';
+  const servidor = qs.get('s') || 'https://taller-facturador.onrender.com'; // links cortos: sin &s=
   const $ = (i) => document.getElementById(i);
 
   function mostrar(tit, txt, accionesHtml, conSpin) {
@@ -76,7 +76,7 @@
       const esCelu = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       mostrar('Tu factura está lista ✅', esCelu ? 'Tocá el botón para verla o guardarla.' : '',
         `<a class="btn prim" href="${url}" target="_blank" rel="noopener">📄 Ver factura</a>` +
-        `<a class="btn sec" href="${url}" download="${nombre.replace(/[^\w.-]/g, '_')}">⬇️ Descargar PDF</a>`);
+        `<a class="btn sec" href="${url}" download="${nombre.replace(/[\\/:*?"<>|]/g, '_').replace(/&/g, 'y')}">⬇️ Descargar PDF</a>`);
       if (!esCelu) { $('visor').src = url; $('visor').style.display = 'block'; }
     } catch (e) {
       if (linkServidor) {

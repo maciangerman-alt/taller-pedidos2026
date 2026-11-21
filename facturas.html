@@ -168,8 +168,16 @@ const nroComp = (p) => `${p.tipoComprobanteLetra || ''} ${String(p.puntoVenta ||
 const ESTADO = { pendiente: '⏳ Pendiente', produccion: '🔧 Producción', listo: '✅ Listo', entregado: '🚚 Entregado', cobrado: '💵 Cobrado' };
 function toast(t, ms = 2600) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => (el.style.display = 'none'), ms); }
 function telWA(tel) { let n = String(tel || '').replace(/\D/g, ''); if (!n) return ''; if (n.startsWith('54')) return n; if (n.startsWith('9') && n.length === 11) return '54' + n; return '549' + n.replace(/^0/, ''); }
+function mensajeFacturaWA(p){
+  const url = String(p.facturaPdfUrl||'').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i,'');
+  const nro = `${p.tipoComprobanteLetra||'C'} ${String(p.puntoVenta||0).padStart(5,'0')}-${String(p.nroComprobante||0).padStart(8,'0')}`;
+  const imp = Number(p.facturaImporte||p.total||0);
+  const monto = imp ? ' por $'+imp.toLocaleString('es-AR',{maximumFractionDigits:2}) : '';
+  const nombre = String(p.nombre||'').trim().split(/\s+/)[0]||'';
+  return `¡Hola${nombre?' '+nombre:''}! 😊\nTe enviamos la factura de tu pedido en *Taller Artesanal* 🧸\n\n🧾 Factura ${nro}${monto}\n📄 Verla o descargarla: ${url}\n\nEl link queda siempre disponible.\n¡Gracias por elegirnos! 💛`;
+}
 function waLink(p) {
-  const msg = `Hola ${p.nombre || ''}! Te paso la factura de tu pedido en *Taller Artesanal*:\n\n${p.facturaPdfUrl}\n\nCualquier consulta avisame!`;
+  const msg = mensajeFacturaWA(p);
   const t = telWA(p.tel); return `https://wa.me/${t}?text=${encodeURIComponent(msg)}`;
 }
 

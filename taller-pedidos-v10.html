@@ -1601,7 +1601,7 @@
             <option value="7">Sujeto No Categorizado</option>
           </select>
         </div>
-        <div class="toggle-row" style="margin-top:10px">
+        <div class="toggle-row" id="fila-factura-emitida" style="margin-top:10px">
           <span class="toggle-label">¿Factura ya emitida? <span style="font-weight:400;font-size:12px;color:var(--texto-secundario)">(por otro sistema)</span></span>
           <button class="toggle" id="toggle-factura-emitida" onclick="toggleFacturaEmitida()"></button>
         </div>
@@ -3001,6 +3001,7 @@ function resetForm(){
   document.getElementById('toggle-madre').classList.remove('on');
   document.getElementById('factura-extra').style.display='none';
   document.getElementById('factura-arca-panel').style.display='none';
+  { const fa=document.getElementById('fila-factura-emitida'); if(fa) fa.style.display=''; }
   document.getElementById('autocomplete-list').style.display='none';
   calcularSaldo();
   avisoCuitOculto();
@@ -3039,6 +3040,8 @@ function mostrarMsgArca(texto, tipo){
 function actualizarPanelFacturacionArca(p){
   const panel=document.getElementById('factura-arca-panel');
   // Solo para pedidos ya guardados y marcados "Requiere factura"
+  const filaAdm=document.getElementById('fila-factura-emitida');
+  if(filaAdm) filaAdm.style.display = (p && p.cae) ? 'none' : ''; // con CAE de este sistema, la llave "otro sistema" no aplica
   if(!p||!p.factura||!editandoId){ panel.style.display='none'; return; }
   panel.style.display='block';
   const conCae = !!p.cae;
@@ -3061,8 +3064,16 @@ function actualizarPanelFacturacionArca(p){
   document.getElementById('btn-borrar-factura-prueba').style.display = prueba?'block':'none';
 }
 
+function mensajeFacturaWA(p){
+  const url = String(p.facturaPdfUrl||'').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i,'');
+  const nro = `${p.tipoComprobanteLetra||'C'} ${String(p.puntoVenta||0).padStart(5,'0')}-${String(p.nroComprobante||0).padStart(8,'0')}`;
+  const imp = Number(p.facturaImporte||p.total||0);
+  const monto = imp ? ' por $'+imp.toLocaleString('es-AR',{maximumFractionDigits:2}) : '';
+  const nombre = String(p.nombre||'').trim().split(/\s+/)[0]||'';
+  return `¡Hola${nombre?' '+nombre:''}! 😊\nTe enviamos la factura de tu pedido en *Taller Artesanal* 🧸\n\n🧾 Factura ${nro}${monto}\n📄 Verla o descargarla: ${url}\n\nEl link queda siempre disponible.\n¡Gracias por elegirnos! 💛`;
+}
 function waLinkFactura(p){
-  const msg = `Hola ${p.nombre||''}! Te paso la factura de tu pedido en *Taller Artesanal*:\n\n${p.facturaPdfUrl}\n\nCualquier consulta avisame!`;
+  const msg = mensajeFacturaWA(p);
   const telWA = p.tel ? formatTelWA(p.tel) : '';
   const base = telWA?`https://wa.me/${telWA}`:`https://wa.me/`;
   return base+'?text='+encodeURIComponent(msg);
@@ -3149,7 +3160,8 @@ window.facturarConArca = async function(){
     `¿Emitir factura${letra?' '+letra:''} por $${fmt(total)}?`,
     `${cliente} · ${COND_IVA_TXT[cond]||''}${cuit?' · CUIT '+cuit:''}. Se informa a ARCA y no se puede deshacer.`,
     '🧾',
-    ejecutar
+    ejecutar,
+    { textoOk:'Emitir factura', colorOk:'#2E7D4F' }
   );
 }
 
@@ -3396,7 +3408,10 @@ function aprenderClienteDePedido(d){
 
 // ==================== CONFIRM MODAL ====================
 let confirmCallback = null;
-window.mostrarConfirm = function(titulo, sub, icon, callback){
+window.mostrarConfirm = function(titulo, sub, icon, callback, opciones){
+  const okBtn = document.getElementById('confirm-btn-ok');
+  okBtn.textContent = (opciones && opciones.textoOk) || 'Eliminar';
+  okBtn.style.background = (opciones && opciones.colorOk) || '';
   document.getElementById('confirm-titulo').textContent = titulo;
   document.getElementById('confirm-sub').textContent = sub;
   document.getElementById('confirm-icon').textContent = icon||'🗑️';
