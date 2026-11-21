@@ -3337,7 +3337,7 @@ async function cargarBasesBuscadores(){
   if(typeof Maestros==='undefined') return;
   try{ _clientesBase = await Maestros.cargar('clientes'); }catch(e){ console.warn('clientes',e); }
   try{ _productosBase = await Maestros.cargar('productos'); }catch(e){ console.warn('productos',e); }
-  try{ _escuelasBase = await Maestros.cargarEscuelas('base-escuelas.json'); }catch(e){ console.warn('escuelas',e); }
+  // El buscador de Escuela usa SOLO la base de clientes propia (la de 2.121 escuelas queda para la Ruta del día)
 }
 function escH(s){ return typeof Maestros!=='undefined' ? Maestros.esc(s) : String(s==null?'':s); }
 
@@ -3366,9 +3366,8 @@ window.buscarEscuela=function(){
   const q=document.getElementById('f-escuela').value.trim();
   const list=document.getElementById('escuela-list');
   if(q.length<2 || typeof Maestros==='undefined'){ list.style.display='none'; return; }
-  const cli=Maestros.buscar(_clientesBase,q,['nombre','fantasia','cuit','loc','contacto'],6);
-  const esc_=Maestros.buscar(_escuelasBase,q,['n','l','d'],cli.length?4:8)
-    .filter(e=>!cli.some(c=>Maestros.sinAcentos(c.fantasia||c.nombre)===Maestros.sinAcentos(e.n)));
+  const cli=Maestros.buscar(_clientesBase,q,['fantasia','nombre','cuit','dom','loc','contacto'],10);
+  const esc_=[];
   if(!cli.length && !esc_.length){ list.style.display='none'; return; }
   list.innerHTML =
     cli.map(c=>`<div class="autocomplete-item" onclick="elegirCliente(${jsArg(c.id)})"><strong>${escH(c.fantasia||c.nombre)}</strong><span>${c.fantasia?escH(c.nombre)+' · ':''}${c.cuit?'CUIT '+escH(Maestros.formatoCuit(c.cuit)):'sin CUIT'}${c.iva?' · '+escH(Maestros.COND_IVA_CORTO[c.iva]||''):''}${c.loc?' · '+escH(c.loc):''}</span></div>`).join('') +
