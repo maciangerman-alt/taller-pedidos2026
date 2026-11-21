@@ -157,7 +157,7 @@ html.grande button,html.grande input,html.grande select,html.grande textarea{fon
 
 <div id="app" hidden>
 <header>
-  <div class="top"><h1><span class="logo" aria-hidden="true">$</span>Costos y Producción</h1><div class="who"><button id="letra" title="Agrandar o achicar la letra">A+</button> <span id="who" class="mail"></span><a href="#" id="salir">Salir</a></div></div>
+  <div class="top"><h1><a href="../inicio.html" title="Volver al inicio" style="text-decoration:none;margin-right:10px;font-size:13px;font-weight:700;padding:6px 10px;border-radius:10px;border:1px solid currentColor;opacity:.85;vertical-align:middle">🏠 Inicio</a><span class="logo" aria-hidden="true">$</span>Costos y Producción</h1><div class="who"><button id="letra" title="Agrandar o achicar la letra">A+</button> <span id="who" class="mail"></span><a href="#" id="salir">Salir</a></div></div>
   <nav id="nav"></nav>
 </header>
 <main>
@@ -378,9 +378,12 @@ function armarNav(){
   $('nav').innerHTML=vis.map(t=>`<button data-t="${t[0]}">${t[1]}</button>`).join('');
   $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>ir(b.dataset.t));
   $('corte-nueva').hidden=rol!=='admin';
-  ir(rol==='admin'?'tablero':'corte');
+  // Link directo a una pestaña: costos/#consultar (Asesor) o costos/#corte (Requisiciones)
+  const pedida=(location.hash||'').slice(1);
+  ir(vis.some(t=>t[0]===pedida)?pedida:(rol==='admin'?'tablero':'corte'));
 }
-function ir(t){ TABS.forEach(x=>{ const s=$('t-'+x[0]); if(s) s.hidden=x[0]!==t; }); $('nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); if(t==='modelo') pintarModelo(); if(t==='tablero') pintarTablero(); if(t==='consultar'){ bienvenida(); if(matchMedia('(pointer:fine)').matches) setTimeout(()=>$('q').focus(),50); } }
+window.addEventListener('hashchange',()=>{ const h=(location.hash||'').slice(1); if(TABS.some(t=>t[0]===h)&&(rol==='admin'||h==='corte')) ir(h); });
+function ir(t){ if(location.hash.slice(1)!==t) history.replaceState(null,'','#'+t); TABS.forEach(x=>{ const s=$('t-'+x[0]); if(s) s.hidden=x[0]!==t; }); $('nav').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.t===t)); if(t==='modelo') pintarModelo(); if(t==='tablero') pintarTablero(); if(t==='consultar'){ bienvenida(); if(matchMedia('(pointer:fine)').matches) setTimeout(()=>$('q').focus(),50); } }
 
 // ---------- datos en Firestore ----------
 function escuchar(){

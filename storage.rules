@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Las facturas se suben SOLO desde la Cloud Function (Admin SDK, que
+// siempre bypassea estas reglas). Estas reglas son para el acceso
+// desde el navegador: nadie puede escribir, y un PDF de factura solo se
+// puede descargar si se conoce la ruta exacta (incluye el ID del pedido
+// en Firestore, que no es adivinable). Se permite `get` y NO `read`:
+// `read` incluye `list`, que dejaría listar la carpeta (SEC-9/ARCA-13).
+// Es el mismo modelo que "cualquiera con el link" de Drive: alcanza para
+// mandar la factura por WhatsApp sin pedir login. Ojo: si la colección
+// `pedidos` fuera legible sin login, los links quedarían expuestos; ver
+// firestore.rules.propuesta.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /facturas/{pedidoId}/{archivo} {
+      allow get: if true;
+      allow list, write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

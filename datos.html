@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller Artesanal — Productos y Clientes</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--madera:#8B5E3C;--madera-light:#C49A6C;--madera-dark:#5C3D20;--crema:#FAF4EC;--crema-dark:#F0E6D3;--verde:#2D7A4F;--verde-light:#E8F5EE;--rojo:#C0392B;--rojo-light:#FDECEA;--amarillo:#D4820A;--amarillo-light:#FEF3E2;--gris:#6B7280;--texto:#1C1008;--borde:#E5D9CC;--bg:#F5EFE8}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--texto);font-size:14px;min-height:100vh}
+  .header{background:var(--madera-dark);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+  .header a.home{color:#fff;text-decoration:none;font-size:13px;font-weight:700;line-height:1;background:rgba(255,255,255,.14);padding:8px 11px;border-radius:10px;white-space:nowrap}
+  .header .t{font-weight:700;font-size:16px}
+  .header .sub{font-size:11px;opacity:.65}
+  .tabs{background:#fff;display:flex;border-bottom:2px solid var(--borde)}
+  .tab{padding:12px 18px;font-weight:600;color:var(--gris);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}
+  .tab.on{color:var(--madera);border-bottom-color:var(--madera)}
+  .main{max-width:960px;margin:0 auto;padding:14px}
+  .barra{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .buscar{flex:1 1 220px;padding:11px 14px;border:1.5px solid var(--borde);border-radius:12px;font:inherit;background:#fff}
+  .buscar:focus,.in:focus,select:focus{outline:none;border-color:var(--madera-light)}
+  .btn{border:none;border-radius:12px;padding:10px 14px;font:inherit;font-weight:700;cursor:pointer;background:var(--crema-dark);color:var(--madera-dark);white-space:nowrap}
+  .btn.prim{background:var(--madera);color:#fff}
+  .btn.peligro{background:var(--rojo-light);color:var(--rojo)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .resumen{font-size:12px;color:var(--gris);margin:0 2px 10px}
+  .lista{display:flex;flex-direction:column;gap:8px}
+  .fila{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:11px 14px;display:flex;gap:12px;align-items:center;cursor:pointer}
+  .fila:hover{border-color:var(--madera-light)}
+  .fila .ppal{flex:1;min-width:0}
+  .fila .n{font-weight:700;color:var(--madera-dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fila .d{font-size:12px;color:var(--gris);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fila .der{text-align:right;font-weight:700;white-space:nowrap}
+  .chip{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:var(--crema-dark);color:var(--madera-dark);margin-left:4px}
+  .chip.ok{background:var(--verde-light);color:var(--verde)}
+  .chip.mal{background:var(--rojo-light);color:var(--rojo)}
+  .chip.av{background:var(--amarillo-light);color:var(--amarillo)}
+  .vacio{text-align:center;color:var(--gris);padding:40px 10px;background:#fff;border-radius:14px;border:1px dashed var(--borde)}
+  .mas{margin:12px auto;display:block}
+  .ov{position:fixed;inset:0;background:rgba(28,16,8,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}
+  .ov.show{display:flex}
+  #ov-preg{z-index:150}
+  .modal{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px}
+  @media(min-width:700px){.ov{align-items:center}.modal{border-radius:18px}}
+  .modal h3{color:var(--madera-dark);margin-bottom:12px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid .full{grid-column:1/-1}
+  label{display:block;font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px}
+  .in,select{width:100%;padding:10px 12px;border:1.5px solid var(--borde);border-radius:10px;font:inherit;background:#fff}
+  .acciones{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+  .acciones .esp{flex:1}
+  .nota{font-size:12px;color:var(--gris);line-height:1.45}
+  .mapa{display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center;margin:10px 0}
+  .mapa .campo{font-weight:600;font-size:13px}
+  .tablaprev{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  .tablaprev th,.tablaprev td{border-bottom:1px solid var(--borde);padding:5px 6px;text-align:left;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+  .tablaprev th{color:var(--gris);font-weight:700}
+  .prevwrap{overflow-x:auto;border:1px solid var(--borde);border-radius:10px;padding:4px 8px;margin-top:6px}
+  .caja{background:var(--crema);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px;line-height:1.5}
+  .radio{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13px;cursor:pointer}
+  .radio input{margin-top:3px}
+  #login{max-width:360px;margin:60px auto;background:#fff;border-radius:18px;padding:24px;border:1px solid var(--borde)}
+  #login h2{color:var(--madera-dark);margin-bottom:14px}
+  #login .in{margin-bottom:10px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--madera-dark);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;z-index:200;display:none;max-width:90vw}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="home" href="inicio.html" title="Volver al inicio">🏠 Inicio</a>
+  <div><div class="t">Productos y Clientes</div><div class="sub" id="sub-usuario"></div></div>
+</div>
+
+<div id="login" style="display:none">
+  <h2>🔐 Ingresar</h2>
+  <input class="in" id="l-mail" type="email" placeholder="Mail">
+  <input class="in" id="l-pass" type="password" placeholder="Contraseña">
+  <button class="btn prim" style="width:100%" onclick="ingresar()">Entrar</button>
+  <div class="nota" id="l-err" style="color:var(--rojo);margin-top:8px"></div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="tabs">
+    <div class="tab" id="tab-productos" onclick="irA('productos')">📦 Productos</div>
+    <div class="tab" id="tab-clientes" onclick="irA('clientes')">🏫 Clientes</div>
+  </div>
+  <div class="main">
+    <div class="barra">
+      <input class="buscar" id="q" placeholder="Buscar..." oninput="pintar()" onkeydown="enterBuscar(event)" autocomplete="off">
+      <button class="btn prim" onclick="abrirEditar()">+ Agregar</button>
+      <button class="btn" id="btn-importar" onclick="abrirImportar()">📥 Importar Excel</button>
+      <button class="btn" id="btn-exportar" onclick="exportar()">📤 Exportar</button>
+    </div>
+    <div class="resumen" id="aviso-permisos" style="display:none;color:var(--amarillo)"></div>
+    <div class="resumen" id="resumen"></div>
+    <div class="lista" id="lista"></div>
+    <button class="btn mas" id="btn-mas" style="display:none" onclick="limite+=200;pintar()">Mostrar más</button>
+  </div>
+</div>
+
+<!-- Edición -->
+<div class="ov" id="ov-editar"><div class="modal">
+  <h3 id="ed-titulo"></h3>
+  <div class="grid" id="ed-campos"></div>
+  <div class="nota" id="ed-aviso" style="margin-top:8px"></div>
+  <div class="acciones">
+    <button class="btn peligro" id="ed-borrar" onclick="borrar()">🗑️ Borrar</button>
+    <span class="esp"></span>
+    <button class="btn" onclick="cerrar('ov-editar')">Cancelar</button>
+    <button class="btn prim" id="ed-guardar" onclick="guardar()">💾 Guardar</button>
+  </div>
+</div></div>
+
+<!-- Importación -->
+<div class="ov" id="ov-importar"><div class="modal">
+  <h3 id="im-titulo">📥 Importar</h3>
+  <div id="im-paso1">
+    <p class="nota">Elegí el Excel o CSV que exportaste de ADM Global, tal cual sale. En el paso siguiente indicás qué columna es cada dato. Las columnas se detectan solas cuando el nombre se parece.</p>
+    <input type="file" id="im-file" accept=".xlsx,.xls,.csv,.txt" style="margin-top:12px" onchange="leerArchivo(this.files[0])">
+    <div class="nota" id="im-err" style="color:var(--rojo);margin-top:8px"></div>
+  </div>
+  <div id="im-paso2" style="display:none">
+    <div class="nota" id="im-info"></div>
+    <div class="mapa" id="im-mapa"></div>
+    <div class="nota"><b>Vista previa</b> (primeras filas, ya interpretadas):</div>
+    <div class="prevwrap"><table class="tablaprev" id="im-prev"></table></div>
+    <div class="caja" id="im-resumen"></div>
+    <div class="caja">
+      <label class="radio"><input type="radio" name="im-modo" value="merge" checked> <span><b>Agregar y actualizar</b>: suma los nuevos y actualiza los que ya existen (mismo CUIT o código). No borra nada.</span></label>
+      <label class="radio"><input type="radio" name="im-modo" value="reemplazar"> <span><b>Reemplazar todo</b>: borra la base actual y deja solo lo de este archivo.</span></label>
+    </div>
+    <div class="acciones">
+      <button class="btn" onclick="cerrar('ov-importar')">Cancelar</button>
+      <span class="esp"></span>
+      <button class="btn prim" id="im-ok" onclick="importar()">Importar</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- Confirmación -->
+<div class="ov" id="ov-preg"><div class="modal" style="max-width:420px">
+  <h3 id="preg-txt"></h3>
+  <div class="acciones"><span class="esp"></span>
+    <button class="btn" id="preg-no">Cancelar</button>
+    <button class="btn peligro" id="preg-si">Sí, seguir</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777"
+});
+</script>
+<script src="maestros.js?v=20261122"></script>
+<script>
+const M = Maestros, esc = M.esc;
+const $ = (id) => document.getElementById(id);
+let tipo = 'productos', items = [], limite = 200, editando = null;
+
+// Definición de cada base: campos editables, columnas del importador y cómo se muestra
+const DEF = {
+  productos: {
+    titulo: 'Producto', icono: '📦', buscarEn: ['nombre', 'cod', 'barra', 'rubro'],
+    campos: [
+      { k: 'nombre', l: 'Nombre / descripción', full: true, req: true },
+      { k: 'cod', l: 'Código' },
+      { k: 'barra', l: 'Código de barras (escaneá acá)' },
+      { k: 'rubro', l: 'Rubro / categoría' },
+      { k: 'precio', l: 'Precio de venta sugerido ($)', num: true },
+      { k: 'costo', l: 'Costo ($)', num: true },
+    ],
+    importar: [
+      { k: 'nombre', l: 'Nombre *', pistas: ['descrip', 'nombre', 'articulo', 'producto', 'detalle'] },
+      { k: 'barra', l: 'Código de barras', pistas: ['codigo de barras', 'cod de barras', 'cod barras', 'codigo barras', 'codigo de barra', 'codigo barra', 'cod barra', 'barras', 'barra', 'ean', 'ean13', 'upc', 'gtin'] },
+      { k: 'cod', l: 'Código', pistas: ['codigo', 'cod', 'sku', 'id art', 'cod art', 'codigo interno'] },
+      { k: 'precio', l: 'Precio venta', pistas: ['precio venta', 'precio de venta', 'pr venta', 'venta', 'lista 1', 'lista1', 'precio final', 'precio publico', 'precio lista', 'precio', 'p venta', 'pvp'] },
+      { k: 'costo', l: 'Costo', pistas: ['costo', 'precio costo', 'precio de costo', 'compra', 'precio de compra'] },
+      { k: 'rubro', l: 'Rubro', pistas: ['rubro', 'categoria', 'familia', 'linea', 'grupo'] },
+    ],
+    clave: (x) => (x.cod ? 'cod:' + M.sinAcentos(x.cod) : x.barra ? 'bar:' + x.barra : 'n:' + M.sinAcentos(x.nombre)),
+    normalizar: M.normalizarProducto,
+    fila: (p) => `<div class="ppal"><div class="n">${esc(p.nombre)}</div><div class="d">${p.cod ? 'Cód. ' + esc(p.cod) : 'Sin código'}${p.barra ? ' · ▮▯▮ ' + esc(p.barra) : ''}${p.rubro ? ' · ' + esc(p.rubro) : ''}</div></div><div class="der">${p.precio != null ? '$' + Number(p.precio).toLocaleString('es-AR') : '<span class="chip av">sin precio</span>'}</div>`,
+  },
+  clientes: {
+    titulo: 'Cliente', icono: '🏫', buscarEn: ['nombre', 'fantasia', 'cuit', 'loc', 'contacto'],
+    campos: [
+      { k: 'nombre', l: 'Razón social / nombre', full: true, req: true },
+      { k: 'fantasia', l: 'Nombre corto (ej. "Jardín 45")', full: true },
+      { k: 'cuit', l: 'CUIT' },
+      { k: 'iva', l: 'Condición IVA', sel: true },
+      { k: 'dom', l: 'Domicilio', full: true },
+      { k: 'loc', l: 'Localidad' },
+      { k: 'tel', l: 'Teléfono' },
+      { k: 'mail', l: 'Mail' },
+      { k: 'contacto', l: 'Contacto (maestra / directora)' },
+      { k: 'obs', l: 'Observaciones', full: true },
+    ],
+    importar: [
+      { k: 'nombre', l: 'Razón social *', pistas: ['razon social', 'razon', 'nombre', 'cliente', 'denominacion', 'apellido y nombre'] },
+      { k: 'fantasia', l: 'Nombre fantasía', pistas: ['fantasia', 'nombre comercial', 'nombre corto'] },
+      { k: 'cuit', l: 'CUIT', pistas: ['cuit', 'c.u.i.t', 'cuil', 'nro documento', 'nro doc', 'nro. doc', 'documento'] },
+      { k: 'iva', l: 'Condición IVA', pistas: ['condicion iva', 'cond iva', 'iva', 'situacion iva', 'categoria iva', 'tipo responsable', 'responsable'] },
+      { k: 'dom', l: 'Domicilio', pistas: ['domicilio', 'direccion', 'calle'] },
+      { k: 'loc', l: 'Localidad', pistas: ['localidad', 'ciudad', 'partido', 'loc'] },
+      { k: 'tel', l: 'Teléfono', pistas: ['telefono', 'tel', 'celular', 'whatsapp', 'movil'] },
+      { k: 'mail', l: 'Mail', pistas: ['mail', 'email', 'correo'] },
+      { k: 'contacto', l: 'Contacto', pistas: ['contacto', 'responsable compra', 'atencion'] },
+      { k: 'obs', l: 'Observaciones', pistas: ['observaciones', 'obs', 'notas'] },
+    ],
+    clave: (x) => (x.cuit ? 'cuit:' + x.cuit : 'n:' + M.sinAcentos(x.nombre)),
+    normalizar: M.normalizarCliente,
+    fila: (c) => {
+      const cuit = c.cuit ? `CUIT ${esc(M.formatoCuit(c.cuit))}${M.cuitValido(c.cuit) ? '' : ' <span class="chip mal">CUIT inválido</span>'}` : '<span class="chip av">sin CUIT</span>';
+      const iva = c.iva ? `<span class="chip ok">${esc(M.COND_IVA_CORTO[c.iva] || c.iva)}</span>` : (c.cuit ? '<span class="chip av">sin cond. IVA</span>' : '');
+      return `<div class="ppal"><div class="n">${esc(c.fantasia || c.nombre)}</div><div class="d">${c.fantasia ? esc(c.nombre) + ' · ' : ''}${cuit}${c.loc ? ' · ' + esc(c.loc) : ''}</div></div><div class="der">${iva}</div>`;
+    },
+  },
+};
+
+function toast(t, ms = 2600) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => (el.style.display = 'none'), ms); }
+function cerrar(id) { $(id).classList.remove('show'); }
+// Reemplaza a confirm(): devuelve una promesa true/false
+function preguntar(texto, si = 'Sí, seguir') {
+  return new Promise((res) => {
+    $('preg-txt').textContent = texto; $('preg-si').textContent = si;
+    const fin = (v) => { cerrar('ov-preg'); res(v); };
+    $('preg-si').onclick = () => fin(true); $('preg-no').onclick = () => fin(false);
+    $('ov-preg').classList.add('show');
+  });
+}
+
+// ---------------------------------------------------------------- sesión
+firebase.auth().onAuthStateChanged((u) => {
+  $('login').style.display = u ? 'none' : 'block';
+  $('app').style.display = u ? 'block' : 'none';
+  if (!u) return;
+  $('sub-usuario').textContent = u.email;
+  verificarPermisos(u);
+  irA((location.hash || '#productos').slice(1));
+});
+// SEC-6: Importar / Reemplazar / Exportar solo para los mails autorizados en
+// pedidos/_config_facturacion.emailsAutorizados (los mismos que facturan).
+// Si esa lista todavía no está configurada, se permite (como antes) y se avisa.
+// OJO: es solo una barrera de pantalla; la barrera real son las reglas de Firestore.
+let esAdmin = false;
+async function verificarPermisos(u) {
+  esAdmin = false; aplicarPermisos('Verificando permisos...');
+  try {
+    const s = await firebase.firestore().collection('pedidos').doc('_config_facturacion').get();
+    const lista = s.exists && Array.isArray(s.data().emailsAutorizados) ? s.data().emailsAutorizados.map((x) => String(x).toLowerCase().trim()).filter(Boolean) : [];
+    if (!lista.length) { esAdmin = true; aplicarPermisos(''); return; }
+    esAdmin = lista.includes(String(u.email || '').toLowerCase());
+    aplicarPermisos(esAdmin ? '' : '🔒 Importar y exportar la base es solo para los administradores. Podés buscar y editar fichas.');
+  } catch (e) {
+    console.warn('permisos', e);
+    aplicarPermisos('🔒 No se pudieron verificar los permisos: importar y exportar quedan bloqueados. Recargá la página.');
+  }
+}
+function aplicarPermisos(msg) {
+  ['btn-importar', 'btn-exportar'].forEach((id) => { $(id).disabled = !esAdmin; });
+  $('aviso-permisos').textContent = msg; $('aviso-permisos').style.display = msg ? 'block' : 'none';
+}
+const esTipo = (t) => Object.prototype.hasOwnProperty.call(DEF, t);
+window.ingresar = async () => {
+  $('l-err').textContent = '';
+  try { await firebase.auth().signInWithEmailAndPassword($('l-mail').value.trim(), $('l-pass').value); }
+  catch (e) { $('l-err').textContent = 'Mail o contraseña incorrectos.'; }
+};
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if (esTipo(h) && h !== tipo) irA(h); });
+
+// ---------------------------------------------------------------- lista
+window.irA = async (t) => {
+  tipo = esTipo(t) ? t : 'productos';
+  if (location.hash.slice(1) !== tipo) history.replaceState(null, '', '#' + tipo);
+  document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x.id === 'tab-' + tipo));
+  $('q').value = ''; $('q').placeholder = tipo === 'productos' ? 'Buscar o escanear producto...' : 'Buscar escuela, razón social, CUIT o localidad...';
+  limite = 200; $('lista').innerHTML = '<div class="vacio">Cargando...</div>';
+  try { items = await M.cargar(tipo); } catch (e) { console.error(e); $('lista').innerHTML = '<div class="vacio">No se pudo leer la base. ¿Hay conexión?</div>'; return; }
+  pintar();
+};
+
+// Pistola lectora o Enter en el buscador: si el código coincide exacto, abre el producto
+window.enterBuscar = (e) => {
+  if (e.key !== 'Enter' || tipo !== 'productos') return;
+  const p = M.porCodigo(items, $('q').value);
+  if (p) { e.preventDefault(); abrirEditar(p.id); }
+  else if ($('q').value.trim().length >= 6 && /^\d+$/.test($('q').value.trim())) toast('No hay ningún producto con ese código. Tocá "+ Agregar" para cargarlo.', 4000);
+};
+M.escucharPistola((codigo) => {
+  if (tipo !== 'productos' || document.querySelector('.ov.show')) return;
+  const p = M.porCodigo(items, codigo);
+  if (p) abrirEditar(p.id); else { $('q').value = codigo; pintar(); toast(`Código ${codigo}: no está cargado. Tocá "+ Agregar" para darlo de alta.`, 4500); }
+});
+
+window.pintar = () => {
+  const d = DEF[tipo], q = $('q').value.trim();
+  const ordenados = q ? M.buscar(items, q, d.buscarEn, 100000) : items.slice().sort((a, b) => M.sinAcentos(a.fantasia || a.nombre).localeCompare(M.sinAcentos(b.fantasia || b.nombre)));
+  let extra = '';
+  if (tipo === 'clientes') {
+    const sinIva = items.filter((c) => c.cuit && !c.iva).length, malCuit = items.filter((c) => c.cuit && !M.cuitValido(c.cuit)).length;
+    extra = (sinIva ? ` · ⚠️ ${sinIva} con CUIT pero sin condición IVA` : '') + (malCuit ? ` · ❌ ${malCuit} con CUIT inválido` : '');
+  } else {
+    const sinPrecio = items.filter((p) => p.precio == null).length;
+    extra = sinPrecio ? ` · ⚠️ ${sinPrecio} sin precio` : '';
+  }
+  $('resumen').textContent = `${items.length} ${tipo} en la base${q ? ` · ${ordenados.length} coinciden` : ''}${extra}`;
+  if (!items.length) {
+    $('lista').innerHTML = `<div class="vacio">Todavía no hay ${tipo} cargados.<br><br>Tocá <b>📥 Importar Excel</b> para traerlos de ADM Global, o <b>+ Agregar</b> para cargar uno a mano.</div>`;
+    $('btn-mas').style.display = 'none'; return;
+  }
+  const vis = ordenados.slice(0, limite);
+  $('lista').innerHTML = vis.length ? vis.map((x) => `<div class="fila" data-id="${esc(x.id)}">${d.fila(x)}</div>`).join('') : '<div class="vacio">Nada coincide con la búsqueda.</div>';
+  $('btn-mas').style.display = ordenados.length > limite ? 'block' : 'none';
+};
+
+// Clic en una fila: el id viaja en data-id (nunca dentro de un onclick, SEC-4)
+$('lista').addEventListener('click', (e) => { const f = e.target.closest('.fila[data-id]'); if (f) abrirEditar(f.dataset.id); });
+
+// ---------------------------------------------------------------- edición
+window.abrirEditar = (id) => {
+  const d = DEF[tipo];
+  editando = id ? items.find((x) => x.id === id) : null;
+  $('ed-titulo').textContent = (editando ? 'Editar ' : 'Nuevo ') + d.titulo.toLowerCase();
+  $('ed-borrar').style.display = editando ? '' : 'none';
+  $('ed-campos').innerHTML = d.campos.map((c) => {
+    const v = editando && editando[c.k] != null ? editando[c.k] : '';
+    const ctrl = c.sel
+      ? `<select id="ed-${c.k}"><option value="">—</option>${Object.entries(M.COND_IVA).map(([k, t]) => `<option value="${k}" ${String(v) === k ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`
+      : `<input class="in" id="ed-${c.k}" value="${esc(c.k === 'cuit' && v ? M.formatoCuit(v) : v)}" ${c.num ? 'inputmode="decimal"' : ''}>`;
+    return `<div class="${c.full ? 'full' : ''}"><label>${esc(c.l)}${c.req ? ' *' : ''}</label>${ctrl}</div>`;
+  }).join('');
+  $('ed-aviso').textContent = editando && editando.origen ? `Origen: ${{ adm: 'importado de ADM Global', pedido: 'aprendido de un pedido facturado', manual: 'cargado a mano', escuelas: 'base de escuelas' }[editando.origen] || editando.origen}` : '';
+  if (!editando && tipo === 'productos' && /^\d{6,}$/.test($('q').value.trim())) $('ed-barra').value = $('q').value.trim();
+  $('ov-editar').classList.add('show');
+  setTimeout(() => $('ed-nombre').focus(), 50);
+};
+
+window.guardar = async () => {
+  const d = DEF[tipo];
+  const datos = { ...(editando || {}), origen: editando ? editando.origen : 'manual' };
+  d.campos.forEach((c) => { datos[c.k] = $('ed-' + c.k).value.trim(); });
+  if (!datos.nombre) { toast('⚠️ Falta el nombre'); return; }
+  if (tipo === 'clientes' && datos.cuit) {
+    if (!M.cuitValido(datos.cuit)) { toast('⚠️ El CUIT no es válido (revisá los números)'); return; }
+    const otro = items.find((x) => x.cuit === M.soloDigitos(datos.cuit) && (!editando || x.id !== editando.id));
+    if (otro) { toast(`⚠️ Ese CUIT ya es de "${otro.nombre}"`); return; }
+  }
+  if (tipo === 'productos' && datos.barra) {
+    const otro = items.find((x) => x.barra && x.barra === datos.barra.replace(/\s+/g, '') && (!editando || x.id !== editando.id));
+    if (otro) { toast(`⚠️ Ese código de barras ya es de "${otro.nombre}"`); return; }
+  }
+  if (tipo === 'productos' && datos.cod) {
+    const otro = items.find((x) => x.cod && M.sinAcentos(x.cod) === M.sinAcentos(datos.cod) && (!editando || x.id !== editando.id));
+    if (otro) { toast(`⚠️ El código ya es de "${otro.nombre}"`); return; }
+  }
+  const item = d.normalizar(datos);
+  if (editando) item.id = editando.id;
+  $('ed-guardar').disabled = true;
+  try { await M.guardarUno(tipo, item); items = await M.cargar(tipo); editando = null; cerrar('ov-editar'); pintar(); toast('✅ Guardado'); }
+  catch (e) { console.error(e); toast('❌ No se pudo guardar'); }
+  finally { $('ed-guardar').disabled = false; }
+};
+
+window.borrar = async () => {
+  if (!editando || !(await preguntar(`¿Borrar "${editando.nombre}"?`, 'Sí, borrar'))) return;
+  try { await M.borrarUno(tipo, editando.id); items = await M.cargar(tipo); editando = null; cerrar('ov-editar'); pintar(); toast('🗑️ Borrado'); }
+  catch (e) { console.error(e); toast('❌ No se pudo borrar'); }
+};
+
+// ---------------------------------------------------------------- importar
+let filas = [], filasCrudas = [], encabezados = [];
+const normEnc = (t) => M.sinAcentos(t).replace(/\./g, '').replace(/[\-_/]/g, ' ').replace(/\s+/g, ' ').trim();
+
+window.abrirImportar = () => {
+  if (!esAdmin) { toast('🔒 Importar es solo para administradores'); return; }
+  $('im-titulo').textContent = `📥 Importar ${tipo} desde Excel`;
+  $('im-paso1').style.display = 'block'; $('im-paso2').style.display = 'none';
+  $('im-file').value = ''; $('im-err').textContent = '';
+  $('ov-importar').classList.add('show');
+};
+
+// Lee xlsx/xls binarios, CSV/TXT y "xls" que en realidad son HTML.
+// - Texto: se decodifica acá (UTF-8 si es válido; si no, Windows-1252 como ADM/Excel)
+//   y SheetJS recibe raw:true para que NO convierta "10-12" en fecha ni saque
+//   los ceros de "0012345678905" (XLS-02, XLS-04).
+function leerLibro(buf) {
+  const bytes = new Uint8Array(buf);
+  const esZip = bytes[0] === 0x50 && bytes[1] === 0x4B, esOle = bytes[0] === 0xD0 && bytes[1] === 0xCF;
+  if (esZip || esOle) return XLSX.read(buf, { type: 'array', raw: true, codepage: 1252 });
+  let txt;
+  try { txt = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+  catch (e) { txt = new TextDecoder('windows-1252').decode(bytes); }
+  return XLSX.read(txt.replace(/^﻿/, ''), { type: 'string', raw: true });
+}
+// Fila de encabezados: entre las primeras 30, la que más columnas conocidas reconoce (XLS-10)
+function buscarEncabezados(matriz) {
+  const todas = DEF[tipo].importar.flatMap((f) => f.pistas.map(normEnc));
+  let iEnc = -1, mejor = 0;
+  matriz.slice(0, 30).forEach((r, i) => {
+    const n = r.filter((c) => { const h = normEnc(c); return h && h.length < 60 && todas.some((p) => h === p || h.includes(p)); }).length;
+    if (n > mejor) { mejor = n; iEnc = i; }
+  });
+  if (mejor < 2) iEnc = matriz.findIndex((r) => r.filter((c) => String(c).trim()).length >= 2);
+  return { iEnc, puntaje: mejor };
+}
+
+window.leerArchivo = async (file) => {
+  if (!file) return;
+  $('im-err').textContent = '';
+  try {
+    const wb = leerLibro(await file.arrayBuffer());
+    // Si el libro tiene varias hojas, se usa la que tiene encabezados reconocibles (XLS-22)
+    let elegida = null;
+    wb.SheetNames.forEach((nom) => {
+      const hoja = wb.Sheets[nom];
+      const matriz = XLSX.utils.sheet_to_json(hoja, { header: 1, defval: '', raw: false });
+      const { iEnc, puntaje } = buscarEncabezados(matriz);
+      if (iEnc < 0) return;
+      const filasDatos = matriz.length - iEnc - 1;
+      if (!elegida || puntaje > elegida.puntaje || (puntaje === elegida.puntaje && filasDatos > elegida.filasDatos)) elegida = { nom, hoja, matriz, iEnc, puntaje, filasDatos };
+    });
+    if (!elegida) throw new Error('No encontré encabezados en el archivo.');
+    const { matriz, iEnc } = elegida;
+    // Valores crudos de cada celda: un número con formato "#,##0" se lee como texto
+    // "1,500"; el valor real es 1500 (XLS-01). Un EAN o CUIT como número se ve "7,79E+12".
+    const crudo = XLSX.utils.sheet_to_json(elegida.hoja, { header: 1, defval: '', raw: true });
+    encabezados = matriz[iEnc].map((h, i) => String(h).trim() || `Columna ${i + 1}`);
+    filas = []; filasCrudas = [];
+    for (let i = iEnc + 1; i < matriz.length; i++) {
+      const r = matriz[i];
+      if (!r.some((c) => String(c).trim())) continue;
+      filas.push(r); filasCrudas.push(crudo[i] || []);
+    }
+    if (!filas.length) throw new Error('El archivo no tiene filas de datos.');
+    armarMapeo();
+    if (wb.SheetNames.length > 1) $('im-info').innerHTML += ` <span class="chip">hoja «${esc(elegida.nom)}»</span>`;
+    $('im-paso1').style.display = 'none'; $('im-paso2').style.display = 'block';
+  } catch (e) { console.error(e); $('im-err').textContent = '❌ ' + e.message; }
+};
+
+// Columnas que NO pueden ser cada campo aunque el nombre se parezca (XLS-05)
+const EXCLUIR = {
+  precio: /costo|compra|fecha|\bult|alic|%/,
+  costo: /fecha|venta|%/,
+  cuit: /tipo/,
+  iva: /alic|percep|retenc|%|importe/,
+  nombre: /fantasia|^cod|^nro|^tipo|^n$/,
+  cod: /barra|proveedor/,
+};
+function columnaNumerica(j) {
+  const vals = filas.slice(0, 15).map((r) => String(r[j] == null ? '' : r[j]).trim()).filter(Boolean);
+  return vals.length > 0 && vals.every((v) => /^\d+$/.test(v));
+}
+function autoDetectar(campo, pistas, usadas) {
+  const enc = encabezados.map(normEnc);
+  pistas = pistas.map(normEnc);
+  const ok = (h, j) => !usadas.has(j) && !(EXCLUIR[campo] && EXCLUIR[campo].test(h)) && !(campo === 'nombre' && columnaNumerica(j));
+  for (const p of pistas) { const i = enc.findIndex((h, j) => h === p && ok(h, j)); if (i >= 0) return i; }
+  for (const p of pistas) { const i = enc.findIndex((h, j) => h.includes(p) && ok(h, j)); if (i >= 0) return i; }
+  return -1;
+}
+// Orden de detección: el costo antes que el precio, la barra antes que el código
+const ORDEN_DETECCION = { productos: ['nombre', 'barra', 'costo', 'precio', 'cod', 'rubro'] };
+
+function armarMapeo() {
+  const d = DEF[tipo];
+  $('im-info').innerHTML = `Archivo con <b>${filas.length}</b> filas. Revisá que cada dato apunte a la columna correcta:`;
+  const usadas = new Set(), elegido = {};
+  const orden = ORDEN_DETECCION[tipo] || d.importar.map((f) => f.k);
+  orden.forEach((k) => { const f = d.importar.find((x) => x.k === k); const i = autoDetectar(k, f.pistas, usadas); if (i >= 0) usadas.add(i); elegido[k] = i; });
+  $('im-mapa').innerHTML = d.importar.map((f) => {
+    const i = elegido[f.k];
+    return `<div class="campo">${esc(f.l)}</div><select id="map-${f.k}" onchange="previsualizar()"><option value="-1">— (no importar)</option>${encabezados.map((h, j) => `<option value="${j}" ${j === i ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select>`;
+  }).join('');
+  previsualizar();
+}
+
+// Valor de una celda para un campo: número real para precio/costo; todos los
+// dígitos si Excel lo muestra en notación científica; si no, el texto tal cual
+// (así "00123" o un EAN con formato 0000000000000 conservan los ceros).
+const NUMERICOS = { precio: 1, costo: 1 };
+function valorCelda(campo, fmt, raw) {
+  if (NUMERICOS[campo] && typeof raw === 'number') return raw;
+  if (typeof raw === 'number' && Number.isInteger(raw) && !/^\d+$/.test(String(fmt).trim())) return String(raw);
+  return String(fmt == null ? '' : fmt).trim();
+}
+const barraValida = (b) => (/^\d+$/.test(b) ? b.length >= 6 && b.length <= 14 : /^[0-9A-Za-z-]{3,30}$/.test(b));
+const esFilaBasura = (o) => /^(sub)?total(es)?\b|^rubro\s*:|^cantidad de|^registros\b/i.test(String(o.nombre || '').trim());
+
+function filaAObjeto(r, idx) {
+  const d = DEF[tipo], o = {};
+  const rc = filasCrudas[idx] || [];
+  d.importar.forEach((f) => { const i = Number($('map-' + f.k).value); if (i >= 0) o[f.k] = valorCelda(f.k, r[i], rc[i]); });
+  if (tipo === 'clientes') {
+    const ivaTxt = o.iva; o.iva = M.condIvaDesdeTexto(ivaTxt); o._ivaTxt = ivaTxt;
+    const dig = M.soloDigitos(o.cuit);
+    o._cuitOrig = o.cuit;
+    if (dig.length === 7 || dig.length === 8) { o.dni = dig; o.cuit = ''; }          // DNI de consumidor final: no es error (XLS-13)
+    else if (dig && !M.cuitValido(dig)) { o._obsAdm = `CUIT inválido en ADM: ${o.cuit}`; o.cuit = ''; o._cuitMal = true; }
+    else o.cuit = dig.length === 11 ? dig : '';
+    if (o._obsAdm) o.obs = [o.obs, o._obsAdm].filter(Boolean).join(' · ');
+    o.origen = 'adm';
+  } else {
+    if (o.barra) { const b = String(o.barra).replace(/\s+/g, ''); if (!barraValida(b)) { o._barraMal = o.barra; delete o.barra; } }
+    o.origen = 'adm';
+  }
+  return o;
+}
+function objetosArchivo() { return filas.map((r, i) => filaAObjeto(r, i)); }
+
+window.previsualizar = () => {
+  const d = DEF[tipo];
+  const objs = objetosArchivo();
+  const cols = d.importar.filter((f) => Number($('map-' + f.k).value) >= 0);
+  $('im-prev').innerHTML = `<tr>${cols.map((f) => `<th>${esc(f.l.replace(' *', ''))}</th>`).join('')}</tr>` +
+    objs.slice(0, 6).map((o) => `<tr>${cols.map((f) => {
+      let v = o[f.k];
+      if (f.k === 'iva') v = o.iva ? M.COND_IVA_CORTO[o.iva] : (o._ivaTxt ? `❓ "${o._ivaTxt}"` : '');
+      if (f.k === 'cuit') v = o._cuitMal ? `❌ ${o._cuitOrig}` : (o.cuit ? M.formatoCuit(o.cuit) : (o.dni ? `DNI ${o.dni}` : ''));
+      if (f.k === 'barra' && o._barraMal) v = `❌ ${o._barraMal}`;
+      if ((f.k === 'precio' || f.k === 'costo') && v !== '' && v != null) { const n = M.numeroAR(v); v = n == null ? `❓ ${v}` : '$' + n.toLocaleString('es-AR'); }
+      return `<td title="${esc(v)}">${esc(v)}</td>`;
+    }).join('')}</tr>`).join('');
+
+  const sinNombre = objs.filter((o) => !o.nombre).length;
+  const basura = objs.filter((o) => o.nombre && esFilaBasura(o));
+  let txt = `✅ <b>${objs.length - sinNombre - basura.length}</b> filas para importar.`;
+  if (sinNombre) txt += `<br>⏭️ ${sinNombre} filas sin nombre se van a saltear.`;
+  if (basura.length) txt += `<br>⏭️ ${basura.length} filas de total o subtítulo se van a saltear (${basura.slice(0, 3).map((o) => '"' + esc(o.nombre) + '"').join(', ')}).`;
+  const validos = objs.filter((o) => o.nombre && !esFilaBasura(o));
+  if (tipo === 'clientes') {
+    const malCuit = validos.filter((o) => o._cuitMal).length;
+    const ivaNo = validos.filter((o) => o.cuit && !o.iva).length;
+    const ivaRaros = [...new Set(validos.filter((o) => o._ivaTxt && !o.iva).map((o) => o._ivaTxt))].slice(0, 6);
+    const cuenta = {}; validos.forEach((o) => { if (o.cuit) cuenta[o.cuit] = (cuenta[o.cuit] || 0) + 1; });
+    const repetidos = Object.keys(cuenta).filter((c) => cuenta[c] > 1);
+    if (malCuit) txt += `<br>❌ ${malCuit} con CUIT inválido: se importan <b>sin CUIT</b> y con una nota para corregirlos.`;
+    if (ivaNo) txt += `<br>⚠️ ${ivaNo} con CUIT pero sin condición IVA reconocible${ivaRaros.length ? ` (valores no reconocidos: ${ivaRaros.map((x) => '"' + esc(x) + '"').join(', ')})` : ''}. Se pueden completar después.`;
+    if (repetidos.length) txt += `<br>⚠️ ${repetidos.length} CUIT aparecen en más de una fila (${repetidos.slice(0, 3).map((c) => esc(M.formatoCuit(c))).join(', ')}): quedan como <b>un solo cliente</b> con los datos combinados.`;
+    if (Number($('map-cuit').value) < 0) txt += '<br>⚠️ No elegiste la columna CUIT.';
+    if (Number($('map-iva').value) < 0) txt += '<br>⚠️ No elegiste la columna Condición IVA (es la que pide ARCA desde el 1/12).';
+    else if (validos.length && validos.filter((o) => o._ivaTxt).every((o) => /^\d+$/.test(String(o._ivaTxt).trim()))) txt += '<br>⚠️ La columna Condición IVA trae solo números: revisá que sean códigos de ARCA (1 = Resp. Inscripto, 4 = Exento, 5 = Cons. Final, 6 = Monotributo).';
+  } else {
+    const sinPrecio = validos.filter((o) => M.numeroAR(o.precio) == null).length;
+    const precioCero = validos.filter((o) => { const n = M.numeroAR(o.precio); return n != null && n <= 0; }).length;
+    const barraMal = validos.filter((o) => o._barraMal).length;
+    const cods = {}, eans = {};
+    validos.forEach((o) => { if (o.cod) { const k = M.sinAcentos(o.cod); cods[k] = (cods[k] || 0) + 1; } if (o.barra) (eans[o.barra] = eans[o.barra] || new Set()).add(o.cod || o.nombre); });
+    const codRep = Object.keys(cods).filter((k) => cods[k] > 1).length;
+    const eanRep = Object.keys(eans).filter((k) => eans[k].size > 1).length;
+    if (sinPrecio) txt += `<br>⚠️ ${sinPrecio} sin precio reconocible.`;
+    if (precioCero) txt += `<br>⚠️ ${precioCero} con precio 0 o negativo.`;
+    if (barraMal) txt += `<br>❌ ${barraMal} códigos de barras inválidos (¿notación científica?): se importan sin código de barras.`;
+    if (codRep) txt += `<br>⚠️ ${codRep} códigos repetidos en el archivo: se combinan en un solo producto.`;
+    if (eanRep) txt += `<br>⚠️ ${eanRep} códigos de barras aparecen en productos distintos: revisalos (la pistola agrega el primero).`;
+  }
+  $('im-resumen').innerHTML = txt;
+  $('im-ok').disabled = Number($('map-nombre').value) < 0;
+};
+
+// Busca el registro existente que corresponde a una fila: por código, después
+// por código de barras, después por CUIT y por último por nombre (XLS-07)
+function indiceBase(base) {
+  const m = { cod: new Map(), bar: new Map(), cuit: new Map(), nom: new Map() };
+  base.forEach((x) => {
+    if (x.cod) m.cod.set(M.sinAcentos(x.cod), x);
+    if (x.barra) m.bar.set(String(x.barra).replace(/^0+(?=\d)/, ''), x);
+    if (x.cuit) m.cuit.set(x.cuit, x);
+    const n = M.sinAcentos(x.nombre); if (n && !m.nom.has(n)) m.nom.set(n, x);
+  });
+  return m;
+}
+function buscarEnIndice(m, x) {
+  if (tipo === 'productos') {
+    if (x.cod && m.cod.get(M.sinAcentos(x.cod))) return m.cod.get(M.sinAcentos(x.cod));
+    const b = x.barra && m.bar.get(String(x.barra).replace(/^0+(?=\d)/, ''));
+    if (b && (!b.cod || !x.cod)) return b;
+    const n = m.nom.get(M.sinAcentos(x.nombre));
+    return n && !n.cod && !n.barra && !x.cod ? n : null;
+  }
+  if (x.cuit) { const c = m.cuit.get(x.cuit); if (c) return c; }
+  const n = m.nom.get(M.sinAcentos(x.nombre));
+  return n && (!n.cuit || !x.cuit || n.cuit === x.cuit) ? n : null;
+}
+// Combina una fila con lo existente sin perder datos: los vacíos no pisan,
+// las observaciones se suman, activo/origen se conservan (XLS-11, XLS-13, XLS-22)
+function combinar(ya, x) {
+  const r = { ...ya, ...x, id: ya.id };
+  if (ya.obs && x.obs && ya.obs !== x.obs) r.obs = ya.obs.includes(x.obs) ? ya.obs : `${ya.obs} · ${x.obs}`;
+  if (ya.activo === false) r.activo = false;
+  if (ya.origen && ya.origen !== 'adm') r.origen = ya.origen;
+  return r;
+}
+
+window.importar = async () => {
+  if (!esAdmin) { toast('🔒 Importar es solo para administradores'); return; }
+  const d = DEF[tipo];
+  const modo = document.querySelector('input[name="im-modo"]:checked').value;
+  const nuevos = objetosArchivo().filter((o) => o.nombre && !esFilaBasura(o)).map((o) => d.normalizar(o));
+  if (modo === 'reemplazar' && !(await preguntar(`Se va a BORRAR la base actual de ${tipo} (${items.length}) y quedar solo con ${nuevos.length} del archivo. ¿Seguro?`, 'Sí, reemplazar'))) return;
+  $('im-ok').disabled = true; $('im-ok').textContent = 'Importando...';
+  try {
+    // Base FRESCA (no la que se leyó al abrir la página): así no se pierde lo
+    // que otro celular guardó mientras tanto (BUG-6, PED-18)
+    items = await M.cargar(tipo, { forzar: true });
+    const base = (M._cache[tipo] && M._cache[tipo].meta) || null;
+    let agregados = 0, actualizados = 0;
+    const final = [];
+    const idx = indiceBase([]);
+    const agregar = (x) => { final.push(x); const m1 = indiceBase([x]); ['cod', 'bar', 'cuit', 'nom'].forEach((k) => m1[k].forEach((v, kk) => { if (!idx[k].has(kk)) idx[k].set(kk, v); })); };
+    if (modo === 'merge') items.forEach((x) => { const { _k, ...r } = x; agregar(r); });
+    const enBase = new Set(final.map((x) => x.id));
+    nuevos.forEach((x) => {
+      const ya = buscarEnIndice(idx, x);
+      if (ya) {
+        const i = final.indexOf(ya); const comb = combinar(ya, x); final[i] = comb;
+        ['cod', 'bar', 'cuit', 'nom'].forEach((k) => idx[k].forEach((v, kk) => { if (v === ya) idx[k].set(kk, comb); }));
+        const m1 = indiceBase([comb]); ['cod', 'bar', 'cuit', 'nom'].forEach((k) => m1[k].forEach((v, kk) => { if (!idx[k].has(kk)) idx[k].set(kk, comb); }));
+        if (enBase.has(ya.id)) actualizados++;
+      } else { agregar(x); agregados++; }
+    });
+    // Respaldo automático antes de "Reemplazar todo"
+    if (modo === 'reemplazar' && items.length) {
+      try { await firebase.firestore().collection('maestros').doc(`${tipo}_respaldo`).set({ fecha: new Date().toISOString(), por: (firebase.auth().currentUser || {}).email || '', total: items.length, nota: 'Copia automática antes de Reemplazar todo (solo los primeros 1.000 por el límite de tamaño)', items: items.slice(0, 1000).map(({ _k, ...r }) => r) }); }
+      catch (e) { console.warn('respaldo', e); }
+    }
+    items = await M.guardarTodo(tipo, final, { siBase: base ? base.actualizado || null : null });
+    cerrar('ov-importar'); pintar();
+    toast(`✅ Listo: ${agregados} nuevos${actualizados ? `, ${actualizados} actualizados` : ''}. Total: ${items.length}`, 5000);
+  } catch (e) {
+    console.error(e);
+    if (e.code === 'base-cambio') { items = await M.cargar(tipo, { forzar: true }).catch(() => items); pintar(); }
+    toast('❌ No se pudo importar: ' + e.message + (e.code === 'base-cambio' ? '' : ' (la base quedó como estaba)'), 7000);
+  }
+  finally { $('im-ok').disabled = false; $('im-ok').textContent = 'Importar'; }
+};
+
+// ---------------------------------------------------------------- exportar
+window.exportar = () => {
+  if (!esAdmin) { toast('🔒 Exportar es solo para administradores'); return; }
+  const d = DEF[tipo];
+  const datos = items.map((x) => {
+    const o = {};
+    d.campos.forEach((c) => { let v = x[c.k]; if (c.k === 'iva') v = v ? M.COND_IVA[v] : ''; if (c.k === 'cuit' && v) v = M.formatoCuit(v); o[c.l] = v == null ? '' : v; });
+    return o;
+  });
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, tipo);
+  XLSX.writeFile(wb, `${tipo}-taller-${new Date().toISOString().slice(0, 10)}.xlsx`);
+};
+</script>
+</body>
+</html>

@@ -377,6 +377,7 @@
 
 <div class="header">
   <div class="header-left">
+    <a href="inicio.html" title="Volver al inicio" style="color:#fff;text-decoration:none;font-size:13px;font-weight:700;line-height:1;background:rgba(255,255,255,.14);padding:8px 10px;border-radius:10px;white-space:nowrap">🏠 Inicio</a>
     <img src="https://i.ibb.co/R4dnhnkH/Dise-o-sin-t-tulo-2.png" style="width:38px;height:38px;object-fit:contain;border-radius:8px;" onerror="this.outerHTML='<div class=header-logo>🐊</div>'">
     <div>
       <div class="header-title">Taller Artesanal</div>
@@ -404,6 +405,7 @@
   <div class="tab" onclick="setTab('finano')" id="tab-finano">🎓 Fin de Año <span class="tab-badge" id="badge-finano">0</span></div>
   <div class="tab" onclick="setTab('clientes')" id="tab-clientes">👥 Clientes</div>
   <div class="tab" onclick="setTab('caja')" id="tab-caja">💰 Caja</div>
+  <div class="tab" onclick="location.href='facturas.html'" id="tab-facturas" title="Bandeja de facturas">🧾 Facturas <span class="tab-badge" id="badge-facturas">0</span></div>
   <div class="tab" onclick="setTab('analytics')" id="tab-analytics">📊 Analytics</div>
 </div>
 
@@ -604,30 +606,6 @@
         <div class="form-group">
           <label class="form-label">Observaciones</label>
           <input class="form-input" id="jf-obs" placeholder="Notas adicionales...">
-        </div>
-      </div>
-
-      <div class="form-section">
-        <div class="form-section-title">🧾 Facturación</div>
-        <div class="toggle-row">
-          <span class="toggle-label">¿Requiere factura?</span>
-          <button class="toggle" id="jf-toggle-factura" onclick="toggleFacturaJardin()"></button>
-        </div>
-        <div id="jf-factura-extra" style="display:none;margin-top:12px">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">CUIT</label>
-              <input class="form-input" id="jf-cuit" placeholder="20-12345678-9">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Razón social</label>
-              <input class="form-input" id="jf-razon" placeholder="Institución o nombre">
-            </div>
-          </div>
-          <div class="toggle-row" style="margin-top:10px">
-            <span class="toggle-label">¿Factura ya emitida?</span>
-            <button class="toggle" id="jf-toggle-factura-emitida" onclick="toggleFacturaEmitidaJardin()"></button>
-          </div>
         </div>
       </div>
 
@@ -1544,7 +1522,10 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Escuela *</label>
-          <input class="form-input" id="f-escuela" placeholder="Nombre del jardín">
+          <div class="autocomplete-wrap">
+            <input class="form-input" id="f-escuela" placeholder="Escribí 2-3 letras..." oninput="buscarEscuela()" onfocus="buscarEscuela()" autocomplete="off">
+            <div class="autocomplete-list" id="escuela-list" style="display:none"></div>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Turno</label>
@@ -1564,6 +1545,13 @@
       <div class="form-section-title">📦 Detalle del pedido</div>
       <div class="form-group">
         <label class="form-label">Productos y cantidades *</label>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input class="form-input" id="f-prod-cant" type="number" min="1" max="999" inputmode="numeric" value="1" onkeydown="enterCantidad(event)" onblur="cantidadSana(this)" style="width:64px;flex:none;text-align:center" title="Cantidad">
+          <div class="autocomplete-wrap" style="flex:1">
+            <input class="form-input" id="f-prod-buscar" placeholder="🔎 Buscar o escanear producto..." oninput="buscarProducto()" onkeydown="enterProducto(event)" autocomplete="off">
+            <div class="autocomplete-list" id="prod-list" style="display:none"></div>
+          </div>
+        </div>
         <textarea class="form-textarea" id="f-productos" placeholder="Ej: 20 rompecabezas cuerpo humano, 15 mapas Argentina..."></textarea>
       </div>
       <div class="form-row">
@@ -1599,9 +1587,48 @@
             <input class="form-input" id="f-razon" placeholder="Institución o nombre">
           </div>
         </div>
+        <div class="form-group" style="margin-top:10px">
+          <label class="form-label">Condición IVA del cliente <span style="font-weight:400;color:var(--texto-secundario)">(obligatoria para ARCA)</span></label>
+          <select class="form-select" id="f-cond-iva">
+            <option value="">Consumidor Final (si no tiene CUIT)</option>
+            <option value="5">Consumidor Final</option>
+            <option value="4">IVA Sujeto Exento (ej. escuelas)</option>
+            <option value="6">Responsable Monotributo</option>
+            <option value="1">IVA Responsable Inscripto</option>
+            <option value="13">Monotributista Social</option>
+            <option value="16">Monotributo Trabajador Indep. Promovido</option>
+            <option value="15">IVA No Alcanzado</option>
+            <option value="7">Sujeto No Categorizado</option>
+          </select>
+        </div>
         <div class="toggle-row" style="margin-top:10px">
-          <span class="toggle-label">¿Factura ya emitida?</span>
+          <span class="toggle-label">¿Factura ya emitida? <span style="font-weight:400;font-size:12px;color:var(--texto-secundario)">(por otro sistema)</span></span>
           <button class="toggle" id="toggle-factura-emitida" onclick="toggleFacturaEmitida()"></button>
+        </div>
+        <div id="factura-arca-panel" style="margin-top:12px;display:none">
+          <div id="factura-arca-pendiente">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Tipo de comprobante</label>
+                <select class="form-select" id="f-factura-letra">
+                  <option value="">Automática</option>
+                  <option value="A">Factura A</option>
+                  <option value="B">Factura B</option>
+                  <option value="C">Factura C</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-facturar-arca" onclick="facturarConArca()" style="width:100%;margin-top:6px">⚡ Facturar con ARCA</button>
+          </div>
+          <div id="factura-arca-emitida" style="display:none">
+            <div style="font-size:13px;color:var(--texto-secundario);margin-bottom:8px" id="factura-arca-info"></div>
+            <a id="btn-ver-factura-pdf" href="#" target="_blank" style="display:block;text-align:center;background:#F3EEE7;color:var(--madera-dark);font-weight:700;padding:10px;border-radius:10px;text-decoration:none;margin-bottom:8px">📄 Ver PDF</a>
+            <a id="btn-enviar-factura-wa" href="#" target="_blank" style="display:block;text-align:center;background:#E7F9EF;color:#25D366;font-weight:700;padding:10px;border-radius:10px;text-decoration:none">📤 Enviar factura por WhatsApp</a>
+            <button type="button" class="btn btn-secondary" id="btn-generar-pdf" onclick="facturarConArca()" style="width:100%;margin-top:6px;display:none">📄 Generar PDF</button>
+            <button type="button" id="btn-borrar-factura-prueba" onclick="borrarFacturaPrueba()" style="display:none;width:100%;margin-top:8px;background:none;border:1px dashed #C0392B;color:#C0392B;border-radius:10px;padding:8px;font-size:12px;cursor:pointer">🧪 Borrar factura de PRUEBA (homologación)</button>
+          </div>
+          <div id="factura-arca-msg" style="display:none;margin-top:10px;font-size:12.5px;line-height:1.4;padding:10px;border-radius:10px;white-space:pre-wrap"></div>
+          <button type="button" onclick="diagnosticoArca()" style="margin-top:8px;background:none;border:none;color:var(--texto-secundario);font-size:12px;text-decoration:underline;cursor:pointer;padding:0">🔌 Probar conexión con ARCA</button>
         </div>
       </div>
     </div>
@@ -1680,6 +1707,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script src="maestros.js?v=20261122"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
@@ -1692,6 +1721,7 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 const auth = firebase.auth();
+const functions = firebase.app().functions('southamerica-east1');
 
 // ── Utilidades globales ──────────────────────────────────────────────────────
 function fmt(n){ return Number(n).toLocaleString('es-AR'); }
@@ -1791,6 +1821,45 @@ function limpiarPedido(v, prof){
   return out;
 }
 
+// 🔒 SEC-2: el id de un pedido NO se sanea (puede traer comillas o paréntesis si
+// alguien lo crea a mano por la API). Nunca se mete "pelado" en un onclick:
+// jsArg() lo convierte en un literal JS seguro y además escapado para el atributo HTML.
+function jsArg(v){
+  return JSON.stringify(String(v==null?'':v)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// Solo links http/https (nunca "javascript:") para el PDF de la factura
+function urlSegura(u){ const t=String(u||'').trim(); return /^https?:\/\//i.test(t)||(t&&!/^[^/?#]*:/.test(t))?t:''; } // http/https o ruta relativa
+// Escape para celdas de las exportaciones HTML a Excel (XLS-17)
+function escCelda(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br style="mso-data-placement:same-cell">'); }
+// Llamada a la facturación con margen: ARCA puede tardar y el navegador cortaba a los 70 s
+const TIMEOUT_FACTURAR=310000;
+function mensajeErrorArca(err){
+  const code=String((err&&err.code)||''), msg=String((err&&err.message)||'');
+  if(/deadline-exceeded/.test(code)||/deadline|timeout/i.test(msg))
+    return '⏱️ ARCA tardó demasiado y se cortó la espera. PUEDE QUE SE HAYA EMITIDO: volvé a abrir el pedido en unos minutos, el sistema lo recupera solo. NO vuelvas a apretar "Facturar" enseguida.';
+  return '❌ '+(msg||'No se pudo facturar');
+}
+// Protección común de los datos de factura al guardar desde CUALQUIER modal:
+// - con CAE, la factura no se puede desmarcar (PED-1, PED-2, ARCA-14)
+// - si el usuario no tocó los interruptores, valen los datos actuales del servidor
+//   (alguien pudo emitir desde la bandeja mientras el modal estaba abierto)
+// - deja constancia de quién del taller marcó "Requiere factura" (SEC-3)
+function protegerFactura(data, actual, alAbrir){
+  if(actual){
+    if(alAbrir){
+      if('factura' in data && data.factura===!!alAbrir.factura) data.factura=!!actual.factura;
+      if('facturaEmitida' in data && data.facturaEmitida===!!alAbrir.facturaEmitida) data.facturaEmitida=!!actual.facturaEmitida;
+    }
+    if(actual.cae){ data.factura=true; data.facturaEmitida=true; }
+  }
+  const fac = 'factura' in data ? data.factura : !!(actual&&actual.factura);
+  if(fac && !(actual&&actual.facturaMarcadaPor)){
+    const u=(typeof firebase!=='undefined'&&firebase.auth&&firebase.auth().currentUser)||{};
+    data.facturaMarcadaPor=u.email||u.uid||'panel'; data.facturaMarcadaAt=new Date().toISOString();
+  }
+  return data;
+}
+
 let pedidos = [], filtroActual = 'todos', editandoId = null, periodoActual = 'semana', facturaOn = false, facturaEmitidaOn = false, jardinOn = false, padreOn = false, estudianteOn = false, madreOn = false;
 
 let _pedidosIniciado=false, _unsubPedidos=null;
@@ -1802,9 +1871,11 @@ function mostrarErrorPedidos(e){
 function iniciarPedidos(){
   if(_pedidosIniciado) return;
   _pedidosIniciado=true;
+  cargarBasesBuscadores();
+  if(typeof Maestros!=='undefined') Maestros.despertarFacturador(); // el servidor gratuito se duerme: lo despertamos al abrir el panel
   let unsub2=null;
   const unsub1 = db.collection("pedidos").orderBy("fechaPedido","desc").onSnapshot(snap => {
-  pedidos = []; snap.forEach(d => { if(d.id===DOC_METAS) return; pedidos.push(limpiarPedido({id:d.id,...d.data()})); });
+  pedidos = []; snap.forEach(d => { if(d.id===DOC_METAS||d.id===DOC_FACTURACION) return; pedidos.push(limpiarPedido({id:d.id,...d.data()})); });
   renderPedidos(); renderCaja(); actualizarHeader();
   if(document.getElementById('tab-analytics').classList.contains('active')) renderAnalytics();
   // Actualizar badge y contenido de hoy siempre
@@ -1827,7 +1898,7 @@ function iniciarPedidos(){
 }, (e0) => {
   console.warn('pedidos con orderBy fallo, reintento sin orden', e0);
   unsub2 = db.collection("pedidos").onSnapshot(snap => {
-    pedidos = []; snap.forEach(d => { if(d.id===DOC_METAS) return; pedidos.push(limpiarPedido({id:d.id,...d.data()})); });
+    pedidos = []; snap.forEach(d => { if(d.id===DOC_METAS||d.id===DOC_FACTURACION) return; pedidos.push(limpiarPedido({id:d.id,...d.data()})); });
     pedidos.sort((a,b)=>(b.fechaPedido||'').localeCompare(a.fechaPedido||''));
     renderPedidos(); renderCaja(); actualizarHeader();
     if(document.getElementById('tab-analytics').classList.contains('active')) renderAnalytics();
@@ -1885,7 +1956,7 @@ window.renderPedidos = function() {
     const esEstudiante = p.evento==='estudiante2026';
     const esMadre = p.evento==='madre2026';
     const esFinAno = p.evento==='finano2026';
-    return `<div class="pedido-card ${p.estado||'pendiente'}${esJardin?' jardin-card':''}${esPadre?' padre-card':''}${esEstudiante?' estudiante-card':''}${esMadre?' madre-card':''}${esFinAno?' finano-card':''}" onclick="abrirEditar('${p.id}')">
+    return `<div class="pedido-card ${p.estado||'pendiente'}${esJardin?' jardin-card':''}${esPadre?' padre-card':''}${esEstudiante?' estudiante-card':''}${esMadre?' madre-card':''}${esFinAno?' finano-card':''}" onclick="abrirEditar(${jsArg(p.id)})">
       <div class="pedido-top">
         <div>
           <div class="pedido-nombre">${p.nombre||'—'} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}${esJardin?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#7C3AED;color:white;margin-left:6px;">🌸 Jardines</span>':''}${esPadre?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#1D4ED8;color:white;margin-left:6px;">👔 Día del Padre</span>':''}${esFinAno?'<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#047857;color:white;margin-left:6px;">🎓 Fin de Año · '+(Number(p.cuotas)>1?p.cuotas+' cuotas':'1 pago')+'</span>':''}</div>
@@ -2335,6 +2406,9 @@ let metasGuardadas = null; // lo que vino de Firebase
 // Las metas viven DENTRO de la coleccion pedidos: las reglas de Firestore solo
 // permiten escribir ahi. Se filtra este doc al armar la lista de pedidos.
 const DOC_METAS = '_config_metas';
+// Mismo motivo: la config fiscal del facturador (punto de venta, condición
+// IVA, ambiente) también vive dentro de "pedidos". Se filtra igual que arriba.
+const DOC_FACTURACION = '_config_facturacion';
 
 // Si una meta guardada tiene ceros de más (5 veces la mediana del resto), la
 // ignoro y uso la sugerida. Un solo numero gigante rompia toda la escala.
@@ -2706,7 +2780,7 @@ function renderMaestras(arr){
   const tier = r => Object.assign({n:r.nivel||'BRONCE'}, ESTILO[r.nivel||'BRONCE']);
   cont.innerHTML = arr.slice(0,15).map((r,i)=>{
     const t=tier(r);
-    const wa = r.tel ? `<button onclick="waMaestra('${esc(r.tel)}','${esc(r.nombre).replace(/'/g,'')}')" style="font-size:10px;font-weight:700;background:#DCFCE7;color:#15803D;border:1px solid #86EFAC;border-radius:100px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">WhatsApp</button>` : '';
+    const wa = r.tel ? `<button onclick="waMaestra(${jsArg(r.tel)},${jsArg(r.nombre)})" style="font-size:10px;font-weight:700;background:#DCFCE7;color:#15803D;border:1px solid #86EFAC;border-radius:100px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">WhatsApp</button>` : '';
     return `<div style="background:white;border:1.5px solid ${i<3?t.bd:'var(--borde)'};border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;gap:11px;align-items:center">
       <div style="font-size:${i<3?'22px':'14px'};font-weight:800;color:var(--gris);min-width:30px;text-align:center">${medalla(i)}</div>
       <div style="flex:1;min-width:0">
@@ -2793,6 +2867,8 @@ window.exportarMaestras = function(){
 window.setPeriodo=function(p,el){periodoActual=p;document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderAnalytics();}
 
 function actualizarHeader(){
+  const bf=document.getElementById('badge-facturas');
+  if(bf) bf.textContent=pedidos.filter(p=>p.factura&&!p.cae&&!p.facturaEmitida).length;
   const activos=pedidos.filter(p=>p.estado!=='cobrado').length;
   // Solo sumar saldo de pedidos NO cobrados
   const saldo=pedidos.filter(p=>p.estado!=='cobrado').reduce((a,p)=>a+Math.max(0,(Number(p.total)||0)-(Number(p.senia)||0)),0);
@@ -2815,11 +2891,11 @@ window.buscarCliente=function(){
   const list=document.getElementById('autocomplete-list');
   if(q.length<2){list.style.display='none';return;}
   const clientes={};
-  pedidos.forEach(p=>{if(p.nombre)clientes[p.nombre.toLowerCase()]=p;});
+  pedidos.forEach(p=>{ const k=(p.nombre||'').toLowerCase(); if(k && !clientes[k]) clientes[k]=p; }); // el más NUEVO de cada nombre
   const matches=Object.values(clientes).filter(p=>(p.nombre||'').toLowerCase().includes(q)).slice(0,5);
   if(!matches.length){list.style.display='none';return;}
   list.style.display='block';
-  list.innerHTML=matches.map(p=>`<div class="autocomplete-item" onclick="autocompletar('${p.id}')"><strong>${p.nombre}</strong><span>${p.escuela||''}${p.turno?' · '+p.turno:''}</span></div>`).join('');
+  list.innerHTML=matches.map(p=>`<div class="autocomplete-item" onclick="autocompletar(${jsArg(p.id)})"><strong>${escH(p.nombre)}</strong><span>${escH(p.escuela||'')}${p.turno?' · '+escH(p.turno):''}</span></div>`).join('');
 }
 
 window.autocompletar=function(id){
@@ -2829,11 +2905,13 @@ window.autocompletar=function(id){
   document.getElementById('f-escuela').value=p.escuela||'';
   document.getElementById('f-turno').value=p.turno||'';
   document.getElementById('f-tel').value=p.tel||'';
+  // Siempre se reemplazan los datos fiscales (vacíos si ese pedido no tenía CUIT): nunca quedan los del cliente anterior
+  ponerFacturacion(p.cuit||'', p.cuit?(p.razon||''):'', p.cuit?p.condicionIVAReceptor:null);
   document.getElementById('autocomplete-list').style.display='none';
   toast('✅ Cliente autocompletado');
 }
 
-document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete-wrap'))document.getElementById('autocomplete-list').style.display='none';});
+document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete-wrap'))['autocomplete-list','escuela-list','prod-list'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});});
 
 window.abrirModal=function(){
   editandoId=null;
@@ -2849,6 +2927,8 @@ window.abrirEditar=function(id){
   if(p.evento==='jardin2026'){ abrirEditarJardines(id); return; }
   if(p.evento==='finano2026'){ abrirEditarFinAno(id); return; }
   editandoId=id;
+  limpiarBuscadoresForm();
+  _snapFact={cuit:p.cuit||'', razon:p.razon||'', iva:p.condicionIVAReceptor||null, factura:!!p.factura, facturaEmitida:!!p.facturaEmitida};
   document.getElementById('modal-title').textContent='Editar Pedido';
   document.getElementById('btn-eliminar-wrap').style.display='block';
   document.getElementById('f-nombre').value=p.nombre||'';
@@ -2864,6 +2944,9 @@ window.abrirEditar=function(id){
   document.getElementById('f-pago').value=p.pago||'';
   document.getElementById('f-cuit').value=p.cuit||'';
   document.getElementById('f-razon').value=p.razon||'';
+  document.getElementById('f-cond-iva').value=p.condicionIVAReceptor?String(p.condicionIVAReceptor):'';
+  document.getElementById('f-factura-letra').value='';
+  mostrarMsgArca('');
   facturaOn=!!p.factura;
   facturaEmitidaOn=!!p.facturaEmitida;
   jardinOn=p.evento==='jardin2026';
@@ -2873,20 +2956,33 @@ window.abrirEditar=function(id){
   document.getElementById('toggle-factura').classList.toggle('on',facturaOn);
   document.getElementById('factura-extra').style.display=facturaOn?'block':'none';
   document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);
+  actualizarPanelFacturacionArca(p);
   document.getElementById('toggle-madre').classList.toggle('on',madreOn);
   document.querySelectorAll('#f-estado-opts .estado-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.estado||'pendiente')));
   document.querySelectorAll('.log-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.logistica||'tucuman')));
   document.getElementById('f-provincia').value=p.provincia||'';
   document.getElementById('paqar-extra').style.display=p.logistica==='paqar'?'block':'none';
   calcularSaldo();
+  avisoCuitOculto();
   document.getElementById('overlay').classList.add('show');
 }
 
 window.cerrarModal=function(){document.getElementById('overlay').classList.remove('show');}
 window.cerrarModalSiOverlay=function(e){if(e.target===document.getElementById('overlay'))cerrarModal();}
 
+// Restos del pedido anterior: buscador, cantidad, listas abiertas (PED-9)
+function limpiarBuscadoresForm(){
+  const b=document.getElementById('f-prod-buscar'); if(b) b.value='';
+  const c=document.getElementById('f-prod-cant'); if(c) c.value='1';
+  const l=document.getElementById('f-factura-letra'); if(l) l.value='';
+  ['prod-list','escuela-list','autocomplete-list'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='none'; });
+  _autoFact=null;
+}
+let _snapFact=null; // datos fiscales al abrir el modal (PED-8)
 function resetForm(){
-  ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon'].forEach(id=>document.getElementById(id).value='');
+  limpiarBuscadoresForm(); _snapFact=null;
+  ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon','f-cond-iva'].forEach(id=>document.getElementById(id).value='');
+  mostrarMsgArca('');
   document.getElementById('f-turno').value='';
   document.getElementById('f-pago').value='';
   document.getElementById('f-fecha-pedido').value=hoy();
@@ -2904,12 +3000,186 @@ function resetForm(){
   document.getElementById('toggle-factura-emitida').classList.remove('on');
   document.getElementById('toggle-madre').classList.remove('on');
   document.getElementById('factura-extra').style.display='none';
+  document.getElementById('factura-arca-panel').style.display='none';
   document.getElementById('autocomplete-list').style.display='none';
   calcularSaldo();
+  avisoCuitOculto();
 }
 
-window.toggleFactura=function(){facturaOn=!facturaOn;document.getElementById('toggle-factura').classList.toggle('on',facturaOn);document.getElementById('factura-extra').style.display=facturaOn?'block':'none';if(!facturaOn){facturaEmitidaOn=false;document.getElementById('toggle-factura-emitida').classList.remove('on');}}
-window.toggleFacturaEmitida=function(){facturaEmitidaOn=!facturaEmitidaOn;document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);}
+function pedidoEnEdicion(){ return editandoId ? (pedidos.find(x=>x.id===editandoId)||null) : null; }
+window.toggleFactura=function(){
+  const p=pedidoEnEdicion();
+  if(facturaOn && p && p.cae){ toast('⚠️ Este pedido tiene factura electrónica emitida (CAE). No se puede desmarcar.'); return; }
+  facturaOn=!facturaOn;document.getElementById('toggle-factura').classList.toggle('on',facturaOn);document.getElementById('factura-extra').style.display=facturaOn?'block':'none';
+  if(!facturaOn){facturaEmitidaOn=false;document.getElementById('toggle-factura-emitida').classList.remove('on');}
+  if(editandoId) actualizarPanelFacturacionArca({...(p||{}), factura:facturaOn});
+  avisoCuitOculto();
+}
+window.toggleFacturaEmitida=function(){
+  const p=pedidoEnEdicion();
+  if(facturaEmitidaOn && p && p.cae){ toast('⚠️ Tiene CAE de ARCA: queda como emitida.'); return; }
+  facturaEmitidaOn=!facturaEmitidaOn;document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);
+  if(editandoId) actualizarPanelFacturacionArca({...(p||{}), factura:facturaOn, facturaEmitida:facturaEmitidaOn});
+}
+function mostrarMsgArca(texto, tipo){
+  const el=document.getElementById('factura-arca-msg');
+  if(!el) return;
+  if(!texto){ el.style.display='none'; el.textContent=''; return; }
+  el.style.display='block';
+  el.textContent=texto;
+  el.style.background = tipo==='error' ? '#FDECEA' : tipo==='ok' ? '#E7F9EF' : '#F3EEE7';
+  el.style.color = tipo==='error' ? '#A93226' : 'var(--texto)';
+}
+
+// Panel "Facturar con ARCA" dentro del modal de edición. Solo tiene sentido
+// para un pedido que ya existe en Firestore (no al crear uno nuevo) y que
+// está marcado para facturar. Si ya se emitió (vía este sistema, con CAE
+// real), muestra los datos del comprobante y el link de WhatsApp en vez del
+// botón de facturar.
+function actualizarPanelFacturacionArca(p){
+  const panel=document.getElementById('factura-arca-panel');
+  // Solo para pedidos ya guardados y marcados "Requiere factura"
+  if(!p||!p.factura||!editandoId){ panel.style.display='none'; return; }
+  panel.style.display='block';
+  const conCae = !!p.cae;
+  // "Factura ya emitida (otro sistema)" tildado: no se ofrece facturar con ARCA (doble factura, PED-4)
+  const adm = !conCae && (('facturaEmitida' in p) ? !!p.facturaEmitida : facturaEmitidaOn);
+  document.getElementById('factura-arca-pendiente').style.display = (conCae||adm)?'none':'block';
+  document.getElementById('factura-arca-emitida').style.display = conCae?'block':'none';
+  if(!conCae) return;
+  const prueba = p.facturaAmbiente && p.facturaAmbiente!=='produccion';
+  document.getElementById('factura-arca-info').textContent =
+    `${prueba?'🧪 PRUEBA · ':''}Factura ${p.tipoComprobanteLetra||''} N° ${String(p.puntoVenta||0).padStart(5,'0')}-${String(p.nroComprobante||0).padStart(8,'0')} · CAE ${p.cae}`;
+  const tienePdf = !!p.facturaPdfUrl;
+  document.getElementById('btn-ver-factura-pdf').style.display = tienePdf?'block':'none';
+  document.getElementById('btn-enviar-factura-wa').style.display = tienePdf?'block':'none';
+  document.getElementById('btn-generar-pdf').style.display = tienePdf?'none':'block';
+  if(tienePdf){
+    document.getElementById('btn-ver-factura-pdf').href = urlSegura(p.facturaPdfUrl)||'#';
+    document.getElementById('btn-enviar-factura-wa').href = waLinkFactura(p);
+  }
+  document.getElementById('btn-borrar-factura-prueba').style.display = prueba?'block':'none';
+}
+
+function waLinkFactura(p){
+  const msg = `Hola ${p.nombre||''}! Te paso la factura de tu pedido en *Taller Artesanal*:\n\n${p.facturaPdfUrl}\n\nCualquier consulta avisame!`;
+  const telWA = p.tel ? formatTelWA(p.tel) : '';
+  const base = telWA?`https://wa.me/${telWA}`:`https://wa.me/`;
+  return base+'?text='+encodeURIComponent(msg);
+}
+
+// Guarda en Firestore lo que está en el formulario ANTES de facturar, para
+// que la factura salga con el CUIT / total / condición IVA que se ven en
+// pantalla y no con lo último que se guardó.
+async function guardarCamposFacturacion(){
+  const total=Number(document.getElementById('f-total').value)||0;
+  const datos={
+    factura:true,
+    nombre:document.getElementById('f-nombre').value.trim(),
+    tel:document.getElementById('f-tel').value,
+    productos:document.getElementById('f-productos').value,
+    total,
+    cuit:document.getElementById('f-cuit').value.trim(),
+    razon:document.getElementById('f-razon').value.trim(),
+    condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,
+    updatedAt:new Date().toISOString(),
+  };
+  conservarFiscalesDelServidor(datos, pedidoEnEdicion());
+  protegerFactura(datos, pedidoEnEdicion(), null);
+  await db.collection('pedidos').doc(editandoId).update(datos);
+  aprenderClienteDePedido(datos);
+  return datos;
+}
+
+const COND_IVA_TXT={1:'Responsable Inscripto',4:'Exento',5:'Consumidor Final',6:'Monotributo',7:'No Categorizado',13:'Monotributista Social',15:'No Alcanzado',16:'Monotributo Promovido'};
+
+window.facturarConArca = async function(){
+  if(!editandoId){ toast('Guardá el pedido antes de facturar'); return; }
+  const p=pedidoEnEdicion()||{};
+  const soloPdf = !!p.cae;
+  if(!soloPdf && facturaEmitidaOn){ toast('⚠️ Está marcada como "Factura ya emitida" por otro sistema. Destildala si querés facturar acá.'); return; }
+  let totalConfirmado=null;
+  const ejecutar = async ()=>{
+    if(!soloPdf && totalConfirmado!=null && (Number(document.getElementById('f-total').value)||0)!==totalConfirmado){
+      mostrarMsgArca('❌ El total cambió después de confirmar (¿se escaneó un producto?). No se emitió nada: revisá y volvé a tocar Facturar.','error'); return;
+    }
+    const btns=[document.getElementById('btn-facturar-arca'),document.getElementById('btn-generar-pdf')];
+    btns.forEach(b=>{ b.disabled=true; });
+    const btn = soloPdf ? btns[1] : btns[0];
+    const textoOriginal = btn.textContent;
+    btn.textContent = soloPdf ? 'Generando PDF...' : 'Facturando... no cierres esta ventana';
+    mostrarMsgArca('');
+    try{
+      if(!soloPdf) await guardarCamposFacturacion();
+      const letraElegida=document.getElementById('f-factura-letra').value||undefined;
+      // totalEsperado: la Function no emite si el total guardado no es el que se confirmó (no se manda al solo generar el PDF)
+      const args = { pedidoId: editandoId, letraElegida };
+      if(!soloPdf && totalConfirmado!=null) args.totalEsperado = totalConfirmado;
+      const resultado = await Maestros.llamarFacturador('facturarPedido', args, { timeout: TIMEOUT_FACTURAR });
+      const r = resultado.data;
+      facturaOn=true; facturaEmitidaOn=true;
+      document.getElementById('toggle-factura-emitida').classList.add('on');
+      actualizarPanelFacturacionArca({ ...p, factura:true, facturaEmitida:true, cae:r.cae, facturaPdfUrl:r.facturaPdfUrl, nroComprobante:r.nroComprobante, puntoVenta:r.puntoVenta, tipoComprobanteLetra:r.tipoComprobanteLetra, facturaAmbiente:r.facturaAmbiente });
+      let msg = soloPdf ? '✅ PDF generado.' : `✅ Factura ${r.tipoComprobanteLetra} emitida. CAE ${r.cae}`;
+      if(r.recuperada) msg += '\nSe recuperó una factura que ARCA ya había emitido en un intento anterior (no se duplicó).';
+      if(r.observaciones && r.observaciones.length) msg += '\nObservaciones de ARCA:\n' + r.observaciones.join('\n');
+      if(r.facturaAmbiente!=='produccion') msg += '\n🧪 Ambiente de PRUEBA: esta factura no tiene validez fiscal.';
+      mostrarMsgArca(msg,'ok');
+      toast(soloPdf?'📄 PDF listo':`🧾 Factura emitida — CAE ${r.cae}`);
+    }catch(err){
+      mostrarMsgArca(mensajeErrorArca(err),'error');
+      toast(/⏱️/.test(mensajeErrorArca(err))?'⏱️ ARCA no respondió a tiempo (ver detalle)':'❌ No se pudo facturar (ver detalle)');
+    }finally{
+      btns.forEach(b=>{ b.disabled=false; });
+      btn.textContent=textoOriginal;
+    }
+  };
+  if(soloPdf){ ejecutar(); return; }
+
+  // Confirmación: emitir una factura no se puede deshacer (solo con nota de crédito)
+  const total=Number(document.getElementById('f-total').value)||0;
+  if(total<=0){ toast('⚠️ El pedido no tiene total'); return; }
+  const cuit=document.getElementById('f-cuit').value.trim();
+  const cond=Number(document.getElementById('f-cond-iva').value)||(cuit.replace(/\D/g,'').length===11?0:5);
+  if(!cond){ toast('⚠️ Elegí la condición IVA del cliente'); document.getElementById('f-cond-iva').focus(); return; }
+  const cliente=document.getElementById('f-razon').value.trim()||document.getElementById('f-nombre').value.trim()||'Consumidor Final';
+  const letra=document.getElementById('f-factura-letra').value;
+  totalConfirmado=total;
+  mostrarConfirm(
+    `¿Emitir factura${letra?' '+letra:''} por $${fmt(total)}?`,
+    `${cliente} · ${COND_IVA_TXT[cond]||''}${cuit?' · CUIT '+cuit:''}. Se informa a ARCA y no se puede deshacer.`,
+    '🧾',
+    ejecutar
+  );
+}
+
+window.borrarFacturaPrueba = function(){
+  const p=pedidoEnEdicion();
+  if(!p||!p.cae||p.facturaAmbiente==='produccion'){ toast('Solo se pueden borrar facturas de prueba'); return; }
+  mostrarConfirm('¿Borrar la factura de PRUEBA?','Quita el CAE de homologación de este pedido para poder volver a probar. Solo para pruebas.','🧪', async ()=>{
+    const del=firebase.firestore.FieldValue.delete();
+    const campos=['cae','caeVencimiento','nroComprobante','puntoVenta','tipoComprobanteLetra','tipoComprobanteCodigo','facturaFecha','facturaImporte','facturaImpNeto','facturaImpIVA','facturaDocTipo','facturaDocNro','facturaCondicionIVAReceptor','facturaAmbiente','facturaObservaciones','facturaEmitidaAt','facturaEmitidaPor','facturaPdfUrl','facturaIntento','facturaEnProceso','facturaEnProcesoDesde'];
+    const upd={facturaEmitida:false}; campos.forEach(c=>upd[c]=del);
+    try{
+      await db.collection('pedidos').doc(editandoId).update(upd);
+      facturaEmitidaOn=false; document.getElementById('toggle-factura-emitida').classList.remove('on');
+      actualizarPanelFacturacionArca({...p, cae:null, facturaPdfUrl:null, facturaEmitida:false});
+      mostrarMsgArca('Factura de prueba borrada.','info');
+    }catch(e){ toast('❌ No se pudo borrar'); console.error(e); }
+  });
+}
+
+window.diagnosticoArca = async function(){
+  mostrarMsgArca('Probando conexión con ARCA...','info');
+  try{
+    const r=(await Maestros.llamarFacturador('diagnosticoArca', {}, { timeout: 120000 })).data;
+    const lineas=r.pasos.map(x=>`${x.ok?'✅':'❌'} ${x.paso}${x.ok?(typeof x.resultado==='number'?': '+x.resultado:''):': '+x.error}`);
+    mostrarMsgArca(lineas.join('\n'), r.ok?'ok':'error');
+    console.log('Diagnóstico ARCA', r);
+  }catch(e){
+    mostrarMsgArca('❌ '+(e.message||'No responde la función diagnosticoArca (¿está desplegada?)'),'error');
+  }
+}
 window.toggleJardin=function(){jardinOn=!jardinOn;if(jardinOn){padreOn=false;estudianteOn=false;madreOn=false;}}
 window.togglePadre=function(){padreOn=!padreOn;if(padreOn){jardinOn=false;estudianteOn=false;madreOn=false;}}
 window.toggleEstudiante=function(){estudianteOn=!estudianteOn;if(estudianteOn){jardinOn=false;padreOn=false;madreOn=false;}}
@@ -2955,12 +3225,173 @@ window.guardarPedido=async function(){
   else if(pedidoActual?.evento==='madre2026' && madreOn) eventoFinal = 'madre2026';
   // Eventos sin interruptor en este formulario (ej. Fin de Año): no se pierden al guardar
   else if(pedidoActual?.evento && !['jardin2026','padre2026','estudiante2026','madre2026'].includes(pedidoActual.evento)) eventoFinal = pedidoActual.evento;
-  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,productos:document.getElementById('f-productos').value,fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
+  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,productos:document.getElementById('f-productos').value,fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
+  // Una factura electrónica emitida (con CAE) no se puede "desmarcar" desde el formulario
+  if(pedidoActual && pedidoActual.cae){ data.factura=true; data.facturaEmitida=true; }
+  conservarFiscalesDelServidor(data, pedidoActual);
+  protegerFactura(data, pedidoActual, _snapFact);
   try{
     if(editandoId){await db.collection("pedidos").doc(editandoId).update(data);toast('✅ Pedido actualizado');}
     else{data.createdAt=new Date().toISOString();await db.collection("pedidos").add(data);toast('✅ Pedido guardado');}
+    aprenderClienteDePedido(data);
     cerrarModal();
   }catch(e){toast('❌ Error al guardar. Verificá conexión.');console.error(e);}
+}
+
+// PED-8: si un dato fiscal NO se tocó en el modal pero cambió en el servidor
+// (por ejemplo la condición IVA elegida en la bandeja de Facturas), gana el del servidor.
+function conservarFiscalesDelServidor(data, actual){
+  if(!actual || !_snapFact) return data;
+  const iguales=(a,b)=>String(a||'')===String(b||'');
+  if(iguales(data.condicionIVAReceptor,_snapFact.iva) && !iguales(actual.condicionIVAReceptor,_snapFact.iva)) data.condicionIVAReceptor=actual.condicionIVAReceptor||null;
+  if(iguales(data.cuit,_snapFact.cuit) && !iguales(actual.cuit,_snapFact.cuit)) data.cuit=actual.cuit||'';
+  if(iguales(data.razon,_snapFact.razon) && !iguales(actual.razon,_snapFact.razon)) data.razon=actual.razon||'';
+  return data;
+}
+
+// ==================== BUSCADORES: ESCUELA/CLIENTE Y PRODUCTOS ====================
+// Usan maestros.js: la base de clientes y productos (importada de ADM Global)
+// y la base de 2.121 escuelas de Tucumán (base-escuelas.json).
+let _clientesBase=[], _escuelasBase=[], _productosBase=[];
+async function cargarBasesBuscadores(){
+  if(typeof Maestros==='undefined') return;
+  try{ _clientesBase = await Maestros.cargar('clientes'); }catch(e){ console.warn('clientes',e); }
+  try{ _productosBase = await Maestros.cargar('productos'); }catch(e){ console.warn('productos',e); }
+  try{ _escuelasBase = await Maestros.cargarEscuelas('base-escuelas.json'); }catch(e){ console.warn('escuelas',e); }
+}
+function escH(s){ return typeof Maestros!=='undefined' ? Maestros.esc(s) : String(s==null?'':s); }
+
+// Datos fiscales que completó un buscador. Si después se cambia la escuela a mano
+// o se elige otra sin CUIT, se borran: nunca queda el CUIT de otro cliente (PED-3)
+let _autoFact=null;
+function ponerFacturacion(cuit, razon, iva){
+  document.getElementById('f-cuit').value=cuit?(typeof Maestros!=='undefined'?Maestros.formatoCuit(cuit):cuit):'';
+  document.getElementById('f-razon').value=razon||'';
+  document.getElementById('f-cond-iva').value=iva?String(iva):'';
+  _autoFact={cuit:document.getElementById('f-cuit').value, escuela:document.getElementById('f-escuela').value};
+  avisoCuitOculto();
+}
+// Si hay CUIT cargado pero "Requiere factura" está apagado, se avisa en vez de esconderlo
+function avisoCuitOculto(){
+  let el=document.getElementById('aviso-cuit-oculto');
+  const cuit=(document.getElementById('f-cuit').value||'').trim();
+  if(!el){ const ref=document.getElementById('factura-extra'); if(!ref) return; el=document.createElement('div'); el.id='aviso-cuit-oculto'; el.style.cssText='font-size:12px;color:#92400E;background:#FEF3E2;border-radius:8px;padding:6px 10px;margin-top:6px'; ref.parentNode.insertBefore(el, ref); }
+  if(cuit && !facturaOn){ el.textContent='ℹ️ Tiene CUIT '+cuit+' ('+((document.getElementById('f-razon').value||'').trim()||'sin razón social')+'). Si no corresponde, activá "Requiere factura" y borralo.'; el.style.display='block'; }
+  else el.style.display='none';
+}
+window.buscarEscuela=function(){
+  if(_autoFact && document.getElementById('f-escuela').value!==_autoFact.escuela && document.getElementById('f-cuit').value===_autoFact.cuit){
+    ponerFacturacion('','',null); _autoFact=null;
+  }
+  const q=document.getElementById('f-escuela').value.trim();
+  const list=document.getElementById('escuela-list');
+  if(q.length<2 || typeof Maestros==='undefined'){ list.style.display='none'; return; }
+  const cli=Maestros.buscar(_clientesBase,q,['nombre','fantasia','cuit','loc','contacto'],6);
+  const esc_=Maestros.buscar(_escuelasBase,q,['n','l','d'],cli.length?4:8)
+    .filter(e=>!cli.some(c=>Maestros.sinAcentos(c.fantasia||c.nombre)===Maestros.sinAcentos(e.n)));
+  if(!cli.length && !esc_.length){ list.style.display='none'; return; }
+  list.innerHTML =
+    cli.map(c=>`<div class="autocomplete-item" onclick="elegirCliente(${jsArg(c.id)})"><strong>${escH(c.fantasia||c.nombre)}</strong><span>${c.fantasia?escH(c.nombre)+' · ':''}${c.cuit?'CUIT '+escH(Maestros.formatoCuit(c.cuit)):'sin CUIT'}${c.iva?' · '+escH(Maestros.COND_IVA_CORTO[c.iva]||''):''}${c.loc?' · '+escH(c.loc):''}</span></div>`).join('') +
+    esc_.map(e=>`<div class="autocomplete-item" onclick="elegirEscuelaBase(${jsArg(e.i)})"><strong>${escH(e.n)}</strong><span>📍 ${escH(e.l||'')}${e.d&&e.d!==e.l?' · '+escH(e.d):''}${e.s==='Pri'?' · Privada':''}</span></div>`).join('');
+  list.style.display='block';
+};
+window.elegirCliente=function(id){
+  const c=_clientesBase.find(x=>x.id===id); if(!c) return;
+  document.getElementById('f-escuela').value=c.fantasia||c.nombre;
+  // Siempre se reemplazan (vacíos si este cliente no tiene CUIT)
+  ponerFacturacion(c.cuit||'', c.cuit?(c.nombre||''):'', c.cuit?c.iva:null);
+  // PRIV-1: el teléfono de la base es el de la institución; no se pega en el pedido de la seño
+  document.getElementById('escuela-list').style.display='none';
+  toast(c.cuit ? (facturaOn ? '✅ Datos de facturación completados' : '✅ Cliente elegido · tiene CUIT: si pide factura, activá "Requiere factura" y ya está todo cargado') : '✅ Cliente elegido');
+};
+window.elegirEscuelaBase=function(i){
+  const e=_escuelasBase.find(x=>x.i===i); if(!e) return;
+  document.getElementById('f-escuela').value=e.n;
+  if(_autoFact) ponerFacturacion('','',null);
+  _autoFact=null;
+  document.getElementById('escuela-list').style.display='none';
+};
+
+window.buscarProducto=function(){
+  const q=document.getElementById('f-prod-buscar').value.trim();
+  const list=document.getElementById('prod-list');
+  if(q.length<2 || typeof Maestros==='undefined'){ list.style.display='none'; return; }
+  if(!_productosBase.length){ list.innerHTML='<div class="autocomplete-item"><span>Todavía no hay productos cargados. Importalos en Inicio → Productos.</span></div>'; list.style.display='block'; return; }
+  const res=Maestros.buscar(_productosBase.filter(p=>p.activo!==false),q,['nombre','cod','barra','rubro'],8);
+  if(!res.length){ list.style.display='none'; return; }
+  list.innerHTML=res.map(p=>`<div class="autocomplete-item" onclick="agregarProducto(${jsArg(p.id)})"><strong>${escH(p.nombre)}</strong><span>${p.precio!=null?'$'+fmt(p.precio):'sin precio'}${p.cod?' · Cód. '+escH(p.cod):''}${p.rubro?' · '+escH(p.rubro):''}</span></div>`).join('');
+  list.style.display='block';
+};
+window.agregarProducto=function(id){
+  const p=_productosBase.find(x=>x.id===id); if(!p) return;
+  const cant=Math.min(999,Math.max(1,parseInt(document.getElementById('f-prod-cant').value,10)||1));
+  const ta=document.getElementById('f-productos');
+  const sufijo=p.precio!=null?` ($${fmt(p.precio)} c/u)`:'';
+  const lineas=ta.value.replace(/\s+$/,'').split('\n').filter(l=>l.trim()!=='');
+  const nq=t=>String(t||'').replace(/[”“"]/g,'"').replace(/[’‘']/g,"'"); // comillas "lindas" del saneado = comillas comunes
+  const i=lineas.findIndex(l=>{ const m=l.match(/^(\d+) x (.+?)( \(\$[\d.,]+ c\/u\))?$/); return m && nq(m[2])===nq(p.nombre); });
+  let cantLinea=cant;
+  if(i>=0){ cantLinea=Number(lineas[i].match(/^(\d+)/)[1])+cant; lineas[i]=`${cantLinea} x ${p.nombre}${sufijo}`; }
+  else lineas.push(`${cant} x ${p.nombre}${sufijo}`);
+  ta.value=lineas.join('\n');
+  if(p.precio!=null){
+    const tot=document.getElementById('f-total');
+    tot.value=(Number(tot.value)||0)+cant*Number(p.precio);
+    if(typeof calcularSaldo==='function') calcularSaldo();
+  }
+  document.getElementById('f-prod-buscar').value=''; document.getElementById('f-prod-cant').value='1';
+  document.getElementById('prod-list').style.display='none';
+  toast(p.precio!=null?`➕ ${p.nombre} (${cantLinea}) · total $${fmt(document.getElementById('f-total').value)}`:`➕ ${p.nombre} (sin precio cargado)`);
+};
+// PED-5: si la pistola escribe en "Cantidad" (foco ahí), se toma como código, no como cantidad
+window.enterCantidad=function(e){
+  if(e.key!=='Enter') return;
+  e.preventDefault();
+  const el=e.target, v=String(el.value||'').trim();
+  if(v.length>=6){
+    el.value='1';
+    const p=typeof Maestros!=='undefined'?Maestros.porCodigo(_productosBase,v):null;
+    if(p) agregarProducto(p.id); else toast(`Código ${v}: no está en Productos`);
+    return;
+  }
+  document.getElementById('f-prod-buscar').focus();
+};
+window.cantidadSana=function(el){
+  const v=String(el.value||'');
+  if(v.length>3){ // 4 o más dígitos: casi seguro un código de barras escrito acá
+    setTimeout(()=>{ if(String(el.value||'').length>3 && document.activeElement!==el) el.value='1'; },0);
+  }
+};
+// Enter en el buscador de productos (la pistola manda el código + Enter)
+window.enterProducto=function(e){
+  if(e.key!=='Enter') return;
+  e.preventDefault();
+  const q=document.getElementById('f-prod-buscar').value.trim(); if(!q) return;
+  const exacto=Maestros.porCodigo(_productosBase,q);
+  if(exacto){ agregarProducto(exacto.id); return; }
+  const res=Maestros.buscar(_productosBase.filter(p=>p.activo!==false),q,['nombre','cod','barra','rubro'],2);
+  if(res.length===1){ agregarProducto(res[0].id); return; }
+  toast(/^\d{6,}$/.test(q)?`Código ${q}: no está en Productos`:'Elegí el producto de la lista');
+};
+// Pistola con el formulario abierto y el foco fuera de un campo: agrega directo
+// No se activa con otro cartel abierto (por ejemplo "¿Emitir factura?"), ni en un pedido que ya tiene CAE (PED-6)
+if(typeof Maestros!=='undefined' && Maestros.escucharPistola) Maestros.escucharPistola(function(codigo){
+  const p=Maestros.porCodigo(_productosBase,codigo);
+  if(p){ agregarProducto(p.id); } else toast(`Código ${codigo}: no está en Productos`);
+},{ activo:()=>document.getElementById('overlay').classList.contains('show')
+      && !document.querySelector('.confirm-overlay.show, .overlay.show:not(#overlay)')
+      && !((pedidoEnEdicion()||{}).cae) });
+
+// Si el pedido se guardó con un CUIT válido, ese cliente queda en la base
+// para la próxima (no pisa datos cargados a mano).
+function aprenderClienteDePedido(d){
+  try{
+    if(typeof Maestros==='undefined' || !d || !d.cuit || !Maestros.cuitValido(d.cuit)) return;
+    // Solo con razón social (no se inventa con el nombre de la escuela) y SIN el teléfono de la seño (PRIV-1)
+    if(!String(d.razon||'').trim()) return;
+    Maestros.aprenderCliente({ nombre:d.razon, cuit:d.cuit, iva:d.condicionIVAReceptor, fantasia:d.escuela })
+      .then(()=>Maestros.cargar('clientes')).then(l=>{ _clientesBase=l; }).catch(e=>console.warn('aprenderCliente',e));
+  }catch(e){ console.warn(e); }
 }
 
 // ==================== CONFIRM MODAL ====================
@@ -3089,7 +3520,7 @@ window.renderHoy=function(){
       cobrado:'background:#F3F4F6;color:#6B7280'
     }[p.estado]||'';
     const esEntregado=p.estado==='entregado';
-    return `<div class="hoy-card ${p.estado||'pendiente'}" onclick="abrirEditar('${p.id}')" style="${esEntregado?'opacity:0.7':''}">
+    return `<div class="hoy-card ${p.estado||'pendiente'}" onclick="abrirEditar(${jsArg(p.id)})" style="${esEntregado?'opacity:0.7':''}">
       <div class="hoy-card-top">
         <div>
           <div class="hoy-nombre">${esc(p.nombre)}${esEntregado?' <span style="font-size:12px;color:var(--gris);font-weight:400">(ya entregado)</span>':''}</div>
@@ -3146,9 +3577,9 @@ window.exportarPedidos=function(){
   .seccion{background:#F0E6D3;color:#5C3D20;font-weight:bold;font-size:12px;padding:8px;}
 </style></head><body>
 <table border="0" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
-<tr><td colspan="18" class="titulo">🪵 TALLER ARTESANAL — REGISTRO DE PEDIDOS</td></tr>
-<tr><td colspan="18" class="subtitulo">Generado: ${new Date().toLocaleString('es-AR')} · Total: ${pedidos.length} pedidos</td></tr>
-<tr><td colspan="18" style="height:8px;background:#FAF4EC;border:none;"></td></tr>
+<tr><td colspan="23" class="titulo">🪵 TALLER ARTESANAL — REGISTRO DE PEDIDOS</td></tr>
+<tr><td colspan="23" class="subtitulo">Generado: ${new Date().toLocaleString('es-AR')} · Total: ${pedidos.length} pedidos</td></tr>
+<tr><td colspan="23" style="height:8px;background:#FAF4EC;border:none;"></td></tr>
 <tr>
   <td class="header" style="width:30px">#</td>
   <td class="header">Fecha Pedido</td>
@@ -3168,6 +3599,11 @@ window.exportarPedidos=function(){
   <td class="header">Factura</td>
   <td class="header">CUIT</td>
   <td class="header">Observaciones</td>
+  <td class="header">Razón social</td>
+  <td class="header">Cond. IVA</td>
+  <td class="header">Comprobante</td>
+  <td class="header">CAE</td>
+  <td class="header">PDF factura</td>
 </tr>`;
 
   pedidos.forEach((p,i)=>{
@@ -3179,22 +3615,27 @@ window.exportarPedidos=function(){
     html+=`<tr class="${bg}">
       <td style="text-align:center;color:#8B5E3C;font-weight:bold;">${i+1}</td>
       <td style="text-align:center;">${p.fechaPedido||''}</td>
-      <td style="font-weight:bold;">${p.nombre||''}</td>
-      <td>${p.escuela||''}</td>
-      <td style="text-align:center;">${p.turno||''}</td>
-      <td>${p.tel||''}</td>
-      <td style="font-size:10px;">${p.productos||''}</td>
+      <td style="font-weight:bold;">${escCelda(p.nombre)}</td>
+      <td>${escCelda(p.escuela)}</td>
+      <td style="text-align:center;">${escCelda(p.turno)}</td>
+      <td>${escCelda(p.tel)}</td>
+      <td style="font-size:10px;">${escCelda(p.productos)}</td>
       <td style="text-align:center;">${p.fechaEntrega||''}</td>
       <td class="monto">$${Number(t).toLocaleString('es-AR')}</td>
       <td class="monto" style="color:#2563EB;">$${Number(s).toLocaleString('es-AR')}</td>
       <td class="${sal>0?'saldo-rojo':'saldo-verde'}">$${Number(sal).toLocaleString('es-AR')}</td>
       <td style="background:${eColor};color:${eTColor};font-weight:bold;text-align:center;">${estadoLabel[p.estado]||p.estado||''}</td>
       <td style="text-align:center;">${logLabel[p.logistica]||p.logistica||''}</td>
-      <td>${p.provincia||''}</td>
-      <td>${p.pago||''}</td>
+      <td>${escCelda(p.provincia)}</td>
+      <td>${escCelda(p.pago)}</td>
       <td style="text-align:center;${p.factura?'color:#7C3AED;font-weight:bold;':''}">${p.factura?'✅ Sí':'No'}</td>
-      <td style="font-size:10px;">${p.cuit||''}</td>
-      <td style="font-size:10px;">${p.obs||''}</td>
+      <td style="font-size:10px;">${escCelda(p.cuit)}</td>
+      <td style="font-size:10px;">${escCelda(p.obs)}</td>
+      <td style="font-size:10px;">${escCelda(p.razon)}</td>
+      <td style="font-size:10px;">${escCelda(p.condicionIVAReceptor?(COND_IVA_TXT[p.condicionIVAReceptor]||p.condicionIVAReceptor):'')}</td>
+      <td style="font-size:10px;mso-number-format:'\@';">${p.cae?escCelda((p.tipoComprobanteLetra||'')+' '+String(p.puntoVenta||0).padStart(5,'0')+'-'+String(p.nroComprobante||0).padStart(8,'0')+(p.facturaAmbiente&&p.facturaAmbiente!=='produccion'?' (PRUEBA)':'')):(p.facturaEmitida?'ADM Global':'')}</td>
+      <td style="font-size:10px;mso-number-format:'\@';">${escCelda(p.cae||'')}</td>
+      <td style="font-size:10px;">${escCelda(urlSegura(p.facturaPdfUrl))}</td>
     </tr>`;
   });
 
@@ -3203,7 +3644,7 @@ window.exportarPedidos=function(){
     <td>$${sumTotal.toLocaleString('es-AR')}</td>
     <td>$${sumSenia.toLocaleString('es-AR')}</td>
     <td style="color:#FF9999;">$${sumSaldo.toLocaleString('es-AR')}</td>
-    <td colspan="7"></td>
+    <td colspan="12"></td>
   </tr>`;
   html+=`</table></body></html>`;
 
@@ -3498,13 +3939,19 @@ let editandoJardinId = null;
 let jardinFacturaOn = false;
 let jardinFacturaEmitidaOn = false;
 
+let _jardinSnapFact=null;
+function pedidoJardinActual(){ return editandoJardinId ? (pedidos.find(x=>x.id===editandoJardinId)||null) : null; }
 window.toggleFacturaJardin = function(){
+  const pj=pedidoJardinActual();
+  if(jardinFacturaOn && pj && pj.cae){ toast('⚠️ Este pedido tiene factura electrónica emitida (CAE). No se puede desmarcar.'); return; }
   jardinFacturaOn = !jardinFacturaOn;
   document.getElementById('jf-toggle-factura').classList.toggle('on', jardinFacturaOn);
   document.getElementById('jf-factura-extra').style.display = jardinFacturaOn ? 'block' : 'none';
   if(!jardinFacturaOn){ jardinFacturaEmitidaOn=false; document.getElementById('jf-toggle-factura-emitida').classList.remove('on'); }
 }
 window.toggleFacturaEmitidaJardin = function(){
+  const pj=pedidoJardinActual();
+  if(jardinFacturaEmitidaOn && pj && pj.cae){ toast('⚠️ Tiene CAE de ARCA: queda como emitida.'); return; }
   jardinFacturaEmitidaOn = !jardinFacturaEmitidaOn;
   document.getElementById('jf-toggle-factura-emitida').classList.toggle('on', jardinFacturaEmitidaOn);
 }
@@ -3571,7 +4018,7 @@ window.abrirModalJardines = function(){
   document.getElementById('jf-fecha-pedido').value = hoy();
   document.getElementById('jf-fecha-entrega').value = '';
   // Reset factura
-  jardinFacturaOn = false; jardinFacturaEmitidaOn = false;
+  jardinFacturaOn = false; jardinFacturaEmitidaOn = false; _jardinSnapFact=null;
   document.getElementById('jf-toggle-factura').classList.remove('on');
   document.getElementById('jf-toggle-factura-emitida').classList.remove('on');
   document.getElementById('jf-factura-extra').style.display = 'none';
@@ -3613,6 +4060,7 @@ window.abrirEditarJardines = function(id){
   // Cargar factura
   jardinFacturaOn = !!p.factura;
   jardinFacturaEmitidaOn = !!p.facturaEmitida;
+  _jardinSnapFact = { factura: jardinFacturaOn, facturaEmitida: jardinFacturaEmitidaOn };
   document.getElementById('jf-toggle-factura').classList.toggle('on', jardinFacturaOn);
   document.getElementById('jf-toggle-factura-emitida').classList.toggle('on', jardinFacturaEmitidaOn);
   document.getElementById('jf-factura-extra').style.display = jardinFacturaOn ? 'block' : 'none';
@@ -3671,6 +4119,7 @@ window.guardarPedidoJardines = async function(){
     razon: document.getElementById('jf-razon').value,
     updatedAt: new Date().toISOString()
   };
+  protegerFactura(data, pedidoJardinActual(), _jardinSnapFact);
 
   try {
     if(editandoJardinId){
@@ -3756,7 +4205,7 @@ window.renderJardines = function(){
       ? `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;background:#FEF3E2;color:#D4820A;">⭐ Preventa</span>`
       : '';
 
-    return `<div class="pedido-card ${p.estado||'pendiente'}" onclick="abrirEditarJardines('${p.id}')" style="border-left-color:#7C3AED">
+    return `<div class="pedido-card ${p.estado||'pendiente'}" onclick="abrirEditarJardines(${jsArg(p.id)})" style="border-left-color:#7C3AED">
       <div class="pedido-top">
         <div>
           <div class="pedido-nombre">${esc(p.nombre)} ${p.factura&&p.facturaEmitida?'<span class="factura-chip" style="background:#E8F5EE;color:#2D7A4F">🧾 Factura ✓</span>':p.factura?'<span class="factura-chip">🧾 Factura pendiente</span>':''}</div>
@@ -4004,9 +4453,9 @@ function renderItemsFormPadre(){
         <div style="font-size:11px;color:var(--gris)">$${fmt(p.precio)} c/u</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="cambiarCantPadre('${p.id}',-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">−</button>
+        <button onclick="cambiarCantPadre(${jsArg(p.id)},-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">−</button>
         <input type="number" id="pqty-${p.id}" value="0" min="0" oninput="recalcTotalPadre()" style="width:56px;text-align:center;font-size:15px;font-weight:800;border:1.5px solid var(--borde);border-radius:8px;padding:4px 4px;font-family:DM Sans,sans-serif;">
-        <button onclick="cambiarCantPadre('${p.id}',1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #B45309;background:#B45309;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+        <button onclick="cambiarCantPadre(${jsArg(p.id)},1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #B45309;background:#B45309;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
         <span style="font-size:12px;font-weight:700;color:var(--madera-dark);min-width:70px;text-align:right" id="psub-${p.id}"></span>
       </div>
     </div>`).join('');
@@ -4133,16 +4582,16 @@ window.guardarPedidoPadre = async function(){
     productos: productosTexto.join(', '),
     evento: 'padre2026',
     logistica: 'tucuman',
-    factura: false, facturaEmitida: false,
     updatedAt: new Date().toISOString()
   };
 
   try {
+    protegerFactura(data, pedidos.find(x=>x.id===editandoPadreId)||null, null);
     if(editandoPadreId){
       await db.collection('pedidos').doc(editandoPadreId).update(data);
       toast('✅ Pedido actualizado');
     } else {
-      data.createdAt = new Date().toISOString();
+      data.createdAt = new Date().toISOString(); data.factura = false; data.facturaEmitida = false;
       await db.collection('pedidos').add(data);
       toast('✅ Pedido guardado');
     }
@@ -4285,7 +4734,7 @@ window.renderPadre = function(){
       const prod = PRODUCTOS_PADRE.find(x=>x.id===id);
       return prod ? `${qty} ${prod.nombre}` : '';
     }).filter(Boolean).join(' · ') : p.productos||'';
-    return `<div class="pedido-card padre-card ${p.estado||'pendiente'}" onclick="abrirEditarPadre('${p.id}')">
+    return `<div class="pedido-card padre-card ${p.estado||'pendiente'}" onclick="abrirEditarPadre(${jsArg(p.id)})">
       <div class="pedido-top">
         <div><div class="pedido-nombre">${esc(p.nombre)}</div><div class="pedido-escuela">${esc(p.escuela)}${p.turno?' · '+p.turno:''}</div></div>
         <span class="estado-badge" style="${esBadgeColor}">${eL[p.estado]||''}</span>
@@ -4470,9 +4919,9 @@ function renderItemsFormEstudiante(){
         <div style="font-size:11px;color:var(--gris)">$${fmt(p.precio)} c/u</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="cambiarCantEstudiante('${p.id}',-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">−</button>
+        <button onclick="cambiarCantEstudiante(${jsArg(p.id)},-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">−</button>
         <input type="number" id="eqty-${p.id}" value="0" min="0" oninput="recalcTotalEstudiante()" style="width:56px;text-align:center;font-size:15px;font-weight:800;border:1.5px solid var(--borde);border-radius:8px;padding:4px 4px;font-family:DM Sans,sans-serif;">
-        <button onclick="cambiarCantEstudiante('${p.id}',1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #0F766E;background:#0F766E;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+        <button onclick="cambiarCantEstudiante(${jsArg(p.id)},1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #0F766E;background:#0F766E;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
         <span style="font-size:12px;font-weight:700;color:var(--madera-dark);min-width:70px;text-align:right" id="esub-${p.id}"></span>
       </div>
     </div>`).join('');
@@ -4600,16 +5049,16 @@ window.guardarPedidoEstudiante = async function(){
     productos: productosTexto.join(', '),
     evento: 'estudiante2026',
     logistica: 'tucuman',
-    factura: false, facturaEmitida: false,
     updatedAt: new Date().toISOString()
   };
 
   try {
+    protegerFactura(data, pedidos.find(x=>x.id===editandoEstudianteId)||null, null);
     if(editandoEstudianteId){
       await db.collection('pedidos').doc(editandoEstudianteId).update(data);
       toast('✅ Pedido actualizado');
     } else {
-      data.createdAt = new Date().toISOString();
+      data.createdAt = new Date().toISOString(); data.factura = false; data.facturaEmitida = false;
       await db.collection('pedidos').add(data);
       toast('✅ Pedido guardado');
     }
@@ -4689,7 +5138,7 @@ window.renderEstudiante = function(){
       const prod = PRODUCTOS_ESTUDIANTE.find(x=>x.id===id);
       return prod ? `${qty} ${prod.nombre}` : '';
     }).filter(Boolean).join(' · ') : p.productos||'';
-    return `<div class="pedido-card estudiante-card ${p.estado||'pendiente'}" onclick="abrirEditarEstudiante('${p.id}')">
+    return `<div class="pedido-card estudiante-card ${p.estado||'pendiente'}" onclick="abrirEditarEstudiante(${jsArg(p.id)})">
       <div class="pedido-top">
         <div><div class="pedido-nombre">${esc(p.nombre)}</div><div class="pedido-escuela">${esc(p.escuela)}${p.turno?' · '+p.turno:''}</div></div>
         <span class="estado-badge" style="${esBadgeColor}">${eL[p.estado]||''}</span>
@@ -4876,9 +5325,9 @@ function renderItemsFormMadre(){
         <div style="font-size:11px;color:var(--gris)">$${fmt(p.precio)} c/u</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <button onclick="cambiarCantMadre('${p.id}',-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">&minus;</button>
+        <button onclick="cambiarCantMadre(${jsArg(p.id)},-1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid var(--borde);background:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--madera-dark);flex-shrink:0">&minus;</button>
         <input type="number" id="mqty-${p.id}" value="0" min="0" oninput="recalcTotalMadre()" style="width:56px;text-align:center;font-size:15px;font-weight:800;border:1.5px solid var(--borde);border-radius:8px;padding:4px 4px;font-family:DM Sans,sans-serif;">
-        <button onclick="cambiarCantMadre('${p.id}',1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #BE185D;background:#BE185D;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+        <button onclick="cambiarCantMadre(${jsArg(p.id)},1)" style="width:28px;height:28px;border-radius:100px;border:1.5px solid #BE185D;background:#BE185D;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
         <span style="font-size:12px;font-weight:700;color:var(--madera-dark);min-width:70px;text-align:right" id="msub-${p.id}"></span>
       </div>
     </div>`).join('');
@@ -5005,16 +5454,16 @@ window.guardarPedidoMadre = async function(){
     productos: productosTexto.join(', '),
     evento: 'madre2026',
     logistica: 'tucuman',
-    factura: false, facturaEmitida: false,
     updatedAt: new Date().toISOString()
   };
 
   try {
+    protegerFactura(data, pedidos.find(x=>x.id===editandoMadreId)||null, null);
     if(editandoMadreId){
       await db.collection('pedidos').doc(editandoMadreId).update(data);
       toast('\u{2705} Pedido actualizado');
     } else {
-      data.createdAt = new Date().toISOString();
+      data.createdAt = new Date().toISOString(); data.factura = false; data.facturaEmitida = false;
       await db.collection('pedidos').add(data);
       toast('\u{2705} Pedido guardado');
     }
@@ -5094,7 +5543,7 @@ window.renderMadre = function(){
       const prod = PRODUCTOS_MADRE.find(x=>x.id===k);
       return prod ? `${qty} ${prod.nombre}` : '';
     }).filter(Boolean).join(' · ') : p.productos||'';
-    return `<div class="pedido-card madre-card ${p.estado||'pendiente'}" onclick="abrirEditarMadre('${p.id}')">
+    return `<div class="pedido-card madre-card ${p.estado||'pendiente'}" onclick="abrirEditarMadre(${jsArg(p.id)})">
       <div class="pedido-top">
         <div><div class="pedido-nombre">${esc(p.nombre)}</div><div class="pedido-escuela">${esc(p.escuela)}${p.turno?' · '+p.turno:''}</div></div>
         <span class="estado-badge" style="${esBadgeColor}">${eL[p.estado]||''}</span>
@@ -5665,7 +6114,7 @@ window.abrirDuplicados = function(){
         </div>
         <div style="text-align:right;white-space:nowrap">
           <div style="font-size:13px;font-weight:800;color:#BE185D">$${fmt(Number(p.total)||0)}</div>
-          <button onclick="document.getElementById('overlay-dups').classList.remove('show');abrirEditarMadre('${p.id}')"
+          <button onclick="document.getElementById('overlay-dups').classList.remove('show');abrirEditarMadre(${jsArg(p.id)})"
                   style="margin-top:5px;font-size:10px;font-weight:700;background:#FDF2F8;color:#BE185D;border:1px solid #F9A8D4;border-radius:100px;padding:4px 10px;cursor:pointer;font-family:'DM Sans',sans-serif">abrir</button>
         </div>
       </div>`;
@@ -6003,9 +6452,9 @@ function renderItemsFormFA(items){
       <div class="fa-vars">${vars.map(v=>{
         const k = claveFA(p.id, v.k), val = Number(items[k])||0;
         return `<div class="fa-var"><span>${v.n}</span>
-          <button type="button" onclick="cambiarCantFA('${k}',-1)">&minus;</button>
+          <button type="button" onclick="cambiarCantFA(${jsArg(k)},-1)">&minus;</button>
           <input type="number" min="0" id="fqty-${k}" value="${val}" class="${val?'tiene':''}" oninput="recalcTotalFA()">
-          <button type="button" class="mas" onclick="cambiarCantFA('${k}',1)">+</button></div>`;
+          <button type="button" class="mas" onclick="cambiarCantFA(${jsArg(k)},1)">+</button></div>`;
       }).join('')}</div>
     </div>`;
   }).join('');
@@ -6256,7 +6705,7 @@ window.renderFinAno = function(){
     const prox = cs.find(c=>c.est!=='paga');
     const sal = saldoReal(p);
     const badgeCol = {pendiente:'background:var(--amarillo-light);color:var(--amarillo)',produccion:'background:var(--azul-light);color:var(--azul)',listo:'background:var(--verde-light);color:var(--verde)',entregado:'background:var(--crema-dark);color:var(--madera)',cobrado:'background:#F3F4F6;color:#6B7280'}[p.estado]||'';
-    return `<div class="pedido-card finano-card ${p.estado||'pendiente'}" onclick="abrirEditarFinAno('${p.id}')">
+    return `<div class="pedido-card finano-card ${p.estado||'pendiente'}" onclick="abrirEditarFinAno(${jsArg(p.id)})">
       <div class="pedido-top">
         <div><div class="pedido-nombre">${escFA(p.nombre)}</div><div class="pedido-escuela">${escFA(p.escuela)}${p.turno?' · '+escFA(p.turno):''}</div></div>
         <span class="estado-badge" style="${badgeCol}">${eL[p.estado]||''}</span>

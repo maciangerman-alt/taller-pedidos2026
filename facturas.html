@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller Artesanal — Facturas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--madera:#8B5E3C;--madera-light:#C49A6C;--madera-dark:#5C3D20;--crema:#FAF4EC;--crema-dark:#F0E6D3;--verde:#2D7A4F;--verde-light:#E8F5EE;--rojo:#C0392B;--rojo-light:#FDECEA;--amarillo:#D4820A;--amarillo-light:#FEF3E2;--azul:#2563EB;--azul-light:#EFF6FF;--gris:#6B7280;--texto:#1C1008;--borde:#E5D9CC;--bg:#F5EFE8}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--texto);font-size:14px;min-height:100vh;padding-bottom:90px}
+  .header{background:var(--madera-dark);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+  .header a.home{color:#fff;text-decoration:none;font-size:13px;font-weight:700;line-height:1;background:rgba(255,255,255,.14);padding:8px 11px;border-radius:10px;white-space:nowrap}
+  .header a.alt{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.3)}
+  .header .t{font-weight:700;font-size:16px}.header .sub{font-size:11px;opacity:.65}
+  .tabs{background:#fff;display:flex;border-bottom:2px solid var(--borde)}
+  .tab{padding:12px 18px;font-weight:600;color:var(--gris);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;gap:6px;align-items:center}
+  .tab.on{color:var(--madera);border-bottom-color:var(--madera)}
+  .badge{background:var(--crema-dark);color:var(--madera);font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px}
+  .tab.on .badge{background:var(--madera);color:#fff}
+  .main{max-width:960px;margin:0 auto;padding:14px}
+  .filtros{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+  .fbtn{border:1.5px solid var(--borde);background:#fff;border-radius:100px;padding:7px 13px;font:inherit;font-size:12.5px;font-weight:600;color:var(--gris);cursor:pointer}
+  .fbtn.on{background:var(--madera);border-color:var(--madera);color:#fff}
+  .lista{display:flex;flex-direction:column;gap:8px}
+  .fila{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:11px 12px;display:flex;gap:10px;align-items:flex-start}
+  .fila.sel{border-color:var(--madera);box-shadow:0 0 0 2px var(--crema-dark)}
+  .fila input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--madera);flex:none}
+  .ppal{flex:1;min-width:0}
+  .n{font-weight:700;color:var(--madera-dark)}
+  .d{font-size:12px;color:var(--gris);margin-top:2px}
+  .der{text-align:right;white-space:nowrap}
+  .monto{font-weight:700;font-size:15px}
+  .chip{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:var(--crema-dark);color:var(--madera-dark);margin:2px 3px 0 0}
+  .chip.ok{background:var(--verde-light);color:var(--verde)}.chip.mal{background:var(--rojo-light);color:var(--rojo)}.chip.av{background:var(--amarillo-light);color:var(--amarillo)}.chip.az{background:var(--azul-light);color:var(--azul)}
+  .ivasel{margin-top:6px;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font:inherit;font-size:12.5px;background:#fff;max-width:100%}
+  .ivasel.falta{border-color:var(--amarillo);background:var(--amarillo-light)}
+  .acc{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:flex-end}
+  .mini{border:none;border-radius:9px;padding:7px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+  .mini.pdf{background:var(--crema-dark);color:var(--madera-dark)}.mini.wa{background:#E7F9EF;color:#1a9e4b}.mini.gen{background:var(--azul-light);color:var(--azul)}
+  .vacio{text-align:center;color:var(--gris);padding:40px 10px;background:#fff;border-radius:14px;border:1px dashed var(--borde);line-height:1.5}
+  .totales{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:12px}
+  .tot{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:10px 12px}
+  .tot .v{font-size:18px;font-weight:700;color:var(--madera-dark)}.tot .l{font-size:11px;color:var(--gris)}
+  .barra-emitir{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);padding:10px 14px;display:none;z-index:40;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
+  .barra-emitir .in{max-width:960px;margin:0 auto;display:flex;gap:10px;align-items:center}
+  .barra-emitir .txt{flex:1;font-size:13px;color:var(--gris)}
+  .btn{border:none;border-radius:12px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--crema-dark);color:var(--madera-dark)}
+  .btn.prim{background:var(--madera);color:#fff}.btn:disabled{opacity:.5;cursor:default}
+  .ov{position:fixed;inset:0;background:rgba(28,16,8,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}
+  .ov.show{display:flex}
+  .modal{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px}
+  @media(min-width:700px){.ov{align-items:center}.modal{border-radius:18px}}
+  .modal h3{color:var(--madera-dark);margin-bottom:8px}
+  .log{margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+  .log div{padding:8px 10px;border-radius:10px;background:var(--crema)}
+  .log .ok{background:var(--verde-light)}.log .mal{background:var(--rojo-light);color:var(--rojo)}
+  .nota{font-size:12px;color:var(--gris);line-height:1.45}
+  .selmes{padding:7px 10px;border:1.5px solid var(--borde);border-radius:10px;font:inherit;background:#fff}
+  #login{max-width:360px;margin:60px auto;background:#fff;border-radius:18px;padding:24px;border:1px solid var(--borde)}
+  #login h2{color:var(--madera-dark);margin-bottom:14px}
+  #login input{width:100%;padding:10px 12px;border:1.5px solid var(--borde);border-radius:10px;font:inherit;margin-bottom:10px}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--madera-dark);color:#fff;padding:10px 16px;border-radius:12px;font-weight:600;z-index:200;display:none;max-width:90vw}
+</style>
+</head>
+<body>
+<div class="header">
+  <a class="home" href="inicio.html" title="Volver al inicio">🏠 Inicio</a>
+  <div><div class="t">Facturas</div><div class="sub" id="sub-amb"></div></div>
+  <a class="home alt" href="taller-pedidos-v10.html" title="Ir a Pedidos">📦 Pedidos</a>
+</div>
+
+<div id="login" style="display:none">
+  <h2>🔐 Ingresar</h2>
+  <input id="l-mail" type="email" placeholder="Mail">
+  <input id="l-pass" type="password" placeholder="Contraseña">
+  <button class="btn prim" style="width:100%" onclick="ingresar()">Entrar</button>
+  <div class="nota" id="l-err" style="color:var(--rojo);margin-top:8px"></div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="tabs">
+    <div class="tab on" id="tab-pend" onclick="irA('pend')">🧾 Pendientes <span class="badge" id="b-pend">0</span></div>
+    <div class="tab" id="tab-emit" onclick="irA('emit')">✅ Emitidas <span class="badge" id="b-emit">0</span></div>
+  </div>
+  <div class="main">
+    <div id="v-pend">
+      <div class="filtros">
+        <button class="fbtn on" data-f="cerrados" onclick="setFiltro(this)">🚚 Entregados y cobrados</button>
+        <button class="fbtn" data-f="todos" onclick="setFiltro(this)">Todos los pendientes</button>
+        <span style="flex:1"></span>
+        <button class="fbtn" onclick="seleccionarTodos()">☑️ Seleccionar todos</button>
+      </div>
+      <div class="lista" id="l-pend"></div>
+    </div>
+    <div id="v-emit" style="display:none">
+      <div class="totales" id="totales"></div>
+      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select></div>
+      <div class="lista" id="l-emit"></div>
+    </div>
+  </div>
+</div>
+
+<div class="barra-emitir" id="barra"><div class="in">
+  <div class="txt" id="barra-txt"></div>
+  <button class="btn prim" id="btn-emitir" onclick="confirmarEmision()">⚡ Emitir</button>
+</div></div>
+
+<div class="ov" id="ov"><div class="modal">
+  <h3 id="ov-tit"></h3>
+  <div class="nota" id="ov-sub"></div>
+  <div class="log" id="ov-log"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+    <button class="btn" id="ov-cancel" onclick="cerrarOv()">Cancelar</button>
+    <button class="btn prim" id="ov-ok">Emitir</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777"
+});
+</script>
+<script src="maestros.js?v=20261122"></script>
+<script>
+const db = firebase.firestore(), functions = firebase.app().functions('southamerica-east1');
+const M = Maestros, esc = M.esc, $ = (id) => document.getElementById(id);
+let pedidos = [], filtro = 'cerrados', seleccion = new Set(), emitiendo = false, ambienteConfig = '';
+
+const fmt = (n) => Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+const fechaCorta = (f) => { if (!f) return ''; const s = String(f); if (/^\d{8}$/.test(s)) return `${s.slice(6, 8)}/${s.slice(4, 6)}/${s.slice(0, 4)}`; const [y, m, d] = s.slice(0, 10).split('-'); return d ? `${d}/${m}/${y}` : s; };
+const cliente = (p) => p.razon || p.escuela || p.nombre || 'Consumidor Final';
+// Los links al PDF solo pueden ser http/https (nunca "javascript:")
+const urlSegura = (u) => { const t = String(u || '').trim(); return /^https?:\/\//i.test(t) || (t && !/^[^/?#]*:/.test(t)) ? t : ''; }; // http/https o ruta relativa; nunca "javascript:" 
+// Llamada a la Function con margen: ARCA puede tardar (el navegador cortaba a los 70 s)
+const TIMEOUT_FACTURAR = 310000;
+const facturarPedido = (datos) => M.llamarFacturador('facturarPedido', datos, { timeout: TIMEOUT_FACTURAR });
+function mensajeError(e) {
+  const code = String((e && e.code) || '');
+  if (/deadline-exceeded/.test(code) || /deadline|timeout|tiempo/i.test(String((e && e.message) || '')))
+    return '⏱️ ARCA tardó demasiado y se cortó la espera. PUEDE QUE SE HAYA EMITIDO: volvé a abrir el pedido en unos minutos, el sistema lo recupera solo. NO vuelvas a apretar enseguida.';
+  return (e && e.message) || 'error';
+}
+// SEC-3: pedidos que NO pasaron por el panel. El catálogo web crea los pedidos
+// con origen "catalogo-web", factura:false y sin CUIT; si uno de esos aparece
+// con "Requiere factura" sin que nadie del taller lo haya marcado en el panel
+// (facturaMarcadaPor), es sospechoso. También los creados desde hoy sin esa marca.
+const DESDE_MARCA = '2026-11-22';
+function sospecha(p) {
+  if (p.facturaMarcadaPor) return '';
+  if (p.origen === 'catalogo-web') return 'creado en el catálogo web y nadie del taller lo marcó para facturar';
+  if (String(p.createdAt || '') >= DESDE_MARCA) return 'no se marcó "Requiere factura" desde el panel';
+  if (!p.estado || p.estado === 'confirmado') return 'sin confirmar en el panel';
+  return '';
+}
+const nroComp = (p) => `${p.tipoComprobanteLetra || ''} ${String(p.puntoVenta || 0).padStart(5, '0')}-${String(p.nroComprobante || 0).padStart(8, '0')}`;
+const ESTADO = { pendiente: '⏳ Pendiente', produccion: '🔧 Producción', listo: '✅ Listo', entregado: '🚚 Entregado', cobrado: '💵 Cobrado' };
+function toast(t, ms = 2600) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => (el.style.display = 'none'), ms); }
+function telWA(tel) { let n = String(tel || '').replace(/\D/g, ''); if (!n) return ''; if (n.startsWith('54')) return n; if (n.startsWith('9') && n.length === 11) return '54' + n; return '549' + n.replace(/^0/, ''); }
+function waLink(p) {
+  const msg = `Hola ${p.nombre || ''}! Te paso la factura de tu pedido en *Taller Artesanal*:\n\n${p.facturaPdfUrl}\n\nCualquier consulta avisame!`;
+  const t = telWA(p.tel); return `https://wa.me/${t}?text=${encodeURIComponent(msg)}`;
+}
+
+// ------------------------------------------------------------- sesión y datos
+firebase.auth().onAuthStateChanged((u) => {
+  if (u) M.despertarFacturador(); // el servidor gratuito se duerme: lo despertamos al entrar
+  $('login').style.display = u ? 'none' : 'block';
+  $('app').style.display = u ? 'block' : 'none';
+  if (!u) { $('barra').style.display = 'none'; return; }
+  db.collection('pedidos').doc('_config_facturacion').get().then((s) => {
+    ambienteConfig = s.exists ? s.data().ambiente : '';
+    $('sub-amb').textContent = ambienteConfig === 'produccion' ? 'ARCA · producción' : ambienteConfig ? '🧪 ARCA · modo PRUEBA (homologación)' : '⚠️ Falta configurar la facturación';
+  }).catch(() => {});
+  // Solo se leen los pedidos que llevan factura (no toda la colección), más los
+  // que tengan CAE aunque alguien les haya sacado "Requiere factura" (PED-7)
+  const conFactura = new Map(), conCae = new Map();
+  const unir = () => { const m = new Map([...conCae, ...conFactura]); pedidos = [...m.values()]; pintar(); };
+  const errLectura = (e) => { console.error(e); $('l-pend').innerHTML = '<div class="vacio">No se pudieron leer los pedidos.</div>'; };
+  db.collection('pedidos').where('factura', '==', true).onSnapshot((snap) => {
+    conFactura.clear(); snap.forEach((d) => { const x = d.data(); if (!x.esConfig) conFactura.set(d.id, { id: d.id, ...x }); });
+    unir();
+  }, errLectura);
+  try {
+    db.collection('pedidos').where('cae', '!=', null).onSnapshot((snap) => {
+      conCae.clear(); snap.forEach((d) => { const x = d.data(); if (!x.esConfig && x.cae) conCae.set(d.id, { id: d.id, ...x }); });
+      unir();
+    }, (e) => console.warn('consulta por CAE', e));
+  } catch (e) { console.warn('consulta por CAE', e); }
+  if ((location.hash || '') === '#emitidas') irA('emit');
+});
+window.ingresar = async () => {
+  $('l-err').textContent = '';
+  try { await firebase.auth().signInWithEmailAndPassword($('l-mail').value.trim(), $('l-pass').value); }
+  catch (e) { $('l-err').textContent = 'Mail o contraseña incorrectos.'; }
+};
+
+const esPendiente = (p) => p.factura === true && !p.cae && !p.facturaEmitida;
+const esEmitida = (p) => !!p.cae || !!p.facturaEmitida;
+
+window.irA = (v) => {
+  $('tab-pend').classList.toggle('on', v === 'pend'); $('tab-emit').classList.toggle('on', v === 'emit');
+  $('v-pend').style.display = v === 'pend' ? 'block' : 'none'; $('v-emit').style.display = v === 'emit' ? 'block' : 'none';
+  history.replaceState(null, '', v === 'emit' ? '#emitidas' : '#pendientes');
+  actualizarBarra();
+};
+window.setFiltro = (b) => { filtro = b.dataset.f; document.querySelectorAll('[data-f]').forEach((x) => x.classList.toggle('on', x === b)); pintarPendientes(); };
+
+function pintar() {
+  $('b-pend').textContent = pedidos.filter(esPendiente).length;
+  $('b-emit').textContent = pedidos.filter(esEmitida).length;
+  pintarPendientes(); armarMeses(); pintarEmitidas();
+}
+
+// ------------------------------------------------------------- pendientes
+function problemas(p) {
+  const out = [];
+  const tieneCuit = M.soloDigitos(p.cuit).length === 11;
+  if (!(Number(p.total) > 0)) out.push('sin total');
+  if (String(p.cuit || '').trim() && !M.cuitValido(p.cuit)) out.push('CUIT inválido');
+  if (tieneCuit && !p.condicionIVAReceptor) out.push('falta condición IVA');
+  if (!tieneCuit && p.condicionIVAReceptor && Number(p.condicionIVAReceptor) !== 5) out.push('esa condición necesita CUIT');
+  return out;
+}
+function pintarPendientes() {
+  let lista = pedidos.filter(esPendiente);
+  if (filtro === 'cerrados') lista = lista.filter((p) => p.estado === 'entregado' || p.estado === 'cobrado');
+  lista.sort((a, b) => String(a.fechaPedido || '').localeCompare(String(b.fechaPedido || '')));
+  // limpiar selección de pedidos que ya no están
+  [...seleccion].forEach((id) => { if (!lista.some((p) => p.id === id)) seleccion.delete(id); });
+  if (!lista.length) {
+    const hayOtros = filtro === 'cerrados' && pedidos.some(esPendiente);
+    $('l-pend').innerHTML = `<div class="vacio">${hayOtros ? 'No hay pendientes entregados o cobrados.<br>Mirá en <b>Todos los pendientes</b> los que todavía están en curso.' : '🎉 No hay facturas pendientes.<br><span class="nota">Acá aparecen los pedidos con "Requiere factura" que todavía no se emitieron.</span>'}</div>`;
+    actualizarBarra(); return;
+  }
+  $('l-pend').innerHTML = lista.map((p) => {
+    const prob = problemas(p);
+    const cuit = M.soloDigitos(p.cuit).length === 11;
+    const sosp = sospecha(p);
+    const opciones = Object.entries(M.COND_IVA).map(([k, t]) => `<option value="${k}" ${String(p.condicionIVAReceptor || '') === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
+    return `<div class="fila ${seleccion.has(p.id) ? 'sel' : ''}" ${sosp ? 'style="border-color:var(--rojo);background:var(--rojo-light)"' : ''}>
+      <input type="checkbox" class="js-sel" data-id="${esc(p.id)}" ${seleccion.has(p.id) ? 'checked' : ''} ${prob.length ? 'disabled title="Corregí los datos antes de emitir"' : ''}>
+      <div class="ppal">
+        <div class="n">${esc(cliente(p))}</div>
+        <div class="d">${p.razon && p.escuela ? esc(p.escuela) + ' · ' : ''}${esc(p.nombre || '')}${p.fechaPedido ? ' · pedido ' + esc(fechaCorta(p.fechaPedido)) : ''}</div>
+        <div><span class="chip">${esc(ESTADO[p.estado] || p.estado || '')}</span>${cuit ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.cuit))}</span>` : '<span class="chip">Consumidor Final</span>'}${prob.map((x) => `<span class="chip mal">⚠️ ${esc(x)}</span>`).join('')}${sosp ? `<span class="chip mal" title="${esc(sosp)}">🚩 Revisar: ${esc(sosp)}</span>` : ''}${p.origen === 'catalogo-web' ? '<span class="chip">🌐 catálogo web</span>' : ''}</div>
+        <select class="ivasel js-iva ${cuit && !p.condicionIVAReceptor ? 'falta' : ''}" data-id="${esc(p.id)}">
+          <option value="">${cuit ? 'Elegí condición IVA del cliente…' : 'Consumidor Final (sin CUIT)'}</option>${opciones}
+        </select>
+      </div>
+      <div class="der"><div class="monto">$${fmt(p.total)}</div></div>
+    </div>`;
+  }).join('');
+  actualizarBarra();
+}
+window.toggleSel = (id, on) => {
+  const p = pedidos.find((x) => x.id === id);
+  if (on && p && sospecha(p) && !confirm(`🚩 Este pedido ${sospecha(p)}.\n\nRevisá en el panel que el cliente, el CUIT y el total sean reales antes de emitir.\n\n¿Lo marco igual para emitir?`)) { pintarPendientes(); return; }
+  on ? seleccion.add(id) : seleccion.delete(id); pintarPendientes();
+};
+// Los ids viajan en data-id y se leen con delegación: nunca dentro de un onchange (SEC-2)
+$('l-pend').addEventListener('change', (e) => {
+  const sel = e.target.closest('.js-sel'); if (sel) { toggleSel(sel.dataset.id, sel.checked); return; }
+  const iva = e.target.closest('.js-iva'); if (iva) cambiarIva(iva.dataset.id, iva.value);
+});
+$('l-emit').addEventListener('click', (e) => { const b = e.target.closest('.js-gen'); if (b) generarPdf(b.dataset.id, b); });
+window.seleccionarTodos = () => {
+  let lista = pedidos.filter(esPendiente);
+  if (filtro === 'cerrados') lista = lista.filter((p) => p.estado === 'entregado' || p.estado === 'cobrado');
+  // No se preseleccionan los que tienen problemas ni los sospechosos (SEC-3)
+  const validos = lista.filter((p) => !problemas(p).length && !sospecha(p));
+  const todos = validos.length > 0 && validos.every((p) => seleccion.has(p.id));
+  validos.forEach((p) => (todos ? seleccion.delete(p.id) : seleccion.add(p.id)));
+  pintarPendientes();
+  const conProblemas = lista.filter((p) => problemas(p).length).length, sosp = lista.filter((p) => !problemas(p).length && sospecha(p)).length;
+  if (!todos && (conProblemas || sosp)) toast([conProblemas ? `${conProblemas} con datos incompletos` : '', sosp ? `${sosp} 🚩 para revisar` : ''].filter(Boolean).join(' y ') + ' quedaron sin marcar', 4000);
+};
+window.cambiarIva = async (id, v) => {
+  try { await db.collection('pedidos').doc(id).update({ condicionIVAReceptor: Number(v) || null }); toast('✅ Condición IVA guardada'); }
+  catch (e) { console.error(e); toast('❌ No se pudo guardar'); }
+};
+function actualizarBarra() {
+  const enPend = $('v-pend').style.display !== 'none';
+  const sel = pedidos.filter((p) => seleccion.has(p.id));
+  $('barra').style.display = enPend && sel.length && !emitiendo ? 'block' : 'none';
+  const total = sel.reduce((a, p) => a + (Number(p.total) || 0), 0);
+  $('barra-txt').innerHTML = `<b>${sel.length}</b> seleccionada${sel.length === 1 ? '' : 's'} · <b>$${fmt(total)}</b>`;
+  $('btn-emitir').textContent = `⚡ Emitir ${sel.length} factura${sel.length === 1 ? '' : 's'}`;
+}
+
+// ------------------------------------------------------------- emisión en tanda
+function cerrarOv() { if (!emitiendo) $('ov').classList.remove('show'); }
+window.cerrarOv = cerrarOv;
+window.confirmarEmision = () => {
+  const sel = pedidos.filter((p) => seleccion.has(p.id));
+  if (!sel.length) return;
+  const total = sel.reduce((a, p) => a + (Number(p.total) || 0), 0);
+  $('ov-tit').textContent = `¿Emitir ${sel.length} factura${sel.length === 1 ? '' : 's'} por $${fmt(total)}?`;
+  $('ov-sub').innerHTML = `Se informan a ARCA una por una. <b>No se pueden deshacer</b> (solo con nota de crédito).${ambienteConfig !== 'produccion' ? '<br>🧪 Estás en modo PRUEBA: no tienen validez fiscal.' : ''}`;
+  $('ov-log').innerHTML = sel.map((p) => `<div>${esc(cliente(p))} · $${fmt(p.total)}</div>`).join('');
+  $('ov-ok').style.display = ''; $('ov-ok').disabled = false; $('ov-ok').textContent = 'Emitir'; $('ov-cancel').textContent = 'Cancelar';
+  // Se congela el total que se mostró: la Function no emite si en el servidor es otro (totalEsperado)
+  const totales = {}; sel.forEach((p) => { totales[p.id] = Number(p.total) || 0; });
+  $('ov-ok').onclick = () => emitirTanda(sel.map((p) => p.id), totales);
+  $('ov').classList.add('show');
+};
+async function emitirTanda(ids, totales) {
+  emitiendo = true; $('ov-ok').disabled = true; $('ov-cancel').disabled = true; actualizarBarra();
+  const log = $('ov-log'); log.innerHTML = '';
+  let ok = 0, mal = 0;
+  for (const id of ids) {
+    const p = pedidos.find((x) => x.id === id) || { id };
+    const fila = document.createElement('div'); fila.textContent = `⏳ ${cliente(p)} · $${fmt(p.total)}...`; log.appendChild(fila);
+    try {
+      const args = { pedidoId: id };
+      if (totales && totales[id] != null) args.totalEsperado = totales[id];
+      const r = (await facturarPedido(args)).data;
+      fila.className = 'ok'; fila.textContent = `✅ ${cliente(p)} · Factura ${r.tipoComprobanteLetra} N° ${String(r.nroComprobante).padStart(8, '0')} · CAE ${r.cae}${r.recuperada ? ' (recuperada)' : ''}`;
+      ok++; seleccion.delete(id);
+    } catch (e) {
+      fila.className = 'mal'; fila.textContent = `❌ ${cliente(p)}: ${mensajeError(e)}`; mal++;
+    }
+  }
+  emitiendo = false; $('ov-cancel').disabled = false; $('ov-cancel').textContent = 'Cerrar'; $('ov-ok').style.display = 'none';
+  $('ov-tit').textContent = mal ? `Listo: ${ok} emitida${ok === 1 ? '' : 's'}, ${mal} con error` : `✅ ${ok} factura${ok === 1 ? '' : 's'} emitida${ok === 1 ? '' : 's'}`;
+  $('ov-sub').textContent = mal ? 'Las que dieron error siguen en Pendientes: revisá el mensaje, corregí y volvé a intentar. Si el error fue por demora de ARCA, esperá unos minutos antes de reintentar.' : 'Ya están en la pestaña Emitidas, con su PDF y el botón de WhatsApp.';
+  pintarPendientes();
+}
+
+// ------------------------------------------------------------- emitidas
+function mesDe(p) { const f = String(p.facturaFecha || p.facturaEmitidaAt || p.fechaPedido || ''); return /^\d{8}$/.test(f) ? `${f.slice(0, 4)}-${f.slice(4, 6)}` : f.slice(0, 7); }
+function armarMeses() {
+  const sel = $('mes'), actual = sel.value;
+  const hoy = new Date(); const mesHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+  const meses = [...new Set([mesHoy, ...pedidos.filter(esEmitida).map(mesDe).filter((m) => /^\d{4}-\d{2}$/.test(m))])].sort().reverse();
+  const nombres = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  sel.innerHTML = '<option value="todas">Todas</option>' + meses.map((m) => `<option value="${esc(m)}">${nombres[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}</option>`).join('');
+  sel.value = actual && [...sel.options].some((o) => o.value === actual) ? actual : mesHoy;
+}
+window.pintarEmitidas = () => {
+  const todas = pedidos.filter(esEmitida);
+  const reales = todas.filter((p) => p.cae && p.facturaAmbiente === 'produccion');
+  const hoy = new Date();
+  const mesHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+  const hace12 = new Date(hoy.getFullYear(), hoy.getMonth() - 11, 1); const desde12 = `${hace12.getFullYear()}-${String(hace12.getMonth() + 1).padStart(2, '0')}`;
+  const suma = (l) => l.reduce((a, p) => a + (Number(p.facturaImporte ?? p.total) || 0), 0);
+  const delMes = reales.filter((p) => mesDe(p) === mesHoy), ult12 = reales.filter((p) => mesDe(p) >= desde12);
+  const pruebas = todas.filter((p) => p.cae && p.facturaAmbiente !== 'produccion').length;
+  // Las emitidas en ADM Global (sin CAE) también son facturas: se suman aparte (PED-7)
+  const adm = todas.filter((p) => !p.cae && p.facturaEmitida);
+  const admMes = adm.filter((p) => mesDe(p) === mesHoy), adm12 = adm.filter((p) => mesDe(p) >= desde12);
+  const detalle = (a, b) => (b ? ` (ARCA $${fmt(a)} + ADM $${fmt(b)})` : '');
+  $('totales').innerHTML =
+    `<div class="tot"><div class="v">$${fmt(suma(delMes) + suma(admMes))}</div><div class="l">Facturado este mes (${delMes.length + admMes.length})${detalle(suma(delMes), suma(admMes))}</div></div>` +
+    `<div class="tot"><div class="v">$${fmt(suma(ult12) + suma(adm12))}</div><div class="l">Últimos 12 meses${detalle(suma(ult12), suma(adm12))} · el tope del monotributo se mide sobre TODOS los ingresos, no solo lo facturado acá</div></div>` +
+    (pruebas ? `<div class="tot"><div class="v">${pruebas}</div><div class="l">🧪 de prueba (no suman)</div></div>` : '');
+  const m = $('mes').value;
+  const lista = todas.filter((p) => m === 'todas' || mesDe(p) === m)
+    .sort((a, b) => String(b.facturaEmitidaAt || b.facturaFecha || '').localeCompare(String(a.facturaEmitidaAt || a.facturaFecha || '')));
+  if (!lista.length) { $('l-emit').innerHTML = '<div class="vacio">No hay facturas en este período.</div>'; return; }
+  $('l-emit').innerHTML = lista.map((p) => {
+    if (!p.cae) {
+      return `<div class="fila"><div class="ppal"><div class="n">${esc(cliente(p))}</div><div class="d">Marcada como emitida por otro sistema (ADM Global)</div></div><div class="der"><div class="monto">$${fmt(p.total)}</div></div></div>`;
+    }
+    const prueba = p.facturaAmbiente !== 'produccion';
+    return `<div class="fila"><div class="ppal">
+        <div class="n">${esc(cliente(p))}</div>
+        <div class="d">Factura ${esc(nroComp(p))} · ${esc(fechaCorta(p.facturaFecha))} · CAE ${esc(p.cae)}</div>
+        <div>${prueba ? '<span class="chip av">🧪 PRUEBA</span>' : ''}${p.facturaDocTipo === 80 ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.facturaDocNro))}</span>` : '<span class="chip">Consumidor Final</span>'}</div>
+        <div class="acc">${urlSegura(p.facturaPdfUrl)
+          ? `<a class="mini pdf" href="${esc(urlSegura(p.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a><a class="mini wa" href="${esc(waLink(p))}" target="_blank" rel="noopener">📤 WhatsApp</a>`
+          : `<button class="mini gen js-gen" data-id="${esc(p.id)}">📄 Generar PDF</button>`}</div>
+      </div><div class="der"><div class="monto">$${fmt(p.facturaImporte ?? p.total)}</div></div></div>`;
+  }).join('');
+};
+window.generarPdf = async (id, b) => {
+  b.disabled = true; b.textContent = 'Generando...';
+  try { await facturarPedido({ pedidoId: id }); toast('📄 PDF listo'); }
+  catch (e) { toast('❌ ' + mensajeError(e), 8000); b.disabled = false; b.textContent = '📄 Generar PDF'; }
+};
+</script>
+</body>
+</html>

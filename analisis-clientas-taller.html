@@ -95,6 +95,18 @@ code{font-size:12.5px;background:var(--linen-2);padding:1px 4px;border-radius:2p
 <hr class="rule">
 
 <!-- ── 1. Conexión ─────────────────────────────────── -->
+<!-- Login obligatorio: los pedidos tienen datos personales (SEC-1) -->
+<section id="login-box" class="hide">
+  <h2>🔐 Ingresar</h2>
+  <p class="hint">Usá el mismo mail y contraseña del panel de pedidos.</p>
+  <div class="row">
+    <div style="flex:1;min-width:170px"><label for="l-mail">Mail</label><input id="l-mail" type="email" autocomplete="username"></div>
+    <div style="flex:1;min-width:130px"><label for="l-pass">Contraseña</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+  </div>
+  <button id="l-btn" type="button" style="margin-top:10px">Entrar</button>
+  <div id="l-err"></div>
+</section>
+
 <section id="paso-conexion">
   <h2>1 · Conectar</h2>
   <p class="hint">Pegá el objeto <code>firebaseConfig</code> del catálogo. Si preferís no pegarlo cada vez, escribilo directo en la constante <code>CONFIG_FIJA</code> arriba del script.</p>
@@ -178,6 +190,7 @@ code{font-size:12.5px;background:var(--linen-2);padding:1px 4px;border-radius:2p
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 /* Si querés evitar pegar el config cada vez, escribilo acá y listo. */
 const CONFIG_FIJA = {
@@ -217,9 +230,15 @@ $('btn-conectar').onclick = async () => {
     return aviso('msg-conexion','El SDK de Firebase no cargó. Estás abriendo el archivo en local y el navegador bloquea los scripts externos. Subilo a GitHub Pages o Netlify y abrilo desde ahí.',true);
   }
 
+  if (!firebase.apps.length) firebase.initializeApp(cfg);
+  // SEC-1: sin sesión no se lee nada
+  if (!firebase.auth || !firebase.auth().currentUser){
+    if (!$('l-btn').onclick) prepararLogin();
+    $('login-box').classList.remove('hide');
+    return aviso('msg-conexion','Primero ingresá con tu mail y contraseña (arriba).',true);
+  }
   btn.disabled = true; aviso('msg-conexion','Leyendo…');
   try{
-    if (!firebase.apps.length) firebase.initializeApp(cfg);
     const lim = Math.max(10, parseInt($('lim').value)||5000);
     const snap = await firebase.firestore().collection($('col').value.trim()).limit(lim).get();
     if (snap.empty){ btn.disabled=false; return aviso('msg-conexion','La colección existe pero está vacía. Revisá el nombre.',true); }
@@ -448,6 +467,22 @@ $('btn-csv').onclick = () => {
   a.click();
 };
 
+// Login (mismo patrón que el panel y las otras páginas)
+function prepararLogin(){
+  if (typeof firebase === 'undefined' || !firebase.auth) return false;
+  if (!firebase.apps.length && CONFIG_FIJA) firebase.initializeApp(CONFIG_FIJA);
+  $('l-btn').onclick = async () => {
+    $('l-err').innerHTML = '';
+    try { await firebase.auth().signInWithEmailAndPassword($('l-mail').value.trim(), $('l-pass').value); }
+    catch(e){ $('l-err').innerHTML = '<div class="msg bad">Mail o contraseña incorrectos.</div>'; }
+  };
+  firebase.auth().onAuthStateChanged(u => {
+    $('login-box').classList.toggle('hide', !!u);
+    if (u && CONFIG_FIJA && !PEDIDOS.length) $('btn-conectar').click();
+  });
+  return true;
+}
+
 if (CONFIG_FIJA) {
   $('cfg').closest('div').style.display = 'none';
   $('paso-conexion').querySelector('.hint').textContent = 'Ya está conectado al proyecto taller-artesanal-902ac. Sólo apretá el botón.';
@@ -456,7 +491,8 @@ if (CONFIG_FIJA) {
     const esperar = setInterval(() => {
       if (typeof firebase !== 'undefined' || ++intentos > 20){
         clearInterval(esperar);
-        $('btn-conectar').click();
+        // Con sesión, onAuthStateChanged dispara la lectura; sin sesión, aparece el login
+        if (!prepararLogin()) $('btn-conectar').click();
       }
     }, 250);
   });

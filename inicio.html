@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taller Artesanal — Inicio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--madera:#8B5E3C;--madera-light:#C49A6C;--madera-dark:#5C3D20;--crema:#FAF4EC;--crema-dark:#F0E6D3;--verde:#2D7A4F;--rojo:#C0392B;--amarillo:#D4820A;--gris:#6B7280;--texto:#1C1008;--borde:#E5D9CC;--bg:#F5EFE8}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--texto);min-height:100vh}
+  .hero{background:var(--madera-dark);color:#fff;padding:22px 18px 46px}
+  .hero .in{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:14px}
+  .hero img{width:46px;height:46px;object-fit:contain;border-radius:10px}
+  .hero h1{font-size:20px}
+  .hero .sub{font-size:12.5px;opacity:.7;margin-top:2px}
+  .hero .salir{margin-left:auto;color:#fff;opacity:.7;font-size:12px;text-decoration:none;border:1px solid rgba(255,255,255,.35);padding:6px 10px;border-radius:9px}
+  .main{max-width:960px;margin:-30px auto 0;padding:0 14px 30px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+  .card{background:#fff;border:1px solid var(--borde);border-radius:18px;padding:18px 16px 16px;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 18px rgba(92,61,32,.07);transition:transform .15s,box-shadow .15s;min-height:150px;position:relative}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(92,61,32,.13)}
+  .card .ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;background:var(--crema)}
+  .card .tt{font-weight:700;font-size:16px;color:var(--madera-dark);margin-top:4px}
+  .card .ds{font-size:12.5px;color:var(--gris);line-height:1.35}
+  .card .num{margin-top:auto;font-size:13px;font-weight:700;color:var(--madera)}
+  .card .num.alerta{color:var(--amarillo)}
+  .card.c1 .ic{background:#FBEFD9}.card.c2 .ic{background:#E5F1EA}.card.c3 .ic{background:#EAF0FB}.card.c4 .ic{background:#F1EAFB}.card.c5 .ic{background:#FBE9E7}
+  h2{font-size:13px;color:var(--gris);text-transform:uppercase;letter-spacing:.05em;margin:26px 2px 10px}
+  .links{display:flex;flex-wrap:wrap;gap:8px}
+  .lnk{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:10px 13px;text-decoration:none;color:var(--madera-dark);font-weight:600;font-size:13px}
+  .lnk:hover{border-color:var(--madera-light)}
+  #login{max-width:360px;margin:40px auto;background:#fff;border-radius:18px;padding:24px;border:1px solid var(--borde)}
+  #login h2{color:var(--madera-dark);margin:0 0 14px;text-transform:none;font-size:18px;letter-spacing:0}
+  #login input{width:100%;padding:11px 12px;border:1.5px solid var(--borde);border-radius:10px;font:inherit;margin-bottom:10px}
+  #login button{width:100%;border:none;border-radius:12px;padding:12px;font:inherit;font-weight:700;background:var(--madera);color:#fff;cursor:pointer}
+  .err{color:var(--rojo);font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="hero"><div class="in">
+  <img src="https://i.ibb.co/R4dnhnkH/Dise-o-sin-t-tulo-2.png" alt="" onerror="this.outerHTML='<div style=font-size:34px>🐊</div>'">
+  <div><h1 id="saludo">Taller Artesanal</h1><div class="sub" id="fecha"></div></div>
+  <a href="#" class="salir" id="salir" style="display:none" onclick="firebase.auth().signOut();return false">Salir</a>
+</div></div>
+
+<div class="main">
+  <div id="login" style="display:none">
+    <h2>🔐 Ingresar</h2>
+    <input id="l-mail" type="email" placeholder="Mail">
+    <input id="l-pass" type="password" placeholder="Contraseña" onkeydown="if(event.key==='Enter')ingresar()">
+    <button onclick="ingresar()">Entrar</button>
+    <div class="err" id="l-err"></div>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="cards">
+      <a class="card c1" href="taller-pedidos-v10.html">
+        <div class="ic">📦</div><div class="tt">Pedidos</div>
+        <div class="ds">Cargar, seguir y cobrar pedidos.</div>
+        <div class="num" id="n-pedidos">…</div>
+      </a>
+      <a class="card c2" href="facturas.html">
+        <div class="ic">🧾</div><div class="tt">Facturas</div>
+        <div class="ds">Pendientes de emitir, emitidas, PDF y WhatsApp.</div>
+        <div class="num" id="n-facturas">…</div>
+      </a>
+      <a class="card c3" href="datos.html#productos">
+        <div class="ic">🏷️</div><div class="tt">Productos</div>
+        <div class="ds">Lista de productos con precio sugerido.</div>
+        <div class="num" id="n-productos">…</div>
+      </a>
+      <a class="card c4" href="costos/#consultar">
+        <div class="ic">🤖</div><div class="tt">Asesor comercial</div>
+        <div class="ds">Ventas, costos, producción y planificación de eventos.</div>
+        <div class="num">Preguntale →</div>
+      </a>
+      <a class="card c5" href="costos/#corte">
+        <div class="ic">✂️</div><div class="tt">Requisición de corte</div>
+        <div class="ds">Pendiente → cortado → pintado → armado → listo.</div>
+        <div class="num" id="n-corte">…</div>
+      </a>
+    </div>
+
+    <h2>Más herramientas</h2>
+    <div class="links">
+      <a class="lnk" href="datos.html#clientes">🏫 Clientes</a>
+      <a class="lnk" href="costos/#tablero">📈 Tablero de costos</a>
+      <a class="lnk" href="ruta-del-dia.html">🗺️ Ruta del día</a>
+      <a class="lnk" href="analisis-clientas-taller.html">📊 Análisis de clientas</a>
+      <a class="lnk" href="./" target="_blank" rel="noopener">🛍️ Catálogo público</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
+  authDomain: "taller-artesanal-902ac.firebaseapp.com",
+  projectId: "taller-artesanal-902ac",
+  storageBucket: "taller-artesanal-902ac.firebasestorage.app",
+  messagingSenderId: "783225891542",
+  appId: "1:783225891542:web:82490ed46b64b186d0f777"
+});
+const db = firebase.firestore();
+const $ = (id) => document.getElementById(id);
+const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
+
+$('fecha').textContent = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^./, (c) => c.toUpperCase());
+
+firebase.auth().onAuthStateChanged((u) => {
+  $('login').style.display = u ? 'none' : 'block';
+  $('app').style.display = u ? 'block' : 'none';
+  $('salir').style.display = u ? '' : 'none';
+  if (!u) { $('saludo').textContent = 'Taller Artesanal'; return; }
+  const nombre = u.email === 'maciangerman@gmail.com' ? 'Germán' : /^nora/i.test(u.email) ? 'Nora' : '';
+  const h = new Date().getHours();
+  $('saludo').textContent = `${h < 13 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches'}${nombre ? ', ' + nombre : ''} 👋`;
+  cargarContadores();
+});
+
+window.ingresar = async () => {
+  $('l-err').textContent = '';
+  try { await firebase.auth().signInWithEmailAndPassword($('l-mail').value.trim(), $('l-pass').value); }
+  catch (e) { $('l-err').textContent = 'Mail o contraseña incorrectos.'; }
+};
+
+// Contadores livianos: cada uno lee solo lo que necesita
+async function cargarContadores() {
+  const poner = (id, txt, alerta) => { const el = $(id); el.textContent = txt; el.classList.toggle('alerta', !!alerta); };
+  db.collection('pedidos').where('estado', 'in', ['pendiente', 'confirmado', 'produccion', 'listo']).get()
+    .then((s) => { let n = 0; s.forEach((d) => { if (!d.data().esConfig) n++; }); poner('n-pedidos', plural(n, 'pedido activo', 'pedidos activos')); })
+    .catch(() => poner('n-pedidos', 'Abrir →'));
+  db.collection('pedidos').where('factura', '==', true).get()
+    .then((s) => { let n = 0; s.forEach((d) => { const p = d.data(); if (!p.esConfig && !p.cae && !p.facturaEmitida) n++; }); poner('n-facturas', n ? plural(n, 'pendiente', 'pendientes') : 'Sin pendientes ✓', n > 0); })
+    .catch(() => poner('n-facturas', 'Abrir →'));
+  db.collection('maestros').doc('productos').get()
+    .then((s) => { const n = s.exists ? Number(s.data().total || 0) : 0; poner('n-productos', n ? plural(n, 'producto', 'productos') : 'Importar desde ADM →', !n); })
+    .catch(() => poner('n-productos', 'Abrir →'));
+  db.collection('costos_corte').get()
+    .then((s) => { let n = 0; s.forEach((d) => { if (d.data().estado !== 'listo') n++; }); poner('n-corte', n ? plural(n, 'requisición activa', 'requisiciones activas') : 'Nada pendiente ✓'); })
+    .catch(() => poner('n-corte', 'Abrir →'));
+}
+</script>
+</body>
+</html>

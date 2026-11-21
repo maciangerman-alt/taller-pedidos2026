@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Factura — Taller Artesanal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--madera:#8B5E3C;--madera-dark:#5C3D20;--crema:#FAF4EC;--borde:#E5D9CC;--gris:#6B7280;--rojo:#C0392B}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'DM Sans',system-ui,sans-serif;background:#F5EFE8;color:#1C1008;min-height:100vh;display:flex;flex-direction:column}
+  header{background:var(--madera-dark);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px}
+  header b{font-size:16px}
+  main{flex:1;display:flex;flex-direction:column;align-items:center;padding:18px;gap:14px}
+  .card{background:#fff;border:1px solid var(--borde);border-radius:18px;padding:20px;max-width:520px;width:100%;text-align:center}
+  .card h1{font-size:19px;color:var(--madera-dark);margin:0 0 6px}
+  .card p{color:var(--gris);margin:0 0 14px;line-height:1.45;font-size:14px}
+  .btn{display:block;width:100%;border:none;border-radius:14px;padding:14px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:8px}
+  .prim{background:var(--madera);color:#fff}.sec{background:var(--crema);color:var(--madera-dark)}
+  iframe{width:100%;max-width:900px;height:75vh;border:1px solid var(--borde);border-radius:12px;background:#fff;display:none}
+  .spin{width:34px;height:34px;border:4px solid var(--borde);border-top-color:var(--madera);border-radius:50%;animation:g 0.9s linear infinite;margin:6px auto 12px}
+  @keyframes g{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none}}
+  footer{text-align:center;color:var(--gris);font-size:12px;padding:14px}
+</style>
+</head>
+<body>
+<header><span style="font-size:22px">🐊</span><b>Taller Artesanal</b></header>
+<main>
+  <div class="card" id="card">
+    <div class="spin" id="spin"></div>
+    <h1 id="tit">Buscando tu factura…</h1>
+    <p id="txt">Un momento, por favor.</p>
+    <div id="acciones"></div>
+  </div>
+  <iframe id="visor" title="Factura"></iframe>
+</main>
+<footer>Pedidos: 381 331-1414 · Luis Dode 361, Banda del Río Salí</footer>
+<script>
+{
+  const PROYECTO = 'taller-artesanal-902ac';
+  const API_KEY = 'AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc';
+  const qs = new URLSearchParams(location.search);
+  const id = qs.get('id') || '';
+  const servidor = qs.get('s') || '';
+  const $ = (i) => document.getElementById(i);
+
+  function mostrar(tit, txt, accionesHtml, conSpin) {
+    $('tit').textContent = tit; $('txt').textContent = txt;
+    $('acciones').innerHTML = accionesHtml || '';
+    $('spin').style.display = conSpin ? 'block' : 'none';
+  }
+  const servidorValido = /^https:\/\/[a-z0-9.-]+\.(onrender\.com|tallerartesanal\.com\.ar)$/i.test(servidor);
+  const linkServidor = servidorValido ? `${servidor}/pdf/${id}` : '';
+
+  async function deFirestore() {
+    const url = `https://firestore.googleapis.com/v1/projects/${PROYECTO}/databases/(default)/documents/facturas_pdf/${id}`
+      + `?key=${API_KEY}&mask.fieldPaths=pdf&mask.fieldPaths=nombreArchivo`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const b64 = j.fields && j.fields.pdf && j.fields.pdf.bytesValue;
+    if (!b64) throw new Error('sin pdf');
+    const bin = atob(b64), bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const nombre = (j.fields.nombreArchivo && j.fields.nombreArchivo.stringValue) || 'factura.pdf';
+    return { blob: new Blob([bytes], { type: 'application/pdf' }), nombre };
+  }
+
+  (async () => {
+    if (!/^[a-f0-9]{32}$/.test(id)) { mostrar('Link incompleto', 'Pedile al taller que te reenvíe el link de la factura.'); return; }
+    try {
+      const { blob, nombre } = await deFirestore();
+      const url = URL.createObjectURL(blob);
+      const esCelu = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      mostrar('Tu factura está lista ✅', esCelu ? 'Tocá el botón para verla o guardarla.' : '',
+        `<a class="btn prim" href="${url}" target="_blank" rel="noopener">📄 Ver factura</a>` +
+        `<a class="btn sec" href="${url}" download="${nombre.replace(/[^\w.-]/g, '_')}">⬇️ Descargar PDF</a>`);
+      if (!esCelu) { $('visor').src = url; $('visor').style.display = 'block'; }
+    } catch (e) {
+      if (linkServidor) {
+        mostrar('Abriendo tu factura…', 'Puede tardar hasta un minuto la primera vez.', `<a class="btn prim" href="${linkServidor}">📄 Ver factura</a>`, true);
+        setTimeout(() => { location.href = linkServidor; }, 400);
+      } else {
+        mostrar('No pudimos abrir la factura', 'Probá de nuevo en un rato o escribinos al 381 331-1414.');
+      }
+    }
+  })();
+}
+</script>
+</body>
+</html>
