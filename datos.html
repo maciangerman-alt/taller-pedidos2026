@@ -219,7 +219,8 @@ const DEF = {
       { k: 'contacto', l: 'Contacto', pistas: ['contacto', 'responsable compra', 'atencion'] },
       { k: 'obs', l: 'Observaciones', pistas: ['observaciones', 'obs', 'notas'] },
     ],
-    clave: (x) => (x.cuit ? 'cuit:' + x.cuit : 'n:' + M.sinAcentos(x.nombre)),
+    // Mismo CUIT + distinta escuela = clientes distintos (casi todas facturan con Superior Gobierno)
+    clave: (x) => (x.cuit ? 'cuit:' + x.cuit + '|' + M.sinAcentos(x.fantasia || x.nombre) : 'n:' + M.sinAcentos(x.nombre) + '|' + M.sinAcentos(x.fantasia || '')),
     normalizar: M.normalizarCliente,
     fila: (c) => {
       const cuit = c.cuit ? `CUIT ${esc(M.formatoCuit(c.cuit))}${M.cuitValido(c.cuit) ? '' : ' <span class="chip mal">CUIT inválido</span>'}` : '<span class="chip av">sin CUIT</span>';
@@ -496,7 +497,7 @@ function valorCelda(campo, fmt, raw) {
   if (typeof raw === 'number' && Number.isInteger(raw) && !/^\d+$/.test(String(fmt).trim())) return String(raw);
   return String(fmt == null ? '' : fmt).trim();
 }
-const barraValida = (b) => (/^\d+$/.test(b) ? b.length >= 6 && b.length <= 14 : /^[0-9A-Za-z-]{3,30}$/.test(b));
+const barraValida = (b) => (/^\d+$/.test(b) ? b.length >= 1 && b.length <= 14 : /^[0-9A-Za-z-]{3,30}$/.test(b)); // el ADM usa códigos cortos (ej. 443)
 const esFilaBasura = (o) => /^(sub)?total(es)?\b|^rubro\s*:|^cantidad de|^registros\b/i.test(String(o.nombre || '').trim());
 
 function filaAObjeto(r, idx) {
@@ -544,11 +545,13 @@ window.previsualizar = () => {
     const malCuit = validos.filter((o) => o._cuitMal).length;
     const ivaNo = validos.filter((o) => o.cuit && !o.iva).length;
     const ivaRaros = [...new Set(validos.filter((o) => o._ivaTxt && !o.iva).map((o) => o._ivaTxt))].slice(0, 6);
-    const cuenta = {}; validos.forEach((o) => { if (o.cuit) cuenta[o.cuit] = (cuenta[o.cuit] || 0) + 1; });
-    const repetidos = Object.keys(cuenta).filter((c) => cuenta[c] > 1);
+    const cuenta = {}; validos.forEach((o) => { if (o.cuit) { const k = o.cuit + '|' + claveCliente(o); cuenta[k] = (cuenta[k] || 0) + 1; } });
+    const repetidos = [...new Set(Object.keys(cuenta).filter((c) => cuenta[c] > 1).map((k) => k.split('|')[0]))];
+    const escuelasMismoCuit = new Set(validos.filter((o) => o.cuit === '30675428081').map(claveCliente)).size;
+    if (escuelasMismoCuit > 1) txt += `<br>🏫 ${escuelasMismoCuit} escuelas facturan con el CUIT de Superior Gobierno: cada una queda como cliente aparte.`;
     if (malCuit) txt += `<br>❌ ${malCuit} con CUIT inválido: se importan <b>sin CUIT</b> y con una nota para corregirlos.`;
     if (ivaNo) txt += `<br>⚠️ ${ivaNo} con CUIT pero sin condición IVA reconocible${ivaRaros.length ? ` (valores no reconocidos: ${ivaRaros.map((x) => '"' + esc(x) + '"').join(', ')})` : ''}. Se pueden completar después.`;
-    if (repetidos.length) txt += `<br>⚠️ ${repetidos.length} CUIT aparecen en más de una fila (${repetidos.slice(0, 3).map((c) => esc(M.formatoCuit(c))).join(', ')}): quedan como <b>un solo cliente</b> con los datos combinados.`;
+    if (repetidos.length) txt += `<br>⚠️ ${repetidos.length} CUIT aparecen en más de una fila (${repetidos.slice(0, 3).map((c) => esc(M.formatoCuit(c))).join(', ')}): con la misma escuela repetida: esas filas quedan como <b>un solo cliente</b> con los datos combinados.`;
     if (Number($('map-cuit').value) < 0) txt += '<br>⚠️ No elegiste la columna CUIT.';
     if (Number($('map-iva').value) < 0) txt += '<br>⚠️ No elegiste la columna Condición IVA (es la que pide ARCA desde el 1/12).';
     else if (validos.length && validos.filter((o) => o._ivaTxt).every((o) => /^\d+$/.test(String(o._ivaTxt).trim()))) txt += '<br>⚠️ La columna Condición IVA trae solo números: revisá que sean códigos de ARCA (1 = Resp. Inscripto, 4 = Exento, 5 = Cons. Final, 6 = Monotributo).';
@@ -572,13 +575,15 @@ window.previsualizar = () => {
 
 // Busca el registro existente que corresponde a una fila: por código, después
 // por código de barras, después por CUIT y por último por nombre (XLS-07)
+// Clientes: el mismo CUIT con otra escuela es OTRO cliente (Superior Gobierno factura cientos de escuelas)
+const claveCliente = (x) => M.sinAcentos(x.fantasia || x.nombre || '') + '#' + M.sinAcentos(x.dom || '').replace(/[^a-z0-9]/g, '');
 function indiceBase(base) {
   const m = { cod: new Map(), bar: new Map(), cuit: new Map(), nom: new Map() };
   base.forEach((x) => {
     if (x.cod) m.cod.set(M.sinAcentos(x.cod), x);
     if (x.barra) m.bar.set(String(x.barra).replace(/^0+(?=\d)/, ''), x);
-    if (x.cuit) m.cuit.set(x.cuit, x);
-    const n = M.sinAcentos(x.nombre); if (n && !m.nom.has(n)) m.nom.set(n, x);
+    if (x.cuit) m.cuit.set(x.cuit + '|' + claveCliente(x), x);
+    const n = tipo === 'clientes' ? M.sinAcentos(x.nombre) + '|' + claveCliente(x) : M.sinAcentos(x.nombre); if (n && !m.nom.has(n)) m.nom.set(n, x);
   });
   return m;
 }
@@ -590,8 +595,8 @@ function buscarEnIndice(m, x) {
     const n = m.nom.get(M.sinAcentos(x.nombre));
     return n && !n.cod && !n.barra && !x.cod ? n : null;
   }
-  if (x.cuit) { const c = m.cuit.get(x.cuit); if (c) return c; }
-  const n = m.nom.get(M.sinAcentos(x.nombre));
+  if (x.cuit) { const c = m.cuit.get(x.cuit + '|' + claveCliente(x)); if (c) return c; }
+  const n = m.nom.get(M.sinAcentos(x.nombre) + '|' + claveCliente(x));
   return n && (!n.cuit || !x.cuit || n.cuit === x.cuit) ? n : null;
 }
 // Combina una fila con lo existente sin perder datos: los vacíos no pisan,

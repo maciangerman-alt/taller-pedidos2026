@@ -227,7 +227,7 @@ window.setFiltro = (b) => { filtro = b.dataset.f; document.querySelectorAll('[da
 
 function pintar() {
   $('b-pend').textContent = pedidos.filter(esPendiente).length;
-  $('b-emit').textContent = pedidos.filter(esEmitida).length;
+  $('b-emit').textContent = comprobantesEmitidos().length;
   pintarPendientes(); armarMeses(); pintarEmitidas();
 }
 
@@ -348,48 +348,78 @@ async function emitirTanda(ids, totales) {
 
 // ------------------------------------------------------------- emitidas
 function mesDe(p) { const f = String(p.facturaFecha || p.facturaEmitidaAt || p.fechaPedido || ''); return /^\d{8}$/.test(f) ? `${f.slice(0, 4)}-${f.slice(4, 6)}` : f.slice(0, 7); }
+// Comprobantes emitidos: la factura vigente de cada pedido, las facturas anuladas
+// por nota de crédito y las notas de crédito (restan). Cada fila = un comprobante.
+function comprobantesEmitidos() {
+  const filas = [];
+  for (const p of pedidos) {
+    if (p.cae || p.facturaEmitida) filas.push({ tipo: p.cae ? 'F' : 'ADM', p, d: p, fecha: p.facturaFecha || p.facturaEmitidaAt || p.fechaPedido, importe: Number(p.facturaImporte ?? p.total) || 0, prueba: p.cae && p.facturaAmbiente !== 'produccion' });
+    for (const a of p.facturasAnuladas || []) filas.push({ tipo: 'F', anulada: true, p, d: a, fecha: a.facturaFecha, importe: Number(a.facturaImporte) || 0, prueba: a.facturaAmbiente !== 'produccion' });
+    for (const n of p.notasCredito || []) filas.push({ tipo: 'NC', p, d: n, fecha: n.fecha, importe: -(Number(n.importe) || 0), prueba: n.ambiente !== 'produccion' });
+  }
+  return filas;
+}
+const mesDeFila = (f) => { const s = String(f.fecha || ''); return /^\d{8}$/.test(s) ? `${s.slice(0, 4)}-${s.slice(4, 6)}` : s.slice(0, 7); };
 function armarMeses() {
   const sel = $('mes'), actual = sel.value;
   const hoy = new Date(); const mesHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
-  const meses = [...new Set([mesHoy, ...pedidos.filter(esEmitida).map(mesDe).filter((m) => /^\d{4}-\d{2}$/.test(m))])].sort().reverse();
+  const meses = [...new Set([mesHoy, ...comprobantesEmitidos().map(mesDeFila).filter((m) => /^\d{4}-\d{2}$/.test(m))])].sort().reverse();
   const nombres = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   sel.innerHTML = '<option value="todas">Todas</option>' + meses.map((m) => `<option value="${esc(m)}">${nombres[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}</option>`).join('');
   sel.value = actual && [...sel.options].some((o) => o.value === actual) ? actual : mesHoy;
 }
+function waLinkNC(p, n) {
+  const nro = `${n.letra || 'C'} ${String(n.puntoVenta || 0).padStart(5, '0')}-${String(n.numero || 0).padStart(8, '0')}`;
+  const url = String(n.pdfUrl || '').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i, '');
+  const msg = `¡Hola${p.nombre ? ' ' + String(p.nombre).trim().split(/\s+/)[0] : ''}! 😊\nTe enviamos la nota de crédito ${nro} por $${fmt(n.importe)} de *Taller Artesanal*, correspondiente a la factura ${n.facturaLetra || ''} ${n.facturaNro || ''}.\n📄 ${url}`;
+  return `https://wa.me/${telWA(p.tel)}?text=${encodeURIComponent(msg)}`;
+}
 window.pintarEmitidas = () => {
-  const todas = pedidos.filter(esEmitida);
-  const reales = todas.filter((p) => p.cae && p.facturaAmbiente === 'produccion');
+  const todas = comprobantesEmitidos();
+  const reales = todas.filter((f) => !f.prueba && f.tipo !== 'ADM');
   const hoy = new Date();
   const mesHoy = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
   const hace12 = new Date(hoy.getFullYear(), hoy.getMonth() - 11, 1); const desde12 = `${hace12.getFullYear()}-${String(hace12.getMonth() + 1).padStart(2, '0')}`;
-  const suma = (l) => l.reduce((a, p) => a + (Number(p.facturaImporte ?? p.total) || 0), 0);
-  const delMes = reales.filter((p) => mesDe(p) === mesHoy), ult12 = reales.filter((p) => mesDe(p) >= desde12);
-  const pruebas = todas.filter((p) => p.cae && p.facturaAmbiente !== 'produccion').length;
+  const suma = (l) => l.reduce((a, f) => a + f.importe, 0);
+  const delMes = reales.filter((f) => mesDeFila(f) === mesHoy), ult12 = reales.filter((f) => mesDeFila(f) >= desde12);
+  const pruebas = todas.filter((f) => f.prueba).length;
   // Las emitidas en ADM Global (sin CAE) también son facturas: se suman aparte (PED-7)
-  const adm = todas.filter((p) => !p.cae && p.facturaEmitida);
-  const admMes = adm.filter((p) => mesDe(p) === mesHoy), adm12 = adm.filter((p) => mesDe(p) >= desde12);
+  const adm = todas.filter((f) => f.tipo === 'ADM');
+  const admMes = adm.filter((f) => mesDeFila(f) === mesHoy), adm12 = adm.filter((f) => mesDeFila(f) >= desde12);
   const detalle = (a, b) => (b ? ` (ARCA $${fmt(a)} + ADM $${fmt(b)})` : '');
+  const ncMes = delMes.filter((f) => f.tipo === 'NC').length;
   $('totales').innerHTML =
-    `<div class="tot"><div class="v">$${fmt(suma(delMes) + suma(admMes))}</div><div class="l">Facturado este mes (${delMes.length + admMes.length})${detalle(suma(delMes), suma(admMes))}</div></div>` +
+    `<div class="tot"><div class="v">$${fmt(suma(delMes) + suma(admMes))}</div><div class="l">Facturado este mes (${delMes.filter((f) => f.tipo === 'F').length + admMes.length})${detalle(suma(delMes), suma(admMes))}${ncMes ? ` · ya descuenta ${ncMes} nota(s) de crédito` : ''}</div></div>` +
     `<div class="tot"><div class="v">$${fmt(suma(ult12) + suma(adm12))}</div><div class="l">Últimos 12 meses${detalle(suma(ult12), suma(adm12))} · el tope del monotributo se mide sobre TODOS los ingresos, no solo lo facturado acá</div></div>` +
     (pruebas ? `<div class="tot"><div class="v">${pruebas}</div><div class="l">🧪 de prueba (no suman)</div></div>` : '');
   const m = $('mes').value;
-  const lista = todas.filter((p) => m === 'todas' || mesDe(p) === m)
-    .sort((a, b) => String(b.facturaEmitidaAt || b.facturaFecha || '').localeCompare(String(a.facturaEmitidaAt || a.facturaFecha || '')));
-  if (!lista.length) { $('l-emit').innerHTML = '<div class="vacio">No hay facturas en este período.</div>'; return; }
-  $('l-emit').innerHTML = lista.map((p) => {
-    if (!p.cae) {
+  const lista = todas.filter((f) => m === 'todas' || mesDeFila(f) === m)
+    .sort((a, b) => String(b.d.emitidaAt || b.d.facturaEmitidaAt || b.fecha || '').localeCompare(String(a.d.emitidaAt || a.d.facturaEmitidaAt || a.fecha || '')));
+  if (!lista.length) { $('l-emit').innerHTML = '<div class="vacio">No hay comprobantes en este período.</div>'; return; }
+  $('l-emit').innerHTML = lista.map((f) => {
+    const p = f.p, d = f.d;
+    if (f.tipo === 'ADM') {
       return `<div class="fila"><div class="ppal"><div class="n">${esc(cliente(p))}</div><div class="d">Marcada como emitida por otro sistema (ADM Global)</div></div><div class="der"><div class="monto">$${fmt(p.total)}</div></div></div>`;
     }
-    const prueba = p.facturaAmbiente !== 'produccion';
-    return `<div class="fila"><div class="ppal">
+    const chips = `${f.prueba ? '<span class="chip av">🧪 PRUEBA</span>' : ''}`;
+    if (f.tipo === 'NC') {
+      const nro = `${d.letra || 'C'} ${String(d.puntoVenta || 0).padStart(5, '0')}-${String(d.numero || 0).padStart(8, '0')}`;
+      return `<div class="fila" style="border-color:#E8D3B0;background:#FFFBF2"><div class="ppal">
+        <div class="n">↩️ ${esc(cliente(p))}</div>
+        <div class="d">Nota de crédito ${esc(nro)} · ${esc(fechaCorta(d.fecha))} · CAE ${esc(d.cae)} · de la factura ${esc((d.facturaLetra || '') + ' ' + (d.facturaNro || ''))}${d.motivo ? ' · ' + esc(d.motivo) : ''}</div>
+        <div>${chips}<span class="chip">${d.total ? 'Anulación total' : 'Parcial'}</span></div>
+        <div class="acc">${urlSegura(d.pdfUrl) ? `<a class="mini pdf" href="${esc(urlSegura(d.pdfUrl))}" target="_blank" rel="noopener">📄 PDF</a><a class="mini wa" href="${esc(waLinkNC(p, d))}" target="_blank" rel="noopener">📤 WhatsApp</a>` : ''}</div>
+      </div><div class="der"><div class="monto" style="color:#A93226">-$${fmt(-f.importe)}</div></div></div>`;
+    }
+    const nroF = `${d.tipoComprobanteLetra || ''} ${String(d.puntoVenta || 0).padStart(5, '0')}-${String(d.nroComprobante || 0).padStart(8, '0')}`;
+    return `<div class="fila" ${f.anulada ? 'style="opacity:.75"' : ''}><div class="ppal">
         <div class="n">${esc(cliente(p))}</div>
-        <div class="d">Factura ${esc(nroComp(p))} · ${esc(fechaCorta(p.facturaFecha))} · CAE ${esc(p.cae)}</div>
-        <div>${prueba ? '<span class="chip av">🧪 PRUEBA</span>' : ''}${p.facturaDocTipo === 80 ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.facturaDocNro))}</span>` : '<span class="chip">Consumidor Final</span>'}</div>
-        <div class="acc">${urlSegura(p.facturaPdfUrl)
-          ? `<a class="mini pdf" href="${esc(urlSegura(p.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a><a class="mini wa" href="${esc(waLink(p))}" target="_blank" rel="noopener">📤 WhatsApp</a>`
-          : `<button class="mini gen js-gen" data-id="${esc(p.id)}">📄 Generar PDF</button>`}</div>
-      </div><div class="der"><div class="monto">$${fmt(p.facturaImporte ?? p.total)}</div></div></div>`;
+        <div class="d">Factura ${esc(nroF)} · ${esc(fechaCorta(d.facturaFecha))} · CAE ${esc(d.cae)}</div>
+        <div>${chips}${f.anulada ? `<span class="chip mal">Anulada por NC ${esc(d.anuladaPorNC || '')}</span>` : ''}${d.facturaDocTipo === 80 ? `<span class="chip az">CUIT ${esc(M.formatoCuit(d.facturaDocNro))}</span>` : '<span class="chip">Consumidor Final</span>'}</div>
+        <div class="acc">${urlSegura(d.facturaPdfUrl)
+          ? `<a class="mini pdf" href="${esc(urlSegura(d.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a>${f.anulada ? '' : `<a class="mini wa" href="${esc(waLink(p))}" target="_blank" rel="noopener">📤 WhatsApp</a>`}`
+          : (f.anulada ? '' : `<button class="mini gen js-gen" data-id="${esc(p.id)}">📄 Generar PDF</button>`)}</div>
+      </div><div class="der"><div class="monto">$${fmt(f.importe)}</div></div></div>`;
   }).join('');
 };
 window.generarPdf = async (id, b) => {

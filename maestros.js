@@ -298,11 +298,14 @@
     const c = soloDigitos(cuit);
     if (!cuitValido(c) || !String(nombre || '').trim()) return null;
     const items = await cargar('clientes');
-    const enCache = items.find((x) => x.cuit === c);
+    // Mismo CUIT (ej. Superior Gobierno) + otra escuela = otro cliente
+    const quien = sinAcentos(String(fantasia || '').trim() || nombre);
+    const mismo = (x) => x.cuit === c && sinAcentos(x.fantasia || x.nombre) === quien;
+    const enCache = items.find(mismo);
     if (enCache && (enCache.iva || !iva)) return enCache; // nada que aprender: ni una lectura más
     return mutar('clientes', (listas) => {
       for (let k = 0; k < listas.length; k++) {
-        const i = listas[k].findIndex((x) => x.cuit === c);
+        const i = listas[k].findIndex(mismo);
         if (i < 0) continue;
         const ya = listas[k][i];
         if (!ya.iva && iva) { listas[k][i] = { ...ya, iva: Number(iva) }; return { tocados: [k], valor: listas[k][i] }; }
@@ -375,7 +378,7 @@
       if (buf && gap > 600) { buf = ''; sucio = false; }      // restos viejos: se empieza de cero
       else if (buf && gap > maxGap) sucio = true;             // pausa en el medio del código
       if (e.key === 'Enter') {
-        if (!sucio && buf.length >= minLargo && /^[0-9A-Za-z-]+$/.test(buf)) { e.preventDefault(); e.stopPropagation(); onScan(buf); }
+        if (!sucio && buf.length >= minLargo && /^[0-9A-Za-z-]+$/.test(buf) && (buf.length >= 6 || /^\d+$/.test(buf))) { e.preventDefault(); e.stopPropagation(); onScan(buf); } // códigos cortos (ADM: 443) solo si son números
         buf = ''; sucio = false; return;
       }
       if (e.key && e.key.length === 1) buf += e.key;

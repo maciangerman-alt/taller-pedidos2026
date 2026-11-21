@@ -184,6 +184,32 @@
   .form-input, .form-select, .form-textarea { width:100%; padding:11px 14px; border:1.5px solid var(--borde); border-radius:10px; font-size:14px; font-family:'DM Sans',sans-serif; background:white; color:var(--texto); outline:none; }
   .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--madera); }
   .form-textarea { min-height:80px; resize:vertical; }
+  /* Tabla de ítems del pedido (estilo ADM) */
+  .items-wrap { border:1.5px solid var(--borde); border-radius:10px; overflow:hidden; background:white; }
+  .items-tabla { width:100%; border-collapse:collapse; font-size:13px; }
+  .items-tabla th { background:var(--crema-dark); color:var(--madera-dark); font-size:11px; font-weight:700; text-align:left; padding:7px 6px; text-transform:uppercase; letter-spacing:.3px; }
+  .items-tabla td { padding:4px 6px; border-top:1px solid var(--crema-dark); vertical-align:middle; }
+  .items-tabla .num { text-align:right; white-space:nowrap; }
+  .items-tabla input { width:100%; border:1px solid transparent; border-radius:6px; padding:6px 5px; font:inherit; background:transparent; color:var(--texto); }
+  .items-tabla input:focus { border-color:var(--madera-light); background:#FFFDF8; outline:none; }
+  .items-tabla input.cant { width:52px; text-align:center; }
+  .items-tabla input.precio { width:86px; text-align:right; }
+  .items-tabla .cod { color:var(--texto-secundario); font-size:11.5px; white-space:nowrap; }
+  .items-tabla .quitar { background:none; border:none; color:#C0392B; font-size:15px; cursor:pointer; padding:4px; }
+  .items-vacio { padding:14px; text-align:center; color:var(--texto-secundario); font-size:12.5px; }
+  .items-pie { display:flex; gap:8px; align-items:center; margin-top:6px; flex-wrap:wrap; }
+  .docs-btns { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .docs-btns button { background:#F3EEE7; color:var(--madera-dark); border:none; border-radius:10px; padding:10px 4px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .docs-btns button:disabled { opacity:.5; cursor:wait; }
+  .doc-fila { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:8px; font-size:12.5px; background:white; border:1px solid var(--crema-dark); border-radius:10px; padding:8px 10px; }
+  .doc-fila .t { flex:1; min-width:140px; color:var(--texto); }
+  .doc-fila a { text-decoration:none; font-weight:700; font-size:12px; border-radius:8px; padding:6px 9px; }
+  .doc-fila a.pdf { background:#F3EEE7; color:var(--madera-dark); }
+  .doc-fila a.wa { background:#E7F9EF; color:#1C9E50; }
+  .btn-mini { background:#F3EEE7; color:var(--madera-dark); border:none; border-radius:8px; padding:7px 10px; font-size:12px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .items-total { font-size:13px; font-weight:700; color:var(--madera-dark); }
+  .items-total.mal { color:#C0392B; }
+  @media (max-width:480px){ .items-tabla .cod-col { display:none; } .items-tabla input.precio { width:72px; } }
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .form-section { background:var(--crema); border-radius:12px; padding:14px; margin-bottom:14px; }
   .form-section-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--madera); margin-bottom:12px; }
@@ -916,6 +942,23 @@
     </div>
   </div>
 
+  <!-- NOTA DE CRÉDITO -->
+  <div class="confirm-overlay" id="nc-overlay">
+    <div class="confirm-box" style="text-align:left;max-width:380px">
+      <div class="confirm-icon" style="text-align:center">↩️</div>
+      <div class="confirm-titulo" style="text-align:center">Nota de crédito</div>
+      <div class="confirm-sub" id="nc-sub" style="text-align:center"></div>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin:12px 0 6px;font-size:13.5px;cursor:pointer"><input type="radio" name="nc-tipo" value="total" checked onchange="ncTipo()"> <span><b>Anular la factura completa</b><br><span style="font-size:12px;color:var(--texto-secundario)">El pedido vuelve a "factura pendiente" para emitir una nueva (ej. CUIT o datos equivocados).</span></span></label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:13.5px;cursor:pointer"><input type="radio" name="nc-tipo" value="parcial" onchange="ncTipo()"> <span><b>Descontar un importe</b><br><span style="font-size:12px;color:var(--texto-secundario)">Devolución o error de precio. La factura sigue vigente.</span></span></label>
+      <input class="form-input" id="nc-importe" type="number" min="1" step="0.01" inputmode="decimal" placeholder="Importe a descontar $" style="display:none;margin:6px 0">
+      <input class="form-input" id="nc-motivo" maxlength="200" placeholder="Motivo (ej. CUIT equivocado, devolución de 1 juego)" style="margin-top:8px">
+      <div class="confirm-btns" style="margin-top:14px">
+        <button class="confirm-btn-cancel" onclick="cerrarNotaCredito()">Cancelar</button>
+        <button class="confirm-btn-ok" id="nc-ok" style="background:#B7791F" onclick="emitirNotaCredito()">Emitir NC</button>
+      </div>
+    </div>
+  </div>
+
   <!-- CONFIRM MODAL -->
   <div class="confirm-overlay" id="confirm-overlay">
     <div class="confirm-box">
@@ -1544,15 +1587,22 @@
     <div class="form-section">
       <div class="form-section-title">📦 Detalle del pedido</div>
       <div class="form-group">
-        <label class="form-label">Productos y cantidades *</label>
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input class="form-input" id="f-prod-cant" type="number" min="1" max="999" inputmode="numeric" value="1" onkeydown="enterCantidad(event)" onblur="cantidadSana(this)" style="width:64px;flex:none;text-align:center" title="Cantidad">
+        <label class="form-label">Productos *</label>
+        <div id="items-buscador" style="display:flex;gap:6px;margin-bottom:6px">
           <div class="autocomplete-wrap" style="flex:1">
-            <input class="form-input" id="f-prod-buscar" placeholder="🔎 Buscar o escanear producto..." oninput="buscarProducto()" onkeydown="enterProducto(event)" autocomplete="off">
+            <input class="form-input" id="f-prod-buscar" placeholder="🔎 Nombre o código, o escaneá con la pistola" oninput="buscarProducto()" onkeydown="enterProducto(event)" autocomplete="off">
             <div class="autocomplete-list" id="prod-list" style="display:none"></div>
           </div>
+          <input class="form-input" id="f-prod-cant" type="number" min="1" max="9999" inputmode="numeric" value="1" onkeydown="enterCantidad(event)" onblur="cantidadSana(this)" style="width:70px;flex:none;text-align:center" title="Cantidad a agregar">
         </div>
-        <textarea class="form-textarea" id="f-productos" placeholder="Ej: 20 rompecabezas cuerpo humano, 15 mapas Argentina..."></textarea>
+        <div class="items-wrap"><table class="items-tabla"><thead><tr><th class="cod-col">Código</th><th>Detalle</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Subtotal</th><th></th></tr></thead><tbody id="items-body"></tbody></table></div>
+        <div class="items-pie">
+          <button type="button" class="btn-mini" id="btn-item-libre" onclick="agregarItemLibre()">➕ Ítem que no está en la lista</button>
+          <span style="flex:1"></span>
+          <span class="items-total" id="items-total"></span>
+        </div>
+        <label class="form-label" style="margin-top:12px">Aclaraciones <span style="font-weight:400;color:var(--texto-secundario)">(colores, nombres, pintado, etc.)</span></label>
+        <textarea class="form-textarea" id="f-productos" style="min-height:60px" placeholder="Ej: pintados, con el nombre de cada nene, colores surtidos..."></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -1625,12 +1675,26 @@
             <a id="btn-ver-factura-pdf" href="#" target="_blank" style="display:block;text-align:center;background:#F3EEE7;color:var(--madera-dark);font-weight:700;padding:10px;border-radius:10px;text-decoration:none;margin-bottom:8px">📄 Ver PDF</a>
             <a id="btn-enviar-factura-wa" href="#" target="_blank" style="display:block;text-align:center;background:#E7F9EF;color:#25D366;font-weight:700;padding:10px;border-radius:10px;text-decoration:none">📤 Enviar factura por WhatsApp</a>
             <button type="button" class="btn btn-secondary" id="btn-generar-pdf" onclick="facturarConArca()" style="width:100%;margin-top:6px;display:none">📄 Generar PDF</button>
+            <button type="button" id="btn-nota-credito" onclick="abrirNotaCredito()" style="width:100%;margin-top:8px;background:#FFF6E8;border:1px solid #E8C48C;color:#8A5A12;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer">↩️ Nota de crédito (anular o descontar)</button>
             <button type="button" id="btn-borrar-factura-prueba" onclick="borrarFacturaPrueba()" style="display:none;width:100%;margin-top:8px;background:none;border:1px dashed #C0392B;color:#C0392B;border-radius:10px;padding:8px;font-size:12px;cursor:pointer">🧪 Borrar factura de PRUEBA (homologación)</button>
           </div>
+          <div id="lista-nc"></div>
           <div id="factura-arca-msg" style="display:none;margin-top:10px;font-size:12.5px;line-height:1.4;padding:10px;border-radius:10px;white-space:pre-wrap"></div>
           <button type="button" onclick="diagnosticoArca()" style="margin-top:8px;background:none;border:none;color:var(--texto-secundario);font-size:12px;text-decoration:underline;cursor:pointer;padding:0">🔌 Probar conexión con ARCA</button>
         </div>
       </div>
+    </div>
+
+    <div class="form-section" id="seccion-documentos">
+      <div class="form-section-title">📄 Documentos</div>
+      <div id="docs-aviso" style="font-size:12.5px;color:var(--texto-secundario);margin-bottom:8px">Guardá el pedido para poder armar presupuesto, remito o comprobante X.</div>
+      <div class="docs-btns" id="docs-btns">
+        <button type="button" onclick="generarDocumento('presupuesto',this)">🧾 Presupuesto</button>
+        <button type="button" onclick="generarDocumento('remito',this)">🚚 Remito</button>
+        <button type="button" onclick="generarDocumento('x',this)">📃 Comprob. X</button>
+      </div>
+      <div id="docs-lista"></div>
+      <div style="font-size:11.5px;color:var(--texto-secundario);margin-top:8px">Salen con el logo, los productos de la tabla y las aclaraciones. No son facturas (no van a ARCA).</div>
     </div>
 
     <div class="form-section">
@@ -2935,7 +2999,7 @@ window.abrirEditar=function(id){
   document.getElementById('f-escuela').value=p.escuela||'';
   document.getElementById('f-turno').value=p.turno||'';
   document.getElementById('f-tel').value=p.tel||'';
-  document.getElementById('f-productos').value=p.productos||'';
+  cargarItemsDePedido(p);
   document.getElementById('f-fecha-pedido').value=p.fechaPedido||'';
   document.getElementById('f-fecha-entrega').value=p.fechaEntrega||'';
   document.getElementById('f-obs').value=p.obs||'';
@@ -2957,6 +3021,7 @@ window.abrirEditar=function(id){
   document.getElementById('factura-extra').style.display=facturaOn?'block':'none';
   document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);
   actualizarPanelFacturacionArca(p);
+  pintarDocumentos(p);
   document.getElementById('toggle-madre').classList.toggle('on',madreOn);
   document.querySelectorAll('#f-estado-opts .estado-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.estado||'pendiente')));
   document.querySelectorAll('.log-opt').forEach(el=>el.classList.toggle('selected',el.dataset.val===(p.logistica||'tucuman')));
@@ -2982,6 +3047,8 @@ let _snapFact=null; // datos fiscales al abrir el modal (PED-8)
 function resetForm(){
   limpiarBuscadoresForm(); _snapFact=null;
   ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon','f-cond-iva'].forEach(id=>document.getElementById(id).value='');
+  _items=[]; _itemsBloqueados=false; renderItems();
+  if(typeof pintarDocumentos==='function'){ pintarDocumentos(null); pintarNotasCredito(null); }
   mostrarMsgArca('');
   document.getElementById('f-turno').value='';
   document.getElementById('f-pago').value='';
@@ -3042,6 +3109,7 @@ function actualizarPanelFacturacionArca(p){
   // Solo para pedidos ya guardados y marcados "Requiere factura"
   const filaAdm=document.getElementById('fila-factura-emitida');
   if(filaAdm) filaAdm.style.display = (p && p.cae) ? 'none' : ''; // con CAE de este sistema, la llave "otro sistema" no aplica
+  pintarNotasCredito(p);
   if(!p||!p.factura||!editandoId){ panel.style.display='none'; return; }
   panel.style.display='block';
   const conCae = !!p.cae;
@@ -3088,7 +3156,7 @@ async function guardarCamposFacturacion(){
     factura:true,
     nombre:document.getElementById('f-nombre').value.trim(),
     tel:document.getElementById('f-tel').value,
-    productos:document.getElementById('f-productos').value,
+    ...datosItemsParaGuardar(true),
     total,
     cuit:document.getElementById('f-cuit').value.trim(),
     razon:document.getElementById('f-razon').value.trim(),
@@ -3211,7 +3279,7 @@ window.selEstado=function(el){
   }
 }
 window.selLog=function(el){document.querySelectorAll('.log-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('paqar-extra').style.display=el.dataset.val==='paqar'?'block':'none';}
-window.calcularSaldo=function(){const t=Number(document.getElementById('f-total').value)||0,s=Number(document.getElementById('f-senia').value)||0;document.getElementById('resumen-total').textContent='$'+fmt(t);document.getElementById('resumen-senia').textContent='$'+fmt(s);document.getElementById('resumen-saldo').textContent='$'+fmt(Math.max(0,t-s));}
+window.calcularSaldo=function(){if(typeof pintarTotalItems==='function') pintarTotalItems();const t=Number(document.getElementById('f-total').value)||0,s=Number(document.getElementById('f-senia').value)||0;document.getElementById('resumen-total').textContent='$'+fmt(t);document.getElementById('resumen-senia').textContent='$'+fmt(s);document.getElementById('resumen-saldo').textContent='$'+fmt(Math.max(0,t-s));}
 
 window.guardarPedido=async function(){
   const nombre=document.getElementById('f-nombre').value.trim();
@@ -3237,7 +3305,7 @@ window.guardarPedido=async function(){
   else if(pedidoActual?.evento==='madre2026' && madreOn) eventoFinal = 'madre2026';
   // Eventos sin interruptor en este formulario (ej. Fin de Año): no se pierden al guardar
   else if(pedidoActual?.evento && !['jardin2026','padre2026','estudiante2026','madre2026'].includes(pedidoActual.evento)) eventoFinal = pedidoActual.evento;
-  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,productos:document.getElementById('f-productos').value,fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
+  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,...datosItemsParaGuardar(!!editandoId),fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
   // Una factura electrónica emitida (con CAE) no se puede "desmarcar" desde el formulario
   if(pedidoActual && pedidoActual.cae){ data.factura=true; data.facturaEmitida=true; }
   conservarFiscalesDelServidor(data, pedidoActual);
@@ -3334,44 +3402,141 @@ window.buscarProducto=function(){
   list.innerHTML=res.map(p=>`<div class="autocomplete-item" onclick="agregarProducto(${jsArg(p.id)})"><strong>${escH(p.nombre)}</strong><span>${p.precio!=null?'$'+fmt(p.precio):'sin precio'}${p.cod?' · Cód. '+escH(p.cod):''}${p.rubro?' · '+escH(p.rubro):''}</span></div>`).join('');
   list.style.display='block';
 };
-window.agregarProducto=function(id){
-  const p=_productosBase.find(x=>x.id===id); if(!p) return;
-  const cant=Math.min(999,Math.max(1,parseInt(document.getElementById('f-prod-cant').value,10)||1));
-  const ta=document.getElementById('f-productos');
-  const sufijo=p.precio!=null?` ($${fmt(p.precio)} c/u)`:'';
-  const lineas=ta.value.replace(/\s+$/,'').split('\n').filter(l=>l.trim()!=='');
-  const nq=t=>String(t||'').replace(/[”“"]/g,'"').replace(/[’‘']/g,"'"); // comillas "lindas" del saneado = comillas comunes
-  const i=lineas.findIndex(l=>{ const m=l.match(/^(\d+) x (.+?)( \(\$[\d.,]+ c\/u\))?$/); return m && nq(m[2])===nq(p.nombre); });
-  let cantLinea=cant;
-  if(i>=0){ cantLinea=Number(lineas[i].match(/^(\d+)/)[1])+cant; lineas[i]=`${cantLinea} x ${p.nombre}${sufijo}`; }
-  else lineas.push(`${cant} x ${p.nombre}${sufijo}`);
-  ta.value=lineas.join('\n');
-  if(p.precio!=null){
-    const tot=document.getElementById('f-total');
-    tot.value=(Number(tot.value)||0)+cant*Number(p.precio);
-    if(typeof calcularSaldo==='function') calcularSaldo();
+// ==================== ÍTEMS DEL PEDIDO (tabla estilo ADM) ====================
+// Cada ítem: { pid, codigo, descripcion, cantidad, precioUnitario }.
+// Se guarda en el pedido como "detalleFactura" (la factura sale con esta tabla)
+// y además como texto en "productos" (lo que ya leen tarjetas, listados y análisis).
+let _items=[], _itemsBloqueados=false;
+const _redondear=n=>Math.round((Number(n)||0)*100)/100;
+function sumaItems(){ return _redondear(_items.reduce((a,it)=>a+_redondear((Number(it.cantidad)||0)*(Number(it.precioUnitario)||0)),0)); }
+function itemsTexto(){ return _items.filter(it=>String(it.descripcion||'').trim()).map(it=>`${Number(it.cantidad)||1} x ${String(it.descripcion).trim()}`).join('\n'); }
+function cargarItemsDePedido(p){
+  const lista=Array.isArray(p.detalleFactura)?p.detalleFactura:[];
+  _items=lista.map(x=>({pid:x.pid||null,codigo:x.codigo||'',descripcion:x.descripcion||'',cantidad:Number(x.cantidad)||1,precioUnitario:Number(x.precioUnitario)||0}));
+  _itemsBloqueados=!!p.cae;
+  if(lista.length){ document.getElementById('f-productos').value=p.aclaraciones||''; renderItems(); return; }
+  // Pedido viejo (sin tabla): las líneas "2 x Producto ($1.500 c/u)" pasan a la tabla;
+  // el resto del texto queda en Aclaraciones. Con factura emitida no se toca nada.
+  const resto=[];
+  const nq=t=>Maestros.sinAcentos(String(t||'').replace(/[”“"]/g,'"').replace(/[’‘']/g,"'"));
+  String(p.productos||'').split('\n').forEach(l=>{
+    const m=!p.cae && l.trim().match(/^(\d{1,4})\s*x\s+(.+?)(?:\s*\(\$\s*([\d.,]+)\s*c\/u\))?$/i);
+    const prod=m && typeof Maestros!=='undefined' ? _productosBase.find(x=>nq(x.nombre)===nq(m[2])) : null;
+    if(m && (m[3] || prod)){
+      const precio=m[3]!=null?Maestros.numeroAR(m[3]):(prod&&prod.precio!=null?Number(prod.precio):0);
+      _items.push({pid:prod?prod.id:null,codigo:prod?String(prod.barra||prod.cod||''):'',descripcion:prod?prod.nombre:m[2].trim(),cantidad:Number(m[1])||1,precioUnitario:Number(precio)||0});
+    } else resto.push(l);
+  });
+  document.getElementById('f-productos').value=resto.join('\n').trim();
+  renderItems();
+}
+function datosItemsParaGuardar(esUpdate){
+  const acl=document.getElementById('f-productos').value.trim();
+  const items=_items.filter(it=>String(it.descripcion||'').trim()).map(it=>{
+    const o={descripcion:String(it.descripcion).trim().slice(0,300),cantidad:Number(it.cantidad)||1,precioUnitario:_redondear(it.precioUnitario)};
+    if(it.codigo) o.codigo=String(it.codigo).slice(0,20);
+    if(it.pid) o.pid=it.pid;
+    return o;
+  });
+  const p=pedidoEnEdicion();
+  if(p && p.cae && Array.isArray(p.detalleFactura)) return {}; // factura emitida: el detalle no se toca
+  if(!items.length){
+    const d={productos:acl};
+    if(esUpdate){ d.detalleFactura=firebase.firestore.FieldValue.delete(); d.aclaraciones=firebase.firestore.FieldValue.delete(); }
+    return d;
   }
+  return {productos:[itemsTexto(),acl].filter(Boolean).join('\n'), detalleFactura:items, aclaraciones:acl};
+}
+function renderItems(){
+  const body=document.getElementById('items-body'); if(!body) return;
+  const ro=_itemsBloqueados;
+  document.getElementById('items-buscador').style.display=ro?'none':'flex';
+  document.getElementById('btn-item-libre').style.display=ro?'none':'';
+  if(!_items.length){
+    body.innerHTML=`<tr><td colspan="6" class="items-vacio">${ro?'Sin detalle de ítems':'Buscá o escaneá productos arriba. Se suman solos al total.'}</td></tr>`;
+  } else {
+    body.innerHTML=_items.map((it,i)=>{
+      const sub=_redondear((Number(it.cantidad)||0)*(Number(it.precioUnitario)||0));
+      const dis=ro?'disabled':'';
+      return `<tr>
+        <td class="cod cod-col">${escH(it.codigo||'')}</td>
+        <td>${it.pid&&!ro?`<span>${escH(it.descripcion)}</span>`:`<input ${dis} value="${escH(it.descripcion)}" placeholder="Detalle del ítem" oninput="cambiarItem(${i},'descripcion',this.value)">`}</td>
+        <td class="num"><input class="cant" ${dis} type="number" min="1" inputmode="numeric" value="${Number(it.cantidad)||1}" oninput="cambiarItem(${i},'cantidad',this.value)"></td>
+        <td class="num"><input class="precio" ${dis} type="number" min="0" step="0.01" inputmode="decimal" value="${Number(it.precioUnitario)||0}" oninput="cambiarItem(${i},'precioUnitario',this.value)"></td>
+        <td class="num" id="item-sub-${i}">$${fmt(sub)}</td>
+        <td>${ro?'':`<button type="button" class="quitar" title="Quitar" onclick="quitarItem(${i})">🗑</button>`}</td>
+      </tr>`;
+    }).join('');
+  }
+  pintarTotalItems();
+}
+function pintarTotalItems(){
+  const el=document.getElementById('items-total'); if(!el) return;
+  if(!_items.length){ el.textContent=''; el.classList.remove('mal'); return; }
+  const suma=sumaItems(), total=Number(document.getElementById('f-total').value)||0;
+  const n=_items.reduce((a,it)=>a+(Number(it.cantidad)||0),0);
+  const distinto=Math.abs(suma-total)>0.009;
+  el.classList.toggle('mal',distinto);
+  el.innerHTML=`${n} ${n===1?'artículo':'artículos'} · Suma $${fmt(suma)}${distinto?` · ⚠️ el total es $${fmt(total)} <button type="button" class="btn-mini" onclick="usarSumaItems()">Usar suma</button>`:''}`;
+}
+window.usarSumaItems=function(){ actualizarTotalDesdeItems(); };
+function actualizarTotalDesdeItems(){
+  if(!_items.length||_itemsBloqueados) return;
+  document.getElementById('f-total').value=sumaItems();
+  if(typeof calcularSaldo==='function') calcularSaldo();
+  pintarTotalItems();
+}
+window.cambiarItem=function(i,campo,valor){
+  const it=_items[i]; if(!it||_itemsBloqueados) return;
+  if(campo==='descripcion') it.descripcion=valor;
+  else if(campo==='cantidad') it.cantidad=Math.min(9999,Math.max(0,parseInt(valor,10)||0));
+  else if(campo==='precioUnitario') it.precioUnitario=Math.max(0,Number(String(valor).replace(',','.'))||0);
+  const sub=document.getElementById('item-sub-'+i);
+  if(sub) sub.textContent='$'+fmt(_redondear((Number(it.cantidad)||0)*(Number(it.precioUnitario)||0)));
+  if(campo!=='descripcion') actualizarTotalDesdeItems();
+};
+window.quitarItem=function(i){ if(_itemsBloqueados) return; _items.splice(i,1); renderItems(); actualizarTotalDesdeItems(); if(!_items.length) pintarTotalItems(); };
+window.agregarItemLibre=function(){
+  if(_itemsBloqueados) return;
+  _items.push({pid:null,codigo:'',descripcion:'',cantidad:1,precioUnitario:0});
+  renderItems();
+  const inputs=document.querySelectorAll('#items-body tr:last-child input');
+  if(inputs[0]) inputs[0].focus();
+};
+window.agregarProducto=function(id){
+  if(_itemsBloqueados){ toast('🔒 La factura ya está emitida: el detalle no se puede cambiar'); return; }
+  const p=_productosBase.find(x=>x.id===id); if(!p) return;
+  const cant=Math.min(9999,Math.max(1,parseInt(document.getElementById('f-prod-cant').value,10)||1));
+  const ya=_items.find(it=>it.pid===p.id);
+  if(ya) ya.cantidad=(Number(ya.cantidad)||0)+cant;
+  else _items.push({pid:p.id,codigo:String(p.barra||p.cod||''),descripcion:p.nombre,cantidad:cant,precioUnitario:p.precio!=null?Number(p.precio):0});
+  renderItems();
+  actualizarTotalDesdeItems();
   document.getElementById('f-prod-buscar').value=''; document.getElementById('f-prod-cant').value='1';
   document.getElementById('prod-list').style.display='none';
-  toast(p.precio!=null?`➕ ${p.nombre} (${cantLinea}) · total $${fmt(document.getElementById('f-total').value)}`:`➕ ${p.nombre} (sin precio cargado)`);
+  document.getElementById('f-prod-buscar').focus();
+  const linea=ya||_items[_items.length-1];
+  toast(p.precio!=null?`➕ ${p.nombre} (${linea.cantidad}) · total $${fmt(document.getElementById('f-total').value)}`:`➕ ${p.nombre} · sin precio cargado: ponelo en la tabla`);
 };
 // PED-5: si la pistola escribe en "Cantidad" (foco ahí), se toma como código, no como cantidad
 window.enterCantidad=function(e){
   if(e.key!=='Enter') return;
   e.preventDefault();
   const el=e.target, v=String(el.value||'').trim();
-  if(v.length>=6){
+  if(v.length>=5){ // 5 o más dígitos: es un código escaneado acá, no una cantidad
     el.value='1';
     const p=typeof Maestros!=='undefined'?Maestros.porCodigo(_productosBase,v):null;
     if(p) agregarProducto(p.id); else toast(`Código ${v}: no está en Productos`);
     return;
   }
+  // Si ya hay algo escrito en el buscador, Enter en la cantidad lo agrega
+  if(document.getElementById('f-prod-buscar').value.trim()){ enterProducto({key:'Enter',preventDefault(){}}); return; }
   document.getElementById('f-prod-buscar').focus();
 };
 window.cantidadSana=function(el){
   const v=String(el.value||'');
-  if(v.length>3){ // 4 o más dígitos: casi seguro un código de barras escrito acá
-    setTimeout(()=>{ if(String(el.value||'').length>3 && document.activeElement!==el) el.value='1'; },0);
+  if(v.length>4){ // 5 o más dígitos: casi seguro un código de barras escrito acá
+    setTimeout(()=>{ if(String(el.value||'').length>4 && document.activeElement!==el) el.value='1'; },0);
   }
 };
 // Enter en el buscador de productos (la pistola manda el código + Enter)
@@ -3390,7 +3555,7 @@ window.enterProducto=function(e){
 if(typeof Maestros!=='undefined' && Maestros.escucharPistola) Maestros.escucharPistola(function(codigo){
   const p=Maestros.porCodigo(_productosBase,codigo);
   if(p){ agregarProducto(p.id); } else toast(`Código ${codigo}: no está en Productos`);
-},{ activo:()=>document.getElementById('overlay').classList.contains('show')
+},{ minLargo:3, activo:()=>document.getElementById('overlay').classList.contains('show')
       && !document.querySelector('.confirm-overlay.show, .overlay.show:not(#overlay)')
       && !((pedidoEnEdicion()||{}).cae) });
 
@@ -3405,6 +3570,133 @@ function aprenderClienteDePedido(d){
       .then(()=>Maestros.cargar('clientes')).then(l=>{ _clientesBase=l; }).catch(e=>console.warn('aprenderCliente',e));
   }catch(e){ console.warn(e); }
 }
+
+// ==================== DOCUMENTOS (presupuesto, remito, X) Y NOTAS DE CRÉDITO ====================
+const DOC_INFO={ presupuesto:{nombre:'Presupuesto',emoji:'🧾'}, remito:{nombre:'Remito',emoji:'🚚'}, x:{nombre:'Comprobante X',emoji:'📃'} };
+function linkCorto(u){ return String(u||'').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i,''); }
+function waLinkDoc(p,tipo,d){
+  const nombre=String(p.nombre||'').trim().split(/\s+/)[0]||'';
+  const que = tipo==='presupuesto' ? `el presupuesto N° ${d.numeroTxt}${d.total?` por $${fmt(d.total)}`:''}` : tipo==='remito' ? `el remito N° ${d.numeroTxt} de tu pedido` : `el comprobante N° ${d.numeroTxt}${d.total?` por $${fmt(d.total)}`:''}`;
+  const msg=`¡Hola${nombre?' '+nombre:''}! 😊\nTe paso ${que} de *Taller Artesanal* 🧸\n\n📄 ${linkCorto(d.pdfUrl)}${tipo==='presupuesto'?'\n\nCualquier duda o cambio, avisame y lo ajustamos.':''}`;
+  const tel=p.tel?formatTelWA(p.tel):'';
+  return (tel?`https://wa.me/${tel}`:'https://wa.me/')+'?text='+encodeURIComponent(msg);
+}
+function pintarDocumentos(p){
+  const hay=!!editandoId;
+  document.getElementById('docs-aviso').style.display=hay?'none':'block';
+  document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=!hay; });
+  const docs=(p&&p.documentos)||{};
+  document.getElementById('docs-lista').innerHTML=Object.keys(DOC_INFO).filter(t=>docs[t]&&docs[t].pdfUrl).map(t=>{
+    const d=docs[t], u=urlSegura(d.pdfUrl);
+    return `<div class="doc-fila"><span class="t">${DOC_INFO[t].emoji} <b>${DOC_INFO[t].nombre} N° ${escH(d.numeroTxt||'')}</b>${d.total&&t!=='remito'?' · $'+fmt(d.total):''}</span>${u?`<a class="pdf" href="${escH(u)}" target="_blank" rel="noopener">📄 Ver</a><a class="wa" href="${escH(waLinkDoc(p,t,d))}" target="_blank" rel="noopener">📤 WhatsApp</a>`:''}</div>`;
+  }).join('');
+}
+// Guarda lo que está en pantalla (productos, total, cliente) sin tocar la factura
+async function guardarParaDocumento(){
+  const datos={
+    nombre:document.getElementById('f-nombre').value.trim(),
+    escuela:document.getElementById('f-escuela').value.trim(),
+    tel:document.getElementById('f-tel').value,
+    ...datosItemsParaGuardar(true),
+    total:Number(document.getElementById('f-total').value)||0,
+    cuit:document.getElementById('f-cuit').value.trim(),
+    razon:document.getElementById('f-razon').value.trim(),
+    condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,
+    updatedAt:new Date().toISOString(),
+  };
+  const p=pedidoEnEdicion();
+  if(p && p.cae){ delete datos.total; delete datos.cuit; delete datos.razon; delete datos.condicionIVAReceptor; } // factura emitida: datos fiscales congelados
+  else conservarFiscalesDelServidor(datos,p);
+  await db.collection('pedidos').doc(editandoId).update(datos);
+}
+window.generarDocumento=async function(tipo,btn){
+  if(!editandoId){ toast('Guardá el pedido primero'); return; }
+  const info=DOC_INFO[tipo]; const txt=btn.textContent;
+  document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=true; });
+  btn.textContent='Armando...';
+  try{
+    await guardarParaDocumento();
+    const r=(await Maestros.llamarFacturador('generarDocumento',{pedidoId:editandoId,tipo},{timeout:120000})).data;
+    const p={...(pedidoEnEdicion()||{})}; p.documentos={...(p.documentos||{}),[tipo]:{numeroTxt:r.numeroTxt,pdfUrl:r.pdfUrl,total:r.total}};
+    p.nombre=document.getElementById('f-nombre').value.trim(); p.tel=document.getElementById('f-tel').value;
+    pintarDocumentos(p);
+    toast(`${info.emoji} ${info.nombre} N° ${r.numeroTxt} listo`);
+  }catch(err){
+    toast('❌ '+mensajeErrorArca(err).replace(/^❌\s*/,''),8000);
+  }finally{
+    document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=false; });
+    btn.textContent=txt;
+  }
+};
+function ncAcreditado(p){ return (p.notasCredito||[]).filter(n=>n.facturaCae===p.cae).reduce((a,n)=>a+Number(n.importe||0),0); }
+function waLinkNC(p,n){
+  const nombre=String(p.nombre||'').trim().split(/\s+/)[0]||'';
+  const nro=`${n.letra||'C'} ${String(n.puntoVenta||0).padStart(5,'0')}-${String(n.numero||0).padStart(8,'0')}`;
+  const msg=`¡Hola${nombre?' '+nombre:''}! 😊\nTe enviamos la nota de crédito ${nro} por $${fmt(n.importe)} de *Taller Artesanal*, correspondiente a la factura ${n.facturaLetra||''} ${n.facturaNro||''}.\n\n📄 ${linkCorto(n.pdfUrl)}`;
+  const tel=p.tel?formatTelWA(p.tel):'';
+  return (tel?`https://wa.me/${tel}`:'https://wa.me/')+'?text='+encodeURIComponent(msg);
+}
+function pintarNotasCredito(p){
+  const el=document.getElementById('lista-nc'); if(!el) return;
+  const lista=(p&&p.notasCredito)||[];
+  el.innerHTML=lista.map(n=>{
+    const u=urlSegura(n.pdfUrl);
+    return `<div class="doc-fila" style="background:#FFFBF2"><span class="t">↩️ <b>NC ${escH(n.letra||'C')} ${String(n.puntoVenta||0).padStart(5,'0')}-${String(n.numero||0).padStart(8,'0')}</b> · -$${fmt(n.importe)} · ${n.total?'anuló':'descontó de'} la factura ${escH(n.facturaNro||'')}${n.ambiente!=='produccion'?' · 🧪':''}</span>${u?`<a class="pdf" href="${escH(u)}" target="_blank" rel="noopener">📄 Ver</a><a class="wa" href="${escH(waLinkNC(p,n))}" target="_blank" rel="noopener">📤</a>`:''}</div>`;
+  }).join('');
+  const btn=document.getElementById('btn-nota-credito');
+  if(btn) btn.style.display = p && p.cae && (Number(p.facturaImporte)-ncAcreditado(p))>0.005 ? 'block' : 'none';
+}
+window.abrirNotaCredito=function(){
+  const p=pedidoEnEdicion(); if(!p||!p.cae){ toast('Este pedido no tiene factura emitida acá'); return; }
+  const queda=Math.round((Number(p.facturaImporte)-ncAcreditado(p))*100)/100;
+  document.getElementById('nc-sub').textContent=`Factura ${p.tipoComprobanteLetra} ${String(p.puntoVenta).padStart(5,'0')}-${String(p.nroComprobante).padStart(8,'0')} por $${fmt(p.facturaImporte)}${queda<Number(p.facturaImporte)?` · queda por acreditar $${fmt(queda)}`:''}. Se informa a ARCA y no se puede deshacer.`;
+  document.querySelector('input[name="nc-tipo"][value="total"]').checked=true;
+  document.getElementById('nc-importe').value=''; document.getElementById('nc-motivo').value='';
+  ncTipo();
+  document.getElementById('nc-overlay').classList.add('show');
+};
+window.ncTipo=function(){
+  const parcial=document.querySelector('input[name="nc-tipo"]:checked').value==='parcial';
+  document.getElementById('nc-importe').style.display=parcial?'block':'none';
+  const p=pedidoEnEdicion()||{}; const queda=Math.round((Number(p.facturaImporte)-ncAcreditado(p))*100)/100;
+  document.getElementById('nc-ok').textContent=parcial?'Emitir NC':`Anular ($${fmt(queda)})`;
+  if(parcial) document.getElementById('nc-importe').focus();
+};
+window.cerrarNotaCredito=function(){ document.getElementById('nc-overlay').classList.remove('show'); };
+window.emitirNotaCredito=async function(){
+  const p=pedidoEnEdicion(); if(!p||!p.cae) return;
+  const parcial=document.querySelector('input[name="nc-tipo"]:checked').value==='parcial';
+  const queda=Math.round((Number(p.facturaImporte)-ncAcreditado(p))*100)/100;
+  const importe=parcial?Number(String(document.getElementById('nc-importe').value).replace(',','.')):null;
+  if(parcial && !(importe>0)){ toast('Poné el importe a descontar'); return; }
+  if(parcial && importe-queda>0.005){ toast(`El importe supera lo que queda por acreditar ($${fmt(queda)})`); return; }
+  const motivo=document.getElementById('nc-motivo').value.trim();
+  const btn=document.getElementById('nc-ok'); const txt=btn.textContent;
+  btn.disabled=true; btn.textContent='Emitiendo... no cierres';
+  mostrarMsgArca('');
+  try{
+    const args={pedidoId:editandoId,motivo}; if(parcial) args.importe=importe;
+    const r=(await Maestros.llamarFacturador('notaCredito',args,{timeout:TIMEOUT_FACTURAR})).data;
+    cerrarNotaCredito();
+    let msg=`✅ Nota de crédito ${r.letra} N° ${String(r.numero).padStart(8,'0')} emitida por $${fmt(r.importe)}. CAE ${r.cae}`;
+    if(r.recuperada) msg+='\nSe recuperó una NC que ARCA ya había emitido en un intento anterior (no se duplicó).';
+    if(r.total) msg+='\nLa factura quedó ANULADA y el pedido volvió a "factura pendiente": corregí los datos y facturá de nuevo.';
+    if(r.aviso) msg+='\n⚠️ '+r.aviso;
+    if(r.ambiente!=='produccion') msg+='\n🧪 Ambiente de PRUEBA: sin validez fiscal.';
+    if(r.total){
+      facturaEmitidaOn=false; document.getElementById('toggle-factura-emitida').classList.remove('on');
+      if(_snapFact) _snapFact.facturaEmitida=false;
+      actualizarPanelFacturacionArca({...p, cae:null, facturaPdfUrl:null, facturaEmitida:false, notasCredito:[...(p.notasCredito||[]),{...r,facturaNro:`${String(p.puntoVenta).padStart(5,'0')}-${String(p.nroComprobante).padStart(8,'0')}`,total:true,pdfUrl:r.pdfUrl}]});
+      _itemsBloqueados=false; renderItems();
+    }
+    else pintarNotasCredito({...p, notasCredito:[...(p.notasCredito||[]),{...r,facturaCae:p.cae,facturaNro:`${String(p.puntoVenta).padStart(5,'0')}-${String(p.nroComprobante).padStart(8,'0')}`,total:false}]});
+    mostrarMsgArca(msg,'ok');
+    toast(`↩️ Nota de crédito emitida — CAE ${r.cae}`);
+  }catch(err){
+    mostrarMsgArca(mensajeErrorArca(err),'error');
+    toast('❌ No se pudo emitir la nota de crédito (ver detalle)');
+  }finally{ btn.disabled=false; btn.textContent=txt; }
+};
 
 // ==================== CONFIRM MODAL ====================
 let confirmCallback = null;
