@@ -72,11 +72,16 @@
     if (!/^[a-f0-9]{32}$/.test(id)) { mostrar('Link incompleto', 'Pedile al taller que te reenvíe el link de la factura.'); return; }
     try {
       const { blob, nombre } = await deFirestore();
-      const url = URL.createObjectURL(blob);
+      const archivo = nombre.replace(/[\\/:*?"<>|]/g, '_').replace(/&/g, 'y');
+      // Como File (con nombre): el PDF lleva el nombre de la escuela, el documento y la fecha
+      const url = URL.createObjectURL(new File([blob], archivo, { type: 'application/pdf' }));
       const esCelu = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      mostrar('Tu factura está lista ✅', esCelu ? 'Tocá el botón para verla o guardarla.' : '',
-        `<a class="btn prim" href="${url}" target="_blank" rel="noopener">📄 Ver factura</a>` +
-        `<a class="btn sec" href="${url}" download="${nombre.replace(/[\\/:*?"<>|]/g, '_').replace(/&/g, 'y')}">⬇️ Descargar PDF</a>`);
+      const que = /Presupuesto/i.test(nombre) ? ['Tu presupuesto está listo', 'presupuesto'] : /Remito/i.test(nombre) ? ['Tu remito está listo', 'remito']
+        : /Nota de Cr/i.test(nombre) ? ['Tu nota de crédito está lista', 'nota de crédito'] : /Comprobante X/i.test(nombre) ? ['Tu comprobante está listo', 'comprobante'] : ['Tu factura está lista', 'factura'];
+      document.title = archivo.replace(/\.pdf$/i, '');
+      mostrar(`${que[0]} ✅`, `${archivo} — usá "Descargar" para guardarlo con este nombre.`,
+        `<a class="btn prim" href="${url}" download="${archivo}">⬇️ Descargar PDF</a>` +
+        `<a class="btn sec" href="${url}" target="_blank" rel="noopener">📄 Ver ${que[1]}</a>`);
       if (!esCelu) { $('visor').src = url; $('visor').style.display = 'block'; }
     } catch (e) {
       if (linkServidor) {

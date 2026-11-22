@@ -170,7 +170,8 @@
   .autocomplete-list { position:absolute; top:100%; left:0; right:0; background:white; border:1.5px solid var(--madera-light); border-radius:10px; z-index:500; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.15); }
   .autocomplete-item { padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--crema-dark); }
   .autocomplete-item:last-child { border-bottom:none; }
-  .autocomplete-item:hover { background:var(--crema); }
+  .autocomplete-item:hover, .autocomplete-item.activo { background:var(--crema); }
+  .autocomplete-item.activo { box-shadow:inset 3px 0 0 var(--madera); }
   .autocomplete-item strong { color:var(--madera-dark); display:block; }
   .autocomplete-item span { color:var(--gris); font-size:11px; }
   .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; align-items:flex-end; justify-content:center; }
@@ -525,7 +526,7 @@
   </div>
 
   <!-- MODAL JARDINES -->
-  <div class="overlay" id="overlay-jardines" onclick="if(event.target===this)cerrarModalJardines()">
+  <div class="overlay" id="overlay-jardines">
     <div class="modal">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-jardines-title">🌸 Nuevo Pedido — Día del Jardín</div>
@@ -700,7 +701,7 @@
   </div>
 
   <!-- MODAL DÍA DEL PADRE -->
-  <div class="overlay" id="overlay-padre" onclick="if(event.target===this)cerrarModalPadre()">
+  <div class="overlay" id="overlay-padre">
     <div class="modal">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-padre-title">👔 Nuevo Pedido — Día del Padre</div>
@@ -849,7 +850,7 @@
   </div>
 
   <!-- MODAL DÍA DEL ESTUDIANTE -->
-  <div class="overlay" id="overlay-estudiante" onclick="if(event.target===this)cerrarModalEstudiante()">
+  <div class="overlay" id="overlay-estudiante">
     <div class="modal">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-estudiante-title">🎓 Nuevo Pedido — Día del Estudiante</div>
@@ -1035,7 +1036,7 @@
   </div>
 
   <!-- MODAL FIN DE AÑO -->
-  <div class="overlay" id="overlay-finano" onclick="if(event.target===this)cerrarModalFinAno()">
+  <div class="overlay" id="overlay-finano">
     <div class="modal">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-finano-title">🎓 Nuevo Pedido — Fin de Año</div>
@@ -1134,7 +1135,7 @@
   </div>
 
   <!-- MODAL PRECIOS FIN DE AÑO -->
-  <div class="overlay" id="overlay-precios-fa" onclick="if(event.target===this)cerrarPreciosFA()">
+  <div class="overlay" id="overlay-precios-fa">
     <div class="modal" style="max-width:560px">
       <div class="modal-handle"></div>
       <div class="modal-title">⚙️ Precios de Fin de Año</div>
@@ -1151,7 +1152,7 @@
   </div>
 
   <!-- MODAL IMPORTADOR FIN DE AÑO -->
-  <div class="overlay" id="overlay-imp-fa" onclick="if(event.target===this)cerrarImportadorFA()">
+  <div class="overlay" id="overlay-imp-fa">
     <div class="modal" style="max-width:900px">
       <div class="modal-handle"></div>
       <div class="modal-title">🔄 Importar pedidos de fin de año</div>
@@ -1232,7 +1233,7 @@
   </div>
 
   <!-- MODAL DÍA DE LA MADRE -->
-  <div class="overlay" id="overlay-madre" onclick="if(event.target===this)cerrarModalMadre()">
+  <div class="overlay" id="overlay-madre">
     <div class="modal">
       <div class="modal-handle"></div>
       <div class="modal-title" id="modal-madre-title">🌷 Nuevo Pedido — Día de la Madre</div>
@@ -1326,7 +1327,7 @@
   </div>
 
   <!-- MODAL IMPORTADOR -->
-  <div class="overlay" id="overlay-importador" onclick="if(event.target===this)cerrarImportador()">
+  <div class="overlay" id="overlay-importador">
     <div class="modal" style="max-width:860px">
       <div class="modal-handle"></div>
       <div class="modal-title">🔄 Importar pedidos cargados a mano</div>
@@ -1359,7 +1360,7 @@
   </div>
 
   <!-- MODAL UNIR MAESTRAS -->
-  <div class="overlay" id="overlay-unir" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="overlay" id="overlay-unir">
     <div class="modal" style="max-width:640px">
       <div class="modal-handle"></div>
       <div class="modal-title">🔗 Unir maestras repetidas</div>
@@ -1373,7 +1374,7 @@
   </div>
 
   <!-- MODAL EDITAR METAS -->
-  <div class="overlay" id="overlay-metas" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="overlay" id="overlay-metas">
     <div class="modal" style="max-width:460px">
       <div class="modal-handle"></div>
       <div class="modal-title">🎯 Metas mensuales</div>
@@ -1390,7 +1391,7 @@
   </div>
 
   <!-- MODAL DUPLICADOS -->
-  <div class="overlay" id="overlay-dups" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="overlay" id="overlay-dups">
     <div class="modal" style="max-width:720px">
       <div class="modal-handle"></div>
       <div class="modal-title">🔎 Pedidos que parecen repetidos</div>
@@ -1404,7 +1405,7 @@
   </div>
 
   <!-- MODAL RESULTADO DE IMPORTACION -->
-  <div class="overlay" id="overlay-impres" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="overlay" id="overlay-impres">
     <div class="modal" style="max-width:520px">
       <div class="modal-handle"></div>
       <div class="modal-title">Resultado de la importación</div>
@@ -1734,7 +1735,7 @@
       </div>
     </div>
 
-    <div class="form-section" style="background:#FDF2F8;border:1.5px solid #F9A8D4;">
+    <div class="form-section" style="display:none;background:#FDF2F8;border:1.5px solid #F9A8D4;"><!-- Día de la Madre: ya pasó, oculto -->
       <div class="toggle-row">
         <div>
           <div class="toggle-label" style="font-weight:700;color:#BE185D;">🌷 Día de la Madre 2026</div>
@@ -1744,7 +1745,7 @@
       </div>
     </div>
 
-    <div class="form-section">
+    <div class="form-section" style="display:none"><!-- Logística: todo es Tucumán, oculto (queda "tucuman" por defecto) -->
       <div class="form-section-title">🚚 Logística</div>
       <div class="logistica-selector">
         <div class="log-opt selected" data-val="tucuman" onclick="selLog(this)">📍<br>Tucumán</div>
@@ -3033,7 +3034,7 @@ window.abrirEditar=function(id){
 }
 
 window.cerrarModal=function(){document.getElementById('overlay').classList.remove('show');}
-window.cerrarModalSiOverlay=function(e){if(e.target===document.getElementById('overlay'))cerrarModal();}
+window.cerrarModalSiOverlay=function(e){ /* ya no se cierra tocando afuera: se cierra con Cancelar o Guardar */ };
 
 // Restos del pedido anterior: buscador, cantidad, listas abiertas (PED-9)
 function limpiarBuscadoresForm(){
@@ -3413,7 +3414,7 @@ window.buscarProducto=function(){
   if(!_productosBase.length){ list.innerHTML='<div class="autocomplete-item"><span>Todavía no hay productos cargados. Importalos en Inicio → Productos.</span></div>'; list.style.display='block'; return; }
   const res=Maestros.buscar(_productosBase.filter(p=>p.activo!==false),q,['nombre','cod','barra','rubro'],8);
   if(!res.length){ list.style.display='none'; return; }
-  list.innerHTML=res.map(p=>`<div class="autocomplete-item" onclick="agregarProducto(${jsArg(p.id)})"><strong>${escH(p.nombre)}</strong><span>${p.precio!=null?'$'+fmt(p.precio):'sin precio'}${p.cod?' · Cód. '+escH(p.cod):''}${p.rubro?' · '+escH(p.rubro):''}</span></div>`).join('');
+  list.innerHTML=res.map(p=>`<div class="autocomplete-item" onclick="agregarProducto(${jsArg(p.id)})"><strong>${escH(p.nombre)}</strong><span>${p.precio!=null?'$'+fmt(p.precio):'sin precio'}${p.barra?' · ▮ '+escH(p.barra):''}${p.cod?' · Cód. '+escH(p.cod):''}${p.rubro?' · '+escH(p.rubro):''}</span></div>`).join('');
   list.style.display='block';
 };
 // ==================== ÍTEMS DEL PEDIDO (tabla estilo ADM) ====================
@@ -3585,6 +3586,25 @@ function aprenderClienteDePedido(d){
   }catch(e){ console.warn(e); }
 }
 
+
+// ==================== LISTAS DESPLEGABLES CON TECLADO ====================
+// Flechas ↑ ↓ para moverse, Enter para elegir (escuela, productos, nombres...)
+document.addEventListener('keydown',function(e){
+  if(!['ArrowDown','ArrowUp','Enter','Escape'].includes(e.key)) return;
+  const inp=e.target; if(!inp||inp.tagName!=='INPUT') return;
+  const wrap=inp.closest('.autocomplete-wrap'); if(!wrap) return;
+  const list=wrap.querySelector('.autocomplete-list'); if(!list||list.style.display==='none') return;
+  const items=[...list.querySelectorAll('.autocomplete-item[onclick]')]; if(!items.length) return;
+  let i=items.findIndex(x=>x.classList.contains('activo'));
+  if(e.key==='Escape'){ list.style.display='none'; e.preventDefault(); return; }
+  if(e.key==='Enter'){
+    if(i<0) return; // sin elegido: sigue el Enter normal (ej. código escaneado)
+    e.preventDefault(); e.stopImmediatePropagation(); items[i].click(); return;
+  }
+  e.preventDefault();
+  i = e.key==='ArrowDown' ? (i+1)%items.length : (i<=0?items.length-1:i-1);
+  items.forEach(x=>x.classList.remove('activo')); items[i].classList.add('activo'); items[i].scrollIntoView({block:'nearest'});
+},true);
 // ==================== DOCUMENTOS (presupuesto, remito, X) Y NOTAS DE CRÉDITO ====================
 const DOC_INFO={ presupuesto:{nombre:'Presupuesto',emoji:'🧾'}, remito:{nombre:'Remito',emoji:'🚚'}, x:{nombre:'Comprobante X',emoji:'📃'} };
 function linkCorto(u){ return String(u||'').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i,''); }
