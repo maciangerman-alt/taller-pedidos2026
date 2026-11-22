@@ -140,7 +140,9 @@ let pedidos = [], filtro = 'cerrados', seleccion = new Set(), emitiendo = false,
 
 const fmt = (n) => Number(n || 0).toLocaleString('es-AR', { maximumFractionDigits: 2 });
 const fechaCorta = (f) => { if (!f) return ''; const s = String(f); if (/^\d{8}$/.test(s)) return `${s.slice(6, 8)}/${s.slice(4, 6)}/${s.slice(0, 4)}`; const [y, m, d] = s.slice(0, 10).split('-'); return d ? `${d}/${m}/${y}` : s; };
-const cliente = (p) => p.razon || p.escuela || p.nombre || 'Consumidor Final';
+// Se ve la ESCUELA (cientos facturan como "Superior Gobierno"); la razón social va al lado si es distinta
+const cliente = (p) => { const e = String(p.escuela || '').trim(), r = String(p.razon || '').trim();
+  return e && r && e.toLowerCase() !== r.toLowerCase() ? `${e} · ${r.length > 28 ? r.slice(0, 28) + '…' : r}` : (e || r || p.nombre || 'Consumidor Final'); };
 // Los links al PDF solo pueden ser http/https (nunca "javascript:")
 const urlSegura = (u) => { const t = String(u || '').trim(); return /^https?:\/\//i.test(t) || (t && !/^[^/?#]*:/.test(t)) ? t : ''; }; // http/https o ruta relativa; nunca "javascript:" 
 // Llamada a la Function con margen: ARCA puede tardar (el navegador cortaba a los 70 s)
