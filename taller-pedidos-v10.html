@@ -1658,7 +1658,7 @@
         </div>
         <div id="factura-arca-panel" style="margin-top:12px;display:none">
           <div id="factura-arca-pendiente">
-            <div class="form-row">
+            <div class="form-row" style="display:none"><!-- Monotributo: siempre Factura C (el servidor la elige sola) -->
               <div class="form-group">
                 <label class="form-label">Tipo de comprobante</label>
                 <select class="form-select" id="f-factura-letra">
@@ -2872,7 +2872,7 @@ window.waMaestra = function(tel, nombre){
   const msg = `Hola ${n}! Soy Germán del Taller Artesanal. Te escribo para agradecerte: sos una de nuestras maestras que más nos eligió este año. Tenemos un regalito preparado para vos, avisame cuando puedas pasar a buscarlo o si querés que te lo llevemos con el próximo pedido. Gracias de verdad!`;
   const t = (typeof formatTelWA === 'function') ? formatTelWA(tel) : String(tel||'').replace(/\D/g,'');
   if(!t){ toast('Esa maestra no tiene teléfono cargado'); return; }
-  window.open(`https://wa.me/${t}?text=${encodeURIComponent(msg)}`,'_blank');
+  window.open(`https://api.whatsapp.com/send?phone=${t}&text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 // Excel con el ranking completo de maestras, para repartir premios
@@ -3144,8 +3144,7 @@ function mensajeFacturaWA(p){
 function waLinkFactura(p){
   const msg = mensajeFacturaWA(p);
   const telWA = p.tel ? formatTelWA(p.tel) : '';
-  const base = telWA?`https://wa.me/${telWA}`:`https://wa.me/`;
-  return base+'?text='+encodeURIComponent(msg);
+  return `https://api.whatsapp.com/send?${telWA?'phone='+telWA+'&':''}text=${encodeURIComponent(msg)}`;
 }
 
 // Guarda en Firestore lo que está en el formulario ANTES de facturar, para
@@ -3199,7 +3198,7 @@ window.facturarConArca = async function(){
       const r = resultado.data;
       facturaOn=true; facturaEmitidaOn=true;
       document.getElementById('toggle-factura-emitida').classList.add('on');
-      actualizarPanelFacturacionArca({ ...p, factura:true, facturaEmitida:true, cae:r.cae, facturaPdfUrl:r.facturaPdfUrl, nroComprobante:r.nroComprobante, puntoVenta:r.puntoVenta, tipoComprobanteLetra:r.tipoComprobanteLetra, facturaAmbiente:r.facturaAmbiente });
+      actualizarPanelFacturacionArca({ ...p, factura:true, facturaEmitida:true, cae:r.cae, facturaPdfUrl:r.facturaPdfUrl, nroComprobante:r.nroComprobante, puntoVenta:r.puntoVenta, tipoComprobanteLetra:r.tipoComprobanteLetra, facturaAmbiente:r.facturaAmbiente, facturaImporte:r.importe ?? Number(document.getElementById('f-total').value) });
       let msg = soloPdf ? '✅ PDF generado.' : `✅ Factura ${r.tipoComprobanteLetra} emitida. CAE ${r.cae}`;
       if(r.recuperada) msg += '\nSe recuperó una factura que ARCA ya había emitido en un intento anterior (no se duplicó).';
       if(r.observaciones && r.observaciones.length) msg += '\nObservaciones de ARCA:\n' + r.observaciones.join('\n');
@@ -3613,7 +3612,7 @@ function waLinkDoc(p,tipo,d){
   const que = tipo==='presupuesto' ? `el presupuesto N° ${d.numeroTxt}${d.total?` por $${fmt(d.total)}`:''}` : tipo==='remito' ? `el remito N° ${d.numeroTxt} de tu pedido` : `el comprobante N° ${d.numeroTxt}${d.total?` por $${fmt(d.total)}`:''}`;
   const msg=`¡Hola${nombre?' '+nombre:''}! 😊\nTe paso ${que} de *Taller Artesanal* 🧸\n\n📄 ${linkCorto(d.pdfUrl)}${tipo==='presupuesto'?'\n\nCualquier duda o cambio, avisame y lo ajustamos.':''}`;
   const tel=p.tel?formatTelWA(p.tel):'';
-  return (tel?`https://wa.me/${tel}`:'https://wa.me/')+'?text='+encodeURIComponent(msg);
+  return `https://api.whatsapp.com/send?${tel?'phone='+tel+'&':''}text=${encodeURIComponent(msg)}`;
 }
 function pintarDocumentos(p){
   document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=false; });
@@ -3661,13 +3660,14 @@ window.generarDocumento=async function(tipo,btn){
     btn.textContent=txt;
   }
 };
+function importeFacturado(p){ return Number(p.facturaImporte ?? p.total) || 0; }
 function ncAcreditado(p){ return (p.notasCredito||[]).filter(n=>n.facturaCae===p.cae).reduce((a,n)=>a+Number(n.importe||0),0); }
 function waLinkNC(p,n){
   const nombre=String(p.nombre||'').trim().split(/\s+/)[0]||'';
   const nro=`${n.letra||'C'} ${String(n.puntoVenta||0).padStart(5,'0')}-${String(n.numero||0).padStart(8,'0')}`;
   const msg=`¡Hola${nombre?' '+nombre:''}! 😊\nTe enviamos la nota de crédito ${nro} por $${fmt(n.importe)} de *Taller Artesanal*, correspondiente a la factura ${n.facturaLetra||''} ${n.facturaNro||''}.\n\n📄 ${linkCorto(n.pdfUrl)}`;
   const tel=p.tel?formatTelWA(p.tel):'';
-  return (tel?`https://wa.me/${tel}`:'https://wa.me/')+'?text='+encodeURIComponent(msg);
+  return `https://api.whatsapp.com/send?${tel?'phone='+tel+'&':''}text=${encodeURIComponent(msg)}`;
 }
 function pintarNotasCredito(p){
   const el=document.getElementById('lista-nc'); if(!el) return;
@@ -3677,12 +3677,12 @@ function pintarNotasCredito(p){
     return `<div class="doc-fila" style="background:#FFFBF2"><span class="t">↩️ <b>NC ${escH(n.letra||'C')} ${String(n.puntoVenta||0).padStart(5,'0')}-${String(n.numero||0).padStart(8,'0')}</b> · -$${fmt(n.importe)} · ${n.total?'anuló':'descontó de'} la factura ${escH(n.facturaNro||'')}${n.ambiente!=='produccion'?' · 🧪':''}</span>${u?`<a class="pdf" href="${escH(u)}" target="_blank" rel="noopener">📄 Ver</a><a class="wa" href="${escH(waLinkNC(p,n))}" target="_blank" rel="noopener">📤</a>`:''}</div>`;
   }).join('');
   const btn=document.getElementById('btn-nota-credito');
-  if(btn) btn.style.display = p && p.cae && (Number(p.facturaImporte)-ncAcreditado(p))>0.005 ? 'block' : 'none';
+  if(btn) btn.style.display = p && p.cae && (importeFacturado(p)-ncAcreditado(p))>0.005 ? 'block' : 'none';
 }
 window.abrirNotaCredito=function(){
   const p=pedidoEnEdicion(); if(!p||!p.cae){ toast('Este pedido no tiene factura emitida acá'); return; }
-  const queda=Math.round((Number(p.facturaImporte)-ncAcreditado(p))*100)/100;
-  document.getElementById('nc-sub').textContent=`Factura ${p.tipoComprobanteLetra} ${String(p.puntoVenta).padStart(5,'0')}-${String(p.nroComprobante).padStart(8,'0')} por $${fmt(p.facturaImporte)}${queda<Number(p.facturaImporte)?` · queda por acreditar $${fmt(queda)}`:''}. Se informa a ARCA y no se puede deshacer.`;
+  const queda=Math.round((importeFacturado(p)-ncAcreditado(p))*100)/100;
+  document.getElementById('nc-sub').textContent=`Factura ${p.tipoComprobanteLetra} ${String(p.puntoVenta).padStart(5,'0')}-${String(p.nroComprobante).padStart(8,'0')} por $${fmt(p.facturaImporte)}${queda<importeFacturado(p)?` · queda por acreditar $${fmt(queda)}`:''}. Se informa a ARCA y no se puede deshacer.`;
   document.querySelector('input[name="nc-tipo"][value="total"]').checked=true;
   document.getElementById('nc-importe').value=''; document.getElementById('nc-motivo').value='';
   ncTipo();
@@ -3691,7 +3691,7 @@ window.abrirNotaCredito=function(){
 window.ncTipo=function(){
   const parcial=document.querySelector('input[name="nc-tipo"]:checked').value==='parcial';
   document.getElementById('nc-importe').style.display=parcial?'block':'none';
-  const p=pedidoEnEdicion()||{}; const queda=Math.round((Number(p.facturaImporte)-ncAcreditado(p))*100)/100;
+  const p=pedidoEnEdicion()||{}; const queda=Math.round((importeFacturado(p)-ncAcreditado(p))*100)/100;
   document.getElementById('nc-ok').textContent=parcial?'Emitir NC':`Anular ($${fmt(queda)})`;
   if(parcial) document.getElementById('nc-importe').focus();
 };
@@ -3699,7 +3699,7 @@ window.cerrarNotaCredito=function(){ document.getElementById('nc-overlay').class
 window.emitirNotaCredito=async function(){
   const p=pedidoEnEdicion(); if(!p||!p.cae) return;
   const parcial=document.querySelector('input[name="nc-tipo"]:checked').value==='parcial';
-  const queda=Math.round((Number(p.facturaImporte)-ncAcreditado(p))*100)/100;
+  const queda=Math.round((importeFacturado(p)-ncAcreditado(p))*100)/100;
   const importe=parcial?Number(String(document.getElementById('nc-importe').value).replace(',','.')):null;
   if(parcial && !(importe>0)){ toast('Poné el importe a descontar'); return; }
   if(parcial && importe-queda>0.005){ toast(`El importe supera lo que queda por acreditar ($${fmt(queda)})`); return; }
@@ -3819,7 +3819,7 @@ window.renderHoy=function(){
   }
   msg+='_Enviado desde el sistema de pedidos_';
   if(hayAlgo){
-    btnNora.href=`https://wa.me/5493816544078?text=${encodeURIComponent(msg)}`;
+    btnNora.href=`https://api.whatsapp.com/send?phone=5493816544078&text=${encodeURIComponent(msg)}`;
     btnNora.style.display='block';
   } else { btnNora.style.display='none'; }
 
@@ -4238,8 +4238,7 @@ function waLink(p){
   msg+=`\nCualquier consulta avisame!`;
   const tel=(p.tel||'').replace(/\D/g,'');
   const telWA=tel?formatTelWA(p.tel):'';
-  const base=telWA?`https://wa.me/${telWA}`:`https://wa.me/`;
-  return base+'?text='+encodeURIComponent(msg);
+  return `https://api.whatsapp.com/send?${telWA?'phone='+telWA+'&':''}text=${encodeURIComponent(msg)}`;
 }
 function formatTelWA(tel){
   // Limpiar todo lo que no sea número

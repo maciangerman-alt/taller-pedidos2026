@@ -178,7 +178,7 @@ function mensajeFacturaWA(p){
 }
 function waLink(p) {
   const msg = mensajeFacturaWA(p);
-  const t = telWA(p.tel); return `https://wa.me/${t}?text=${encodeURIComponent(msg)}`;
+  const t = telWA(p.tel); return `https://api.whatsapp.com/send?${t ? 'phone=' + t + '&' : ''}text=${encodeURIComponent(msg)}`;
 }
 
 // ------------------------------------------------------------- sesión y datos
@@ -372,7 +372,7 @@ function waLinkNC(p, n) {
   const nro = `${n.letra || 'C'} ${String(n.puntoVenta || 0).padStart(5, '0')}-${String(n.numero || 0).padStart(8, '0')}`;
   const url = String(n.pdfUrl || '').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i, '');
   const msg = `¡Hola${p.nombre ? ' ' + String(p.nombre).trim().split(/\s+/)[0] : ''}! 😊\nTe enviamos la nota de crédito ${nro} por $${fmt(n.importe)} de *Taller Artesanal*, correspondiente a la factura ${n.facturaLetra || ''} ${n.facturaNro || ''}.\n📄 ${url}`;
-  return `https://wa.me/${telWA(p.tel)}?text=${encodeURIComponent(msg)}`;
+  return `https://api.whatsapp.com/send?${telWA(p.tel) ? 'phone=' + telWA(p.tel) + '&' : ''}text=${encodeURIComponent(msg)}`;
 }
 window.pintarEmitidas = () => {
   const todas = comprobantesEmitidos();
