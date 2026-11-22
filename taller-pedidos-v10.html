@@ -1687,7 +1687,7 @@
 
     <div class="form-section" id="seccion-documentos">
       <div class="form-section-title">📄 Documentos</div>
-      <div id="docs-aviso" style="font-size:12.5px;color:var(--texto-secundario);margin-bottom:8px">Guardá el pedido para poder armar presupuesto, remito o comprobante X.</div>
+      <div id="docs-aviso" style="display:none"></div>
       <div class="docs-btns" id="docs-btns">
         <button type="button" onclick="generarDocumento('presupuesto',this)">🧾 Presupuesto</button>
         <button type="button" onclick="generarDocumento('remito',this)">🚚 Remito</button>
@@ -3080,14 +3080,14 @@ window.toggleFactura=function(){
   if(facturaOn && p && p.cae){ toast('⚠️ Este pedido tiene factura electrónica emitida (CAE). No se puede desmarcar.'); return; }
   facturaOn=!facturaOn;document.getElementById('toggle-factura').classList.toggle('on',facturaOn);document.getElementById('factura-extra').style.display=facturaOn?'block':'none';
   if(!facturaOn){facturaEmitidaOn=false;document.getElementById('toggle-factura-emitida').classList.remove('on');}
-  if(editandoId) actualizarPanelFacturacionArca({...(p||{}), factura:facturaOn});
+  actualizarPanelFacturacionArca({...(p||{}), factura:facturaOn});
   avisoCuitOculto();
 }
 window.toggleFacturaEmitida=function(){
   const p=pedidoEnEdicion();
   if(facturaEmitidaOn && p && p.cae){ toast('⚠️ Tiene CAE de ARCA: queda como emitida.'); return; }
   facturaEmitidaOn=!facturaEmitidaOn;document.getElementById('toggle-factura-emitida').classList.toggle('on',facturaEmitidaOn);
-  if(editandoId) actualizarPanelFacturacionArca({...(p||{}), factura:facturaOn, facturaEmitida:facturaEmitidaOn});
+  actualizarPanelFacturacionArca({...(p||{}), factura:facturaOn, facturaEmitida:facturaEmitidaOn});
 }
 function mostrarMsgArca(texto, tipo){
   const el=document.getElementById('factura-arca-msg');
@@ -3110,7 +3110,7 @@ function actualizarPanelFacturacionArca(p){
   const filaAdm=document.getElementById('fila-factura-emitida');
   if(filaAdm) filaAdm.style.display = (p && p.cae) ? 'none' : ''; // con CAE de este sistema, la llave "otro sistema" no aplica
   pintarNotasCredito(p);
-  if(!p||!p.factura||!editandoId){ panel.style.display='none'; return; }
+  if(!p||!p.factura){ panel.style.display='none'; return; }
   panel.style.display='block';
   const conCae = !!p.cae;
   // "Factura ya emitida (otro sistema)" tildado: no se ofrece facturar con ARCA (doble factura, PED-4)
@@ -3173,7 +3173,7 @@ async function guardarCamposFacturacion(){
 const COND_IVA_TXT={1:'Responsable Inscripto',4:'Exento',5:'Consumidor Final',6:'Monotributo',7:'No Categorizado',13:'Monotributista Social',15:'No Alcanzado',16:'Monotributo Promovido'};
 
 window.facturarConArca = async function(){
-  if(!editandoId){ toast('Guardá el pedido antes de facturar'); return; }
+  if(!editandoId && !(await guardarPedido({mantenerAbierto:true}))) return; // pedido nuevo: se guarda solo
   const p=pedidoEnEdicion()||{};
   const soloPdf = !!p.cae;
   if(!soloPdf && facturaEmitidaOn){ toast('⚠️ Está marcada como "Factura ya emitida" por otro sistema. Destildala si querés facturar acá.'); return; }
@@ -3281,7 +3281,8 @@ window.selEstado=function(el){
 window.selLog=function(el){document.querySelectorAll('.log-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('paqar-extra').style.display=el.dataset.val==='paqar'?'block':'none';}
 window.calcularSaldo=function(){if(typeof pintarTotalItems==='function') pintarTotalItems();const t=Number(document.getElementById('f-total').value)||0,s=Number(document.getElementById('f-senia').value)||0;document.getElementById('resumen-total').textContent='$'+fmt(t);document.getElementById('resumen-senia').textContent='$'+fmt(s);document.getElementById('resumen-saldo').textContent='$'+fmt(Math.max(0,t-s));}
 
-window.guardarPedido=async function(){
+window.guardarPedido=async function(opts){
+  opts=opts||{}; // mantenerAbierto: guarda sin cerrar (para facturar o armar documentos de una)
   const nombre=document.getElementById('f-nombre').value.trim();
   const escuela=document.getElementById('f-escuela').value.trim();
   if(!nombre||!escuela){toast('Completá nombre y escuela');return;}
@@ -3311,11 +3312,25 @@ window.guardarPedido=async function(){
   conservarFiscalesDelServidor(data, pedidoActual);
   protegerFactura(data, pedidoActual, _snapFact);
   try{
-    if(editandoId){await db.collection("pedidos").doc(editandoId).update(data);toast('✅ Pedido actualizado');}
-    else{data.createdAt=new Date().toISOString();await db.collection("pedidos").add(data);toast('✅ Pedido guardado');}
+    if(editandoId){await db.collection("pedidos").doc(editandoId).update(data);if(!opts.mantenerAbierto)toast('✅ Pedido actualizado');}
+    else{
+      data.createdAt=new Date().toISOString();
+      const nuevo=await db.collection("pedidos").add(data);
+      if(opts.mantenerAbierto){
+        // Queda abierto como "Editar": se puede facturar o armar documentos sin cerrar y volver a abrir
+        editandoId=nuevo.id;
+        _snapFact={cuit:data.cuit||'', razon:data.razon||'', iva:data.condicionIVAReceptor||null, factura:!!data.factura, facturaEmitida:!!data.facturaEmitida};
+        document.getElementById('modal-title').textContent='Editar Pedido';
+        document.getElementById('btn-eliminar-wrap').style.display='block';
+        pintarDocumentos({...data, id:nuevo.id});
+        actualizarPanelFacturacionArca({...data, factura:facturaOn});
+        toast('✅ Pedido guardado');
+      } else toast('✅ Pedido guardado');
+    }
     aprenderClienteDePedido(data);
-    cerrarModal();
-  }catch(e){toast('❌ Error al guardar. Verificá conexión.');console.error(e);}
+    if(!opts.mantenerAbierto) cerrarModal();
+    return true;
+  }catch(e){toast('❌ Error al guardar. Verificá conexión.');console.error(e); return false;}
 }
 
 // PED-8: si un dato fiscal NO se tocó en el modal pero cambió en el servidor
@@ -3581,9 +3596,7 @@ function waLinkDoc(p,tipo,d){
   return (tel?`https://wa.me/${tel}`:'https://wa.me/')+'?text='+encodeURIComponent(msg);
 }
 function pintarDocumentos(p){
-  const hay=!!editandoId;
-  document.getElementById('docs-aviso').style.display=hay?'none':'block';
-  document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=!hay; });
+  document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=false; });
   const docs=(p&&p.documentos)||{};
   document.getElementById('docs-lista').innerHTML=Object.keys(DOC_INFO).filter(t=>docs[t]&&docs[t].pdfUrl).map(t=>{
     const d=docs[t], u=urlSegura(d.pdfUrl);
@@ -3609,8 +3622,9 @@ async function guardarParaDocumento(){
   await db.collection('pedidos').doc(editandoId).update(datos);
 }
 window.generarDocumento=async function(tipo,btn){
-  if(!editandoId){ toast('Guardá el pedido primero'); return; }
   const info=DOC_INFO[tipo]; const txt=btn.textContent;
+  // Pedido nuevo: se guarda solo y sigue (sin cerrar y volver a abrir)
+  if(!editandoId && !(await guardarPedido({mantenerAbierto:true}))) return;
   document.querySelectorAll('#docs-btns button').forEach(b=>{ b.disabled=true; });
   btn.textContent='Armando...';
   try{
