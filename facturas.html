@@ -45,6 +45,8 @@
   .barra-emitir{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);padding:10px 14px;display:none;z-index:40;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
   .barra-emitir .in{max-width:960px;margin:0 auto;display:flex;gap:10px;align-items:center}
   .barra-emitir .txt{flex:1;font-size:13px;color:var(--gris)}
+  a.mini.enviada{background:#EEF6EE !important;color:#2E7D4F !important}
+  #ov-log .mini{margin-left:6px;display:inline-block}
   .btn{border:none;border-radius:12px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--crema-dark);color:var(--madera-dark)}
   .btn.prim{background:var(--madera);color:#fff}.btn:disabled{opacity:.5;cursor:default}
   .ov{position:fixed;inset:0;background:rgba(28,16,8,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}
@@ -89,13 +91,14 @@
         <button class="fbtn on" data-f="cerrados" onclick="setFiltro(this)">🚚 Entregados y cobrados</button>
         <button class="fbtn" data-f="todos" onclick="setFiltro(this)">Todos los pendientes</button>
         <span style="flex:1"></span>
+        <button class="fbtn" id="btn-completar" style="display:none" onclick="abrirCompletarCuit()"></button>
         <button class="fbtn" onclick="seleccionarTodos()">☑️ Seleccionar todos</button>
       </div>
       <div class="lista" id="l-pend"></div>
     </div>
     <div id="v-emit" style="display:none">
       <div class="totales" id="totales"></div>
-      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select></div>
+      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select><span style="flex:1"></span><button class="fbtn" id="btn-sin-enviar" onclick="toggleSinEnviar()"></button></div>
       <div class="lista" id="l-emit"></div>
     </div>
   </div>
@@ -208,6 +211,54 @@ firebase.auth().onAuthStateChanged((u) => {
     }, (e) => console.warn('consulta por CAE', e));
   } catch (e) { console.warn('consulta por CAE', e); }
   if ((location.hash || '') === '#emitidas') irA('emit');
+  M.cargar('clientes').then((l) => { clientesBase = l || []; pintarPendientes(); }).catch((e) => console.warn('clientes', e));
+});
+let clientesBase = [];
+// ------------------------------------------------------------- completar CUIT desde la base de clientes
+// Pedidos viejos sin CUIT cuya escuela está en la base: se completan CUIT, razón social, condición IVA y domicilio
+function sugerenciasCuit() {
+  return pedidos.filter(esPendiente).filter((p) => M.soloDigitos(p.cuit).length !== 11 && p.escuela)
+    .map((p) => ({ p, c: M.clientePorEscuela(clientesBase, p.escuela) }))
+    .filter((x) => x.c && M.soloDigitos(x.c.cuit).length === 11);
+}
+window.abrirCompletarCuit = () => {
+  const sug = sugerenciasCuit(); if (!sug.length) return;
+  $('ov-tit').textContent = `Completar datos de ${sug.length} pedido${sug.length === 1 ? '' : 's'}`;
+  $('ov-sub').innerHTML = 'Encontré estas escuelas en la base de clientes. Destildá las que <b>no</b> correspondan (por ejemplo, si la seño compró a título personal: esa va como Consumidor Final).';
+  $('ov-log').innerHTML = sug.map((x, i) => `<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--borde);cursor:pointer">
+      <input type="checkbox" class="js-comp" data-i="${i}" checked style="margin-top:3px">
+      <span><b>${esc(x.p.escuela)}</b> · ${esc(x.p.nombre || '')} · $${fmt(x.p.total)}<br>
+      <span class="nota">→ ${esc(x.c.fantasia || x.c.nombre)} · ${esc(x.c.nombre)} · CUIT ${esc(M.formatoCuit(x.c.cuit))}${x.c.iva ? ' · ' + esc(M.COND_IVA_CORTO[x.c.iva] || '') : ' · ⚠️ sin condición IVA'}</span></span></label>`).join('');
+  $('ov-ok').style.display = ''; $('ov-ok').disabled = false; $('ov-ok').textContent = 'Completar'; $('ov-cancel').disabled = false; $('ov-cancel').textContent = 'Cancelar';
+  $('ov-ok').onclick = async () => {
+    const elegidos = [...document.querySelectorAll('.js-comp')].filter((x) => x.checked).map((x) => sug[Number(x.dataset.i)]);
+    $('ov-ok').disabled = true; let ok = 0;
+    for (const { p, c } of elegidos) {
+      try {
+        await db.collection('pedidos').doc(p.id).update({
+          cuit: M.formatoCuit(c.cuit), razon: c.nombre || '', condicionIVAReceptor: Number(c.iva) || null,
+          domicilioReceptor: [c.dom, c.loc].filter((v) => v && String(v).trim()).join(', ').slice(0, 200),
+          updatedAt: new Date().toISOString(),
+        });
+        ok++;
+      } catch (e) { console.error(e); }
+    }
+    $('ov').classList.remove('show');
+    toast(`✅ ${ok} pedido${ok === 1 ? '' : 's'} con CUIT y razón social completados`, 3500);
+  };
+  $('ov').classList.add('show');
+};
+// ------------------------------------------------------------- envío por WhatsApp (cola)
+// Cada botón abre WhatsApp en la MISMA pestaña ("wa"): se manda, se vuelve y se sigue con la próxima.
+let soloSinEnviar = false;
+window.toggleSinEnviar = () => { soloSinEnviar = !soloSinEnviar; pintarEmitidas(); };
+async function marcarEnviada(id) {
+  try { await db.collection('pedidos').doc(id).update({ facturaEnviadaAt: new Date().toISOString() }); } catch (e) { console.warn(e); }
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a.js-enviar'); if (!a) return;
+  marcarEnviada(a.dataset.id);
+  a.textContent = '✓ Enviada'; a.classList.add('enviada');
 });
 window.ingresar = async () => {
   $('l-err').textContent = '';
@@ -252,6 +303,9 @@ function pintarPendientes() {
     $('l-pend').innerHTML = `<div class="vacio">${hayOtros ? 'No hay pendientes entregados o cobrados.<br>Mirá en <b>Todos los pendientes</b> los que todavía están en curso.' : '🎉 No hay facturas pendientes.<br><span class="nota">Acá aparecen los pedidos con "Requiere factura" que todavía no se emitieron.</span>'}</div>`;
     actualizarBarra(); return;
   }
+  const nSug = sugerenciasCuit().length;
+  $('btn-completar').style.display = nSug ? '' : 'none';
+  $('btn-completar').textContent = `🏫 Completar CUIT desde la base (${nSug})`;
   $('l-pend').innerHTML = lista.map((p) => {
     const prob = problemas(p);
     const cuit = M.soloDigitos(p.cuit).length === 11;
@@ -337,7 +391,11 @@ async function emitirTanda(ids, totales) {
       const args = { pedidoId: id };
       if (totales && totales[id] != null) args.totalEsperado = totales[id];
       const r = (await facturarPedido(args)).data;
-      fila.className = 'ok'; fila.textContent = `✅ ${cliente(p)} · Factura ${r.tipoComprobanteLetra} N° ${String(r.nroComprobante).padStart(8, '0')} · CAE ${r.cae}${r.recuperada ? ' (recuperada)' : ''}`;
+      fila.className = 'ok'; fila.textContent = `✅ ${cliente(p)} · Factura ${r.tipoComprobanteLetra} N° ${String(r.nroComprobante).padStart(8, '0')} · CAE ${r.cae}${r.recuperada ? ' (recuperada)' : ''} `;
+      if (r.facturaPdfUrl) {
+        const a = document.createElement('a'); a.className = 'mini wa js-enviar'; a.dataset.id = id; a.target = 'wa'; a.rel = 'noopener';
+        a.href = waLink({ ...p, ...r, facturaImporte: p.total }); a.textContent = '📤 Enviar'; fila.appendChild(a);
+      }
       ok++; seleccion.delete(id);
     } catch (e) {
       fila.className = 'mal'; fila.textContent = `❌ ${cliente(p)}: ${mensajeError(e)}`; mal++;
@@ -345,7 +403,7 @@ async function emitirTanda(ids, totales) {
   }
   emitiendo = false; $('ov-cancel').disabled = false; $('ov-cancel').textContent = 'Cerrar'; $('ov-ok').style.display = 'none';
   $('ov-tit').textContent = mal ? `Listo: ${ok} emitida${ok === 1 ? '' : 's'}, ${mal} con error` : `✅ ${ok} factura${ok === 1 ? '' : 's'} emitida${ok === 1 ? '' : 's'}`;
-  $('ov-sub').textContent = mal ? 'Las que dieron error siguen en Pendientes: revisá el mensaje, corregí y volvé a intentar. Si el error fue por demora de ARCA, esperá unos minutos antes de reintentar.' : 'Ya están en la pestaña Emitidas, con su PDF y el botón de WhatsApp.';
+  $('ov-sub').textContent = (mal ? 'Las que dieron error siguen en Pendientes: revisá el mensaje, corregí y volvé a intentar. Si el error fue por demora de ARCA, esperá unos minutos antes de reintentar. ' : '') + 'Mandalas con "📤 Enviar": se abre WhatsApp en una sola pestaña, mandás, volvés y tocás la próxima. Las que te queden quedan en Emitidas → "Sin enviar".';
   pintarPendientes();
 }
 
@@ -395,7 +453,10 @@ window.pintarEmitidas = () => {
     `<div class="tot"><div class="v">$${fmt(suma(ult12) + suma(adm12))}</div><div class="l">Últimos 12 meses${detalle(suma(ult12), suma(adm12))} · el tope del monotributo se mide sobre TODOS los ingresos, no solo lo facturado acá</div></div>` +
     (pruebas ? `<div class="tot"><div class="v">${pruebas}</div><div class="l">🧪 de prueba (no suman)</div></div>` : '');
   const m = $('mes').value;
-  const lista = todas.filter((f) => m === 'todas' || mesDeFila(f) === m)
+  const sinEnviar = todas.filter((f) => f.tipo === 'F' && !f.anulada && !f.prueba && f.p.facturaPdfUrl && !f.p.facturaEnviadaAt);
+  $('btn-sin-enviar').textContent = soloSinEnviar ? '✖ Ver todas' : `📤 Sin enviar (${sinEnviar.length})`;
+  $('btn-sin-enviar').classList.toggle('on', soloSinEnviar);
+  const lista = (soloSinEnviar ? sinEnviar : todas.filter((f) => m === 'todas' || mesDeFila(f) === m))
     .sort((a, b) => String(b.d.emitidaAt || b.d.facturaEmitidaAt || b.fecha || '').localeCompare(String(a.d.emitidaAt || a.d.facturaEmitidaAt || a.fecha || '')));
   if (!lista.length) { $('l-emit').innerHTML = '<div class="vacio">No hay comprobantes en este período.</div>'; return; }
   $('l-emit').innerHTML = lista.map((f) => {
@@ -419,7 +480,7 @@ window.pintarEmitidas = () => {
         <div class="d">Factura ${esc(nroF)} · ${esc(fechaCorta(d.facturaFecha))} · CAE ${esc(d.cae)}</div>
         <div>${chips}${f.anulada ? `<span class="chip mal">Anulada por NC ${esc(d.anuladaPorNC || '')}</span>` : ''}${d.facturaDocTipo === 80 ? `<span class="chip az">CUIT ${esc(M.formatoCuit(d.facturaDocNro))}</span>` : '<span class="chip">Consumidor Final</span>'}</div>
         <div class="acc">${urlSegura(d.facturaPdfUrl)
-          ? `<a class="mini pdf" href="${esc(urlSegura(d.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a>${f.anulada ? '' : `<a class="mini wa" href="${esc(waLink(p))}" target="_blank" rel="noopener">📤 WhatsApp</a>`}`
+          ? `<a class="mini pdf" href="${esc(urlSegura(d.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a>${f.anulada ? '' : `<a class="mini wa js-enviar ${p.facturaEnviadaAt ? 'enviada' : ''}" data-id="${esc(p.id)}" href="${esc(waLink(p))}" target="wa" rel="noopener">${p.facturaEnviadaAt ? '✓ Enviada · reenviar' : '📤 WhatsApp'}</a>`}`
           : (f.anulada ? '' : `<button class="mini gen js-gen" data-id="${esc(p.id)}">📄 Generar PDF</button>`)}</div>
       </div><div class="der"><div class="monto">$${fmt(f.importe)}</div></div></div>`;
   }).join('');

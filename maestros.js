@@ -446,12 +446,30 @@
     try { const base = await urlFacturador(); if (base) fetch(`${base}/salud`, { mode: 'no-cors', cache: 'no-store' }).catch(() => {}); } catch (e) { /* nada */ }
   }
 
+  // Cliente de la base para el nombre de escuela de un pedido (mismo criterio que el servidor):
+  // exacto, o el ÚNICO con 75 % o más de palabras en común ("ESC. JOSE INGENIEROS" ≈ "ESCUELA JOSE INGENIEROS").
+  // Si hay dos parecidos, no adivina (devuelve null).
+  function clientePorEscuela(clientes, escuela) {
+    const norm = (t) => sinAcentos(t).replace(/[^a-z0-9]+/g, ' ').trim();
+    const e = norm(escuela); if (!e || e.length < 4) return null;
+    const exactos = clientes.filter((c) => norm(c.fantasia) === e || norm(c.nombre) === e);
+    if (exactos.length === 1) return exactos[0];
+    if (exactos.length > 1) return null;
+    const VACIAS = new Set(['esc', 'escuela', 'eni', 'jardin', 'de', 'del', 'la', 'el', 'los', 'n', 'no', 'nro', 'nivel', 'inicial', 'dr', 'doctor', 'y']);
+    const pal = (t) => new Set(norm(t).split(' ').filter((w) => w.length > 1 && !VACIAS.has(w)));
+    const obj = pal(escuela); if (!obj.size) return null;
+    const rank = clientes.map((c) => { const w = pal(c.fantasia || c.nombre); let k = 0; obj.forEach((t) => { if (w.has(t)) k++; }); return { c, s: k / obj.size }; })
+      .filter((r) => r.s >= 0.75).sort((a, b) => b.s - a.s);
+    if (rank.length === 1 || (rank.length > 1 && rank[0].s > rank[1].s)) return rank[0].c;
+    return null;
+  }
+
   global.Maestros = {
     COND_IVA, COND_IVA_CORTO, POR_BLOQUE,
     sinAcentos, esc, soloDigitos, cuitValido, formatoCuit, condIvaDesdeTexto, numeroAR, nuevoId,
     normalizarCliente, normalizarProducto, partirPorTamano, MAX_BYTES_BLOQUE,
     cargar, guardarTodo, guardarUno, borrarUno, aprenderCliente, buscar, cargarEscuelas, porCodigo, escucharPistola,
-    llamarFacturador, despertarFacturador, urlFacturador,
+    llamarFacturador, despertarFacturador, urlFacturador, clientePorEscuela,
     _cache: cache,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

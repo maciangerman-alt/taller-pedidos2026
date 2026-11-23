@@ -1674,8 +1674,9 @@
           <div id="factura-arca-emitida" style="display:none">
             <div style="font-size:13px;color:var(--texto-secundario);margin-bottom:8px" id="factura-arca-info"></div>
             <a id="btn-ver-factura-pdf" href="#" target="_blank" style="display:block;text-align:center;background:#F3EEE7;color:var(--madera-dark);font-weight:700;padding:10px;border-radius:10px;text-decoration:none;margin-bottom:8px">📄 Ver PDF</a>
-            <a id="btn-enviar-factura-wa" href="#" target="_blank" style="display:block;text-align:center;background:#E7F9EF;color:#25D366;font-weight:700;padding:10px;border-radius:10px;text-decoration:none">📤 Enviar factura por WhatsApp</a>
+            <a id="btn-enviar-factura-wa" href="#" target="wa" onclick="if(editandoId) db.collection('pedidos').doc(editandoId).update({facturaEnviadaAt:new Date().toISOString()}).catch(()=>{})" style="display:block;text-align:center;background:#E7F9EF;color:#25D366;font-weight:700;padding:10px;border-radius:10px;text-decoration:none">📤 Enviar factura por WhatsApp</a>
             <button type="button" class="btn btn-secondary" id="btn-generar-pdf" onclick="facturarConArca()" style="width:100%;margin-top:6px;display:none">📄 Generar PDF</button>
+            <button type="button" onclick="regenerarPdfFactura(this)" style="width:100%;margin-top:8px;background:none;border:1px solid var(--borde);color:var(--madera-dark);border-radius:10px;padding:8px;font-size:12.5px;font-weight:700;cursor:pointer">🔄 Rearmar el PDF (misma factura, datos actualizados)</button>
             <button type="button" id="btn-nota-credito" onclick="abrirNotaCredito()" style="width:100%;margin-top:8px;background:#FFF6E8;border:1px solid #E8C48C;color:#8A5A12;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer">↩️ Nota de crédito (anular o descontar)</button>
             <button type="button" id="btn-borrar-factura-prueba" onclick="borrarFacturaPrueba()" style="display:none;width:100%;margin-top:8px;background:none;border:1px dashed #C0392B;color:#C0392B;border-radius:10px;padding:8px;font-size:12px;cursor:pointer">🧪 Borrar factura de PRUEBA (homologación)</button>
           </div>
@@ -3001,6 +3002,7 @@ window.abrirEditar=function(id){
   document.getElementById('f-turno').value=p.turno||'';
   document.getElementById('f-tel').value=p.tel||'';
   cargarItemsDePedido(p);
+  _domCliente=p.domicilioReceptor||'';
   document.getElementById('f-fecha-pedido').value=p.fechaPedido||'';
   document.getElementById('f-fecha-entrega').value=p.fechaEntrega||'';
   document.getElementById('f-obs').value=p.obs||'';
@@ -3048,7 +3050,7 @@ let _snapFact=null; // datos fiscales al abrir el modal (PED-8)
 function resetForm(){
   limpiarBuscadoresForm(); _snapFact=null;
   ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon','f-cond-iva'].forEach(id=>document.getElementById(id).value='');
-  _items=[]; _itemsBloqueados=false; renderItems();
+  _items=[]; _itemsBloqueados=false; renderItems(); _domCliente='';
   if(typeof pintarDocumentos==='function'){ pintarDocumentos(null); pintarNotasCredito(null); }
   mostrarMsgArca('');
   document.getElementById('f-turno').value='';
@@ -3157,6 +3159,7 @@ async function guardarCamposFacturacion(){
     nombre:document.getElementById('f-nombre').value.trim(),
     tel:document.getElementById('f-tel').value,
     ...datosItemsParaGuardar(true),
+    domicilioReceptor:_domCliente||'',
     total,
     cuit:document.getElementById('f-cuit').value.trim(),
     razon:document.getElementById('f-razon').value.trim(),
@@ -3224,15 +3227,28 @@ window.facturarConArca = async function(){
   const cliente=document.getElementById('f-razon').value.trim()||document.getElementById('f-nombre').value.trim()||'Consumidor Final';
   const letra=document.getElementById('f-factura-letra').value;
   totalConfirmado=total;
+  const sinProductos=!_items.some(it=>String(it.descripcion||'').trim()) && !document.getElementById('f-productos').value.trim();
   mostrarConfirm(
     `¿Emitir factura${letra?' '+letra:''} por $${fmt(total)}?`,
-    `${cliente} · ${COND_IVA_TXT[cond]||''}${cuit?' · CUIT '+cuit:''}. Se informa a ARCA y no se puede deshacer.`,
+    `${cliente} · ${COND_IVA_TXT[cond]||''}${cuit?' · CUIT '+cuit:''}. Se informa a ARCA y no se puede deshacer.${sinProductos?' ⚠️ No cargaste productos: el detalle va a decir "Juguetes didácticos de madera".':''}`,
     '🧾',
     ejecutar,
     { textoOk:'Emitir factura', colorOk:'#2E7D4F' }
   );
 }
 
+window.regenerarPdfFactura = async function(btn){
+  const p=pedidoEnEdicion(); if(!p||!p.cae){ toast('Este pedido no tiene factura emitida'); return; }
+  const txt=btn.textContent; btn.disabled=true; btn.textContent='Rearmando el PDF...';
+  try{
+    // guarda el domicilio/aclaraciones actuales; los datos fiscales (CAE, número, importe, CUIT) no cambian
+    await db.collection('pedidos').doc(editandoId).update({ domicilioReceptor:_domCliente||p.domicilioReceptor||'', updatedAt:new Date().toISOString() });
+    const r=(await Maestros.llamarFacturador('facturarPedido',{pedidoId:editandoId, regenerarPdf:true},{timeout:TIMEOUT_FACTURAR})).data;
+    toast('✅ PDF rearmado: es la misma factura y el mismo link');
+    if(r.facturaPdfUrl) document.getElementById('btn-ver-factura-pdf').href=urlSegura(r.facturaPdfUrl);
+  }catch(err){ mostrarMsgArca(mensajeErrorArca(err),'error'); }
+  finally{ btn.disabled=false; btn.textContent=txt; }
+};
 window.borrarFacturaPrueba = function(){
   const p=pedidoEnEdicion();
   if(!p||!p.cae||p.facturaAmbiente==='produccion'){ toast('Solo se pueden borrar facturas de prueba'); return; }
@@ -3309,7 +3325,7 @@ async function _guardarPedido(opts){
   else if(pedidoActual?.evento==='madre2026' && madreOn) eventoFinal = 'madre2026';
   // Eventos sin interruptor en este formulario (ej. Fin de Año): no se pierden al guardar
   else if(pedidoActual?.evento && !['jardin2026','padre2026','estudiante2026','madre2026'].includes(pedidoActual.evento)) eventoFinal = pedidoActual.evento;
-  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,...datosItemsParaGuardar(!!editandoId),fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
+  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,...datosItemsParaGuardar(!!editandoId),domicilioReceptor:_domCliente||'',fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
   // Una factura electrónica emitida (con CAE) no se puede "desmarcar" desde el formulario
   if(pedidoActual && pedidoActual.cae){ data.factura=true; data.facturaEmitida=true; }
   conservarFiscalesDelServidor(data, pedidoActual);
@@ -3351,6 +3367,7 @@ function conservarFiscalesDelServidor(data, actual){
 // Usan maestros.js: la base de clientes y productos (importada de ADM Global)
 // (la base de 2.121 escuelas de Tucumán queda solo para la Ruta del día).
 let _clientesBase=[], _productosBase=[];
+let _domCliente=''; // domicilio de la escuela elegida de la base (para la factura)
 async function cargarBasesBuscadores(){
   if(typeof Maestros==='undefined') return;
   try{ _clientesBase = await Maestros.cargar('clientes'); }catch(e){ console.warn('clientes',e); }
@@ -3379,7 +3396,7 @@ function avisoCuitOculto(){
 }
 window.buscarEscuela=function(){
   if(_autoFact && document.getElementById('f-escuela').value!==_autoFact.escuela && document.getElementById('f-cuit').value===_autoFact.cuit){
-    ponerFacturacion('','',null); _autoFact=null;
+    ponerFacturacion('','',null); _autoFact=null; _domCliente='';
   }
   const q=document.getElementById('f-escuela').value.trim();
   const list=document.getElementById('escuela-list');
@@ -3392,6 +3409,7 @@ window.buscarEscuela=function(){
 };
 window.elegirCliente=function(id){
   const c=_clientesBase.find(x=>x.id===id); if(!c) return;
+  _domCliente=[c.dom,c.loc].filter(x=>x&&String(x).trim()).join(', ').slice(0,200); // va a la factura (domicilio del receptor)
   document.getElementById('f-escuela').value=c.fantasia||c.nombre;
   // Siempre se reemplazan (vacíos si este cliente no tiene CUIT)
   ponerFacturacion(c.cuit||'', c.cuit?(c.nombre||''):'', c.cuit?c.iva:null);
@@ -3635,6 +3653,7 @@ async function guardarParaDocumento(){
     escuela:document.getElementById('f-escuela').value.trim(),
     tel:document.getElementById('f-tel').value,
     ...datosItemsParaGuardar(true),
+    domicilioReceptor:_domCliente||'',
     total:Number(document.getElementById('f-total').value)||0,
     cuit:document.getElementById('f-cuit').value.trim(),
     razon:document.getElementById('f-razon').value.trim(),
