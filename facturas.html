@@ -45,8 +45,6 @@
   .barra-emitir{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);padding:10px 14px;display:none;z-index:40;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
   .barra-emitir .in{max-width:960px;margin:0 auto;display:flex;gap:10px;align-items:center}
   .barra-emitir .txt{flex:1;font-size:13px;color:var(--gris)}
-  .ya{margin-top:8px;background:#EEF6EE;color:#2E7D4F;border:none;border-radius:9px;padding:7px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
-  .ya:hover{background:#DDEFDD}
   .btn{border:none;border-radius:12px;padding:12px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--crema-dark);color:var(--madera-dark)}
   .btn.prim{background:var(--madera);color:#fff}.btn:disabled{opacity:.5;cursor:default}
   .ov{position:fixed;inset:0;background:rgba(28,16,8,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}
@@ -105,7 +103,6 @@
 
 <div class="barra-emitir" id="barra"><div class="in">
   <div class="txt" id="barra-txt"></div>
-  <button class="btn" id="btn-ya" onclick="marcarYaFacturadas()" title="Las que ya se facturaron en el ADM Global: salen de pendientes">✔ Ya facturadas</button>
   <button class="btn prim" id="btn-emitir" onclick="confirmarEmision()">⚡ Emitir</button>
 </div></div>
 
@@ -261,7 +258,7 @@ function pintarPendientes() {
     const sosp = sospecha(p);
     const opciones = Object.entries(M.COND_IVA).map(([k, t]) => `<option value="${k}" ${String(p.condicionIVAReceptor || '') === k ? 'selected' : ''}>${esc(t)}</option>`).join('');
     return `<div class="fila ${seleccion.has(p.id) ? 'sel' : ''}" ${sosp ? 'style="border-color:var(--rojo);background:var(--rojo-light)"' : ''}>
-      <input type="checkbox" class="js-sel" data-id="${esc(p.id)}" ${seleccion.has(p.id) ? 'checked' : ''}>
+      <input type="checkbox" class="js-sel" data-id="${esc(p.id)}" ${seleccion.has(p.id) ? 'checked' : ''} ${problemas(p).length ? 'disabled title="Corregí los datos antes de emitir"' : ''}>
       <div class="ppal">
         <div class="n">${esc(cliente(p))}</div>
         <div class="d">${p.razon && p.escuela ? esc(p.escuela) + ' · ' : ''}${esc(p.nombre || '')}${p.fechaPedido ? ' · pedido ' + esc(fechaCorta(p.fechaPedido)) : ''}</div>
@@ -270,7 +267,7 @@ function pintarPendientes() {
           <option value="">${cuit ? 'Elegí condición IVA del cliente…' : 'Consumidor Final (sin CUIT)'}</option>${opciones}
         </select>
       </div>
-      <div class="der"><div class="monto">$${fmt(p.total)}</div><button class="ya js-ya" data-id="${esc(p.id)}" title="Ya se facturó en el ADM Global: sale de pendientes">✔ Ya facturada</button></div>
+      <div class="der"><div class="monto">$${fmt(p.total)}</div></div>
     </div>`;
   }).join('');
   actualizarBarra();
@@ -286,29 +283,11 @@ $('l-pend').addEventListener('change', (e) => {
   const iva = e.target.closest('.js-iva'); if (iva) cambiarIva(iva.dataset.id, iva.value);
 });
 $('l-emit').addEventListener('click', (e) => { const b = e.target.closest('.js-gen'); if (b) generarPdf(b.dataset.id, b); });
-$('l-pend').addEventListener('click', (e) => { const b = e.target.closest('.js-ya'); if (b) marcarYaFacturadas([b.dataset.id]); });
-// "Ya facturada": se emitió por otro sistema (ADM Global). Sale de pendientes al instante (la lista se actualiza sola).
-window.marcarYaFacturadas = async (ids) => {
-  ids = Array.isArray(ids) ? ids : [...seleccion];
-  const lista = pedidos.filter((p) => ids.includes(p.id) && !p.cae);
-  if (!lista.length) return;
-  const txt = lista.length === 1 ? `"${cliente(lista[0])}" ($${fmt(lista[0].total)})` : `${lista.length} pedidos por $${fmt(lista.reduce((a, p) => a + (Number(p.total) || 0), 0))}`;
-  if (!confirm(`¿Marcar ${txt} como YA FACTURADO en el ADM Global?\n\nSale de pendientes y no se va a facturar acá. Se puede deshacer desde el pedido (llave "¿Factura ya emitida?").`)) return;
-  const quien = (firebase.auth().currentUser && firebase.auth().currentUser.email) || '';
-  let ok = 0;
-  for (const p of lista) {
-    try {
-      await db.collection('pedidos').doc(p.id).update({ facturaEmitida: true, facturaMarcadaPor: quien, facturaMarcadaAt: new Date().toISOString() });
-      seleccion.delete(p.id); ok++;
-    } catch (e) { console.error(e); }
-  }
-  toast(ok === lista.length ? `✔ ${ok} marcada${ok === 1 ? '' : 's'} como ya facturada${ok === 1 ? '' : 's'}` : `⚠️ Se marcaron ${ok} de ${lista.length}. Revisá la conexión.`, 3500);
-};
 window.seleccionarTodos = () => {
   let lista = pedidos.filter(esPendiente);
   if (filtro === 'cerrados') lista = lista.filter((p) => p.estado === 'entregado' || p.estado === 'cobrado');
   // No se preseleccionan los que tienen problemas ni los sospechosos (SEC-3)
-  const validos = lista.filter((p) => !sospecha(p)); // incluye las incompletas (para "Ya facturadas"); al emitir quedan afuera
+  const validos = lista.filter((p) => !problemas(p).length && !sospecha(p));
   const todos = validos.length > 0 && validos.every((p) => seleccion.has(p.id));
   validos.forEach((p) => (todos ? seleccion.delete(p.id) : seleccion.add(p.id)));
   pintarPendientes();
@@ -326,7 +305,6 @@ function actualizarBarra() {
   const total = sel.reduce((a, p) => a + (Number(p.total) || 0), 0);
   $('barra-txt').innerHTML = `<b>${sel.length}</b> seleccionada${sel.length === 1 ? '' : 's'} · <b>$${fmt(total)}</b>`;
   $('btn-emitir').textContent = `⚡ Emitir ${sel.length} factura${sel.length === 1 ? '' : 's'}`;
-  $('btn-ya').textContent = `✔ Ya facturada${sel.length === 1 ? '' : 's'} (${sel.length})`;
 }
 
 // ------------------------------------------------------------- emisión en tanda
@@ -336,7 +314,7 @@ window.confirmarEmision = () => {
   const sel = pedidos.filter((p) => seleccion.has(p.id));
   if (!sel.length) return;
   const incompletas = sel.filter((p) => problemas(p).length);
-  if (incompletas.length === sel.length) { toast('⚠️ Las seleccionadas tienen datos incompletos: corregilas antes de emitir (o usá "Ya facturadas")', 5000); return; }
+  if (incompletas.length === sel.length) { toast('⚠️ Las seleccionadas tienen datos incompletos: corregilas antes de emitir', 5000); return; }
   if (incompletas.length) { incompletas.forEach((p) => seleccion.delete(p.id)); pintarPendientes(); toast(`${incompletas.length} con datos incompletos quedaron afuera de la emisión`, 4000); return confirmarEmision(); }
   const total = sel.reduce((a, p) => a + (Number(p.total) || 0), 0);
   $('ov-tit').textContent = `¿Emitir ${sel.length} factura${sel.length === 1 ? '' : 's'} por $${fmt(total)}?`;
