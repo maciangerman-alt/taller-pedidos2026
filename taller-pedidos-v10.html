@@ -3595,7 +3595,7 @@ document.addEventListener('keydown',function(e){
   const list=wrap.querySelector('.autocomplete-list'); if(!list||list.style.display==='none') return;
   const items=[...list.querySelectorAll('.autocomplete-item[onclick]')]; if(!items.length) return;
   let i=items.findIndex(x=>x.classList.contains('activo'));
-  if(e.key==='Escape'){ list.style.display='none'; e.preventDefault(); return; }
+  if(e.key==='Escape'){ list.style.display='none'; e.preventDefault(); e.stopImmediatePropagation(); return; }
   if(e.key==='Enter'){
     if(i<0) return; // sin elegido: sigue el Enter normal (ej. código escaneado)
     e.preventDefault(); e.stopImmediatePropagation(); items[i].click(); return;
@@ -3604,6 +3604,18 @@ document.addEventListener('keydown',function(e){
   i = e.key==='ArrowDown' ? (i+1)%items.length : (i<=0?items.length-1:i-1);
   items.forEach(x=>x.classList.remove('activo')); items[i].classList.add('activo'); items[i].scrollIntoView({block:'nearest'});
 },true);
+// Escape: cierra el cartel abierto; en el pedido pregunta antes (para no perder lo cargado)
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape') return;
+  const conf=document.getElementById('confirm-overlay'), nc=document.getElementById('nc-overlay');
+  if(conf && conf.classList.contains('show')){ e.preventDefault(); cerrarConfirm(); return; }
+  if(nc && nc.classList.contains('show')){ e.preventDefault(); cerrarNotaCredito(); return; }
+  const ov=document.getElementById('overlay');
+  if(ov && ov.classList.contains('show')){
+    e.preventDefault();
+    mostrarConfirm('¿Cerrar el pedido?','Lo que no guardaste se pierde.','✋', ()=>cerrarModal(), { textoOk:'Cerrar sin guardar', colorOk:'#8B5E3C' });
+  }
+});
 // ==================== DOCUMENTOS (presupuesto, remito, X) Y NOTAS DE CRÉDITO ====================
 const DOC_INFO={ presupuesto:{nombre:'Presupuesto',emoji:'🧾'}, remito:{nombre:'Remito',emoji:'🚚'}, x:{nombre:'Comprobante X',emoji:'📃'} };
 function linkCorto(u){ return String(u||'').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i,''); }
