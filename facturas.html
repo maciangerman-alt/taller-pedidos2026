@@ -135,7 +135,7 @@ firebase.initializeApp({
   appId: "1:783225891542:web:82490ed46b64b186d0f777"
 });
 </script>
-<script src="maestros.js?v=20261122"></script>
+<script src="maestros.js?v=20261123b"></script>
 <script>
 const db = firebase.firestore(), functions = firebase.app().functions('southamerica-east1');
 const M = Maestros, esc = M.esc, $ = (id) => document.getElementById(id);
@@ -217,6 +217,7 @@ let clientesBase = [];
 // ------------------------------------------------------------- completar CUIT desde la base de clientes
 // Pedidos viejos sin CUIT cuya escuela está en la base: se completan CUIT, razón social, condición IVA y domicilio
 function sugerenciasCuit() {
+  if (typeof M.clientePorEscuela !== 'function') return []; // maestros.js viejo en caché: no romper la lista
   return pedidos.filter(esPendiente).filter((p) => M.soloDigitos(p.cuit).length !== 11 && p.escuela)
     .map((p) => ({ p, c: M.clientePorEscuela(clientesBase, p.escuela) }))
     .filter((x) => x.c && M.soloDigitos(x.c.cuit).length === 11);
@@ -298,14 +299,14 @@ function pintarPendientes() {
   lista.sort((a, b) => String(a.fechaPedido || '').localeCompare(String(b.fechaPedido || '')));
   // limpiar selección de pedidos que ya no están
   [...seleccion].forEach((id) => { if (!lista.some((p) => p.id === id)) seleccion.delete(id); });
+  const nSug = sugerenciasCuit().length;
+  $('btn-completar').style.display = nSug ? '' : 'none';
+  $('btn-completar').textContent = `🏫 Completar CUIT desde la base (${nSug})`;
   if (!lista.length) {
     const hayOtros = filtro === 'cerrados' && pedidos.some(esPendiente);
     $('l-pend').innerHTML = `<div class="vacio">${hayOtros ? 'No hay pendientes entregados o cobrados.<br>Mirá en <b>Todos los pendientes</b> los que todavía están en curso.' : '🎉 No hay facturas pendientes.<br><span class="nota">Acá aparecen los pedidos con "Requiere factura" que todavía no se emitieron.</span>'}</div>`;
     actualizarBarra(); return;
   }
-  const nSug = sugerenciasCuit().length;
-  $('btn-completar').style.display = nSug ? '' : 'none';
-  $('btn-completar').textContent = `🏫 Completar CUIT desde la base (${nSug})`;
   $('l-pend').innerHTML = lista.map((p) => {
     const prob = problemas(p);
     const cuit = M.soloDigitos(p.cuit).length === 11;
