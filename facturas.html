@@ -166,7 +166,6 @@ function sospecha(p) {
   if (!p.estado || p.estado === 'confirmado') return 'sin confirmar en el panel';
   return '';
 }
-const nroComp = (p) => `${p.tipoComprobanteLetra || ''} ${String(p.puntoVenta || 0).padStart(5, '0')}-${String(p.nroComprobante || 0).padStart(8, '0')}`;
 const ESTADO = { pendiente: '⏳ Pendiente', produccion: '🔧 Producción', listo: '✅ Listo', entregado: '🚚 Entregado', cobrado: '💵 Cobrado' };
 function toast(t, ms = 2600) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => (el.style.display = 'none'), ms); }
 function telWA(tel) { let n = String(tel || '').replace(/\D/g, ''); if (!n) return ''; if (n.startsWith('54')) return n; if (n.startsWith('9') && n.length === 11) return '54' + n; return '549' + n.replace(/^0/, ''); }
@@ -217,7 +216,6 @@ window.ingresar = async () => {
 };
 
 const esPendiente = (p) => p.factura === true && !p.cae && !p.facturaEmitida;
-const esEmitida = (p) => !!p.cae || !!p.facturaEmitida;
 
 window.irA = (v) => {
   $('tab-pend').classList.toggle('on', v === 'pend'); $('tab-emit').classList.toggle('on', v === 'emit');
@@ -349,7 +347,6 @@ async function emitirTanda(ids, totales) {
 }
 
 // ------------------------------------------------------------- emitidas
-function mesDe(p) { const f = String(p.facturaFecha || p.facturaEmitidaAt || p.fechaPedido || ''); return /^\d{8}$/.test(f) ? `${f.slice(0, 4)}-${f.slice(4, 6)}` : f.slice(0, 7); }
 // Comprobantes emitidos: la factura vigente de cada pedido, las facturas anuladas
 // por nota de crédito y las notas de crédito (restan). Cada fila = un comprobante.
 function comprobantesEmitidos() {

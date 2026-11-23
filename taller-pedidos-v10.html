@@ -3260,9 +3260,6 @@ window.diagnosticoArca = async function(){
     mostrarMsgArca('❌ '+(e.message||'No responde la función diagnosticoArca (¿está desplegada?)'),'error');
   }
 }
-window.toggleJardin=function(){jardinOn=!jardinOn;if(jardinOn){padreOn=false;estudianteOn=false;madreOn=false;}}
-window.togglePadre=function(){padreOn=!padreOn;if(padreOn){jardinOn=false;estudianteOn=false;madreOn=false;}}
-window.toggleEstudiante=function(){estudianteOn=!estudianteOn;if(estudianteOn){jardinOn=false;padreOn=false;madreOn=false;}}
 window.toggleMadre=function(){madreOn=!madreOn;if(madreOn){jardinOn=false;padreOn=false;estudianteOn=false;}document.getElementById('toggle-madre').classList.toggle('on',madreOn);}
 window.selEstado=function(el){
   document.querySelectorAll('#f-estado-opts .estado-opt').forEach(e=>e.classList.remove('selected'));
@@ -3281,8 +3278,14 @@ window.selEstado=function(el){
 window.selLog=function(el){document.querySelectorAll('.log-opt').forEach(e=>e.classList.remove('selected'));el.classList.add('selected');document.getElementById('paqar-extra').style.display=el.dataset.val==='paqar'?'block':'none';}
 window.calcularSaldo=function(){if(typeof pintarTotalItems==='function') pintarTotalItems();const t=Number(document.getElementById('f-total').value)||0,s=Number(document.getElementById('f-senia').value)||0;document.getElementById('resumen-total').textContent='$'+fmt(t);document.getElementById('resumen-senia').textContent='$'+fmt(s);document.getElementById('resumen-saldo').textContent='$'+fmt(Math.max(0,t-s));}
 
+let _guardandoPedido=false;
 window.guardarPedido=async function(opts){
   opts=opts||{}; // mantenerAbierto: guarda sin cerrar (para facturar o armar documentos de una)
+  if(_guardandoPedido) return false; // doble clic: no crea dos pedidos
+  _guardandoPedido=true;
+  try{ return await _guardarPedido(opts); } finally { _guardandoPedido=false; }
+};
+async function _guardarPedido(opts){
   const nombre=document.getElementById('f-nombre').value.trim();
   const escuela=document.getElementById('f-escuela').value.trim();
   if(!nombre||!escuela){toast('Completá nombre y escuela');return;}
@@ -3346,8 +3349,8 @@ function conservarFiscalesDelServidor(data, actual){
 
 // ==================== BUSCADORES: ESCUELA/CLIENTE Y PRODUCTOS ====================
 // Usan maestros.js: la base de clientes y productos (importada de ADM Global)
-// y la base de 2.121 escuelas de Tucumán (base-escuelas.json).
-let _clientesBase=[], _escuelasBase=[], _productosBase=[];
+// (la base de 2.121 escuelas de Tucumán queda solo para la Ruta del día).
+let _clientesBase=[], _productosBase=[];
 async function cargarBasesBuscadores(){
   if(typeof Maestros==='undefined') return;
   try{ _clientesBase = await Maestros.cargar('clientes'); }catch(e){ console.warn('clientes',e); }
@@ -3382,11 +3385,9 @@ window.buscarEscuela=function(){
   const list=document.getElementById('escuela-list');
   if(q.length<2 || typeof Maestros==='undefined'){ list.style.display='none'; return; }
   const cli=Maestros.buscar(_clientesBase,q,['fantasia','nombre','cuit','dom','loc','contacto'],10);
-  const esc_=[];
-  if(!cli.length && !esc_.length){ list.style.display='none'; return; }
+  if(!cli.length){ list.style.display='none'; return; }
   list.innerHTML =
-    cli.map(c=>`<div class="autocomplete-item" onclick="elegirCliente(${jsArg(c.id)})"><strong>${escH(c.fantasia||c.nombre)}</strong><span>${c.fantasia?escH(c.nombre)+' · ':''}${c.cuit?'CUIT '+escH(Maestros.formatoCuit(c.cuit)):'sin CUIT'}${c.iva?' · '+escH(Maestros.COND_IVA_CORTO[c.iva]||''):''}${c.loc?' · '+escH(c.loc):''}</span></div>`).join('') +
-    esc_.map(e=>`<div class="autocomplete-item" onclick="elegirEscuelaBase(${jsArg(e.i)})"><strong>${escH(e.n)}</strong><span>📍 ${escH(e.l||'')}${e.d&&e.d!==e.l?' · '+escH(e.d):''}${e.s==='Pri'?' · Privada':''}</span></div>`).join('');
+    cli.map(c=>`<div class="autocomplete-item" onclick="elegirCliente(${jsArg(c.id)})"><strong>${escH(c.fantasia||c.nombre)}</strong><span>${c.fantasia?escH(c.nombre)+' · ':''}${c.cuit?'CUIT '+escH(Maestros.formatoCuit(c.cuit)):'sin CUIT'}${c.iva?' · '+escH(Maestros.COND_IVA_CORTO[c.iva]||''):''}${c.loc?' · '+escH(c.loc):''}</span></div>`).join('');
   list.style.display='block';
 };
 window.elegirCliente=function(id){
@@ -3397,13 +3398,6 @@ window.elegirCliente=function(id){
   // PRIV-1: el teléfono de la base es el de la institución; no se pega en el pedido de la seño
   document.getElementById('escuela-list').style.display='none';
   toast(c.cuit ? (facturaOn ? '✅ Datos de facturación completados' : '✅ Cliente elegido · tiene CUIT: si pide factura, activá "Requiere factura" y ya está todo cargado') : '✅ Cliente elegido');
-};
-window.elegirEscuelaBase=function(i){
-  const e=_escuelasBase.find(x=>x.i===i); if(!e) return;
-  document.getElementById('f-escuela').value=e.n;
-  if(_autoFact) ponerFacturacion('','',null);
-  _autoFact=null;
-  document.getElementById('escuela-list').style.display='none';
 };
 
 window.buscarProducto=function(){
@@ -4658,8 +4652,6 @@ window.exportarJardines = function(){
 
   // Acumular hojas {nombre, filas[]}
   const hojas = [];
-
-  function numVal(v){ return String(v||0); }
 
   // ── GENERAL ──────────────────────────────────────────
   {

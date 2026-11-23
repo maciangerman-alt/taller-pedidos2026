@@ -130,7 +130,8 @@ window.ingresar = async () => {
 // Contadores livianos: cada uno lee solo lo que necesita
 async function cargarContadores() {
   const poner = (id, txt, alerta) => { const el = $(id); el.textContent = txt; el.classList.toggle('alerta', !!alerta); };
-  db.collection('pedidos').where('estado', 'in', ['pendiente', 'confirmado', 'produccion', 'listo']).get()
+  // Mismo criterio que el panel: activos = todos los que todavía no están cobrados
+  db.collection('pedidos').where('estado', '!=', 'cobrado').get()
     .then((s) => { let n = 0; s.forEach((d) => { if (!d.data().esConfig) n++; }); poner('n-pedidos', plural(n, 'pedido activo', 'pedidos activos')); })
     .catch(() => poner('n-pedidos', 'Abrir →'));
   db.collection('pedidos').where('factura', '==', true).get()
