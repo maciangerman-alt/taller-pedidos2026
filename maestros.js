@@ -324,6 +324,30 @@
     });
   }
 
+  // --------------------------------------------------------- teléfono para WhatsApp
+  /**
+   * Teléfono argentino → número para WhatsApp (549 + área + número, 13 dígitos).
+   * Saca el 0 del área y el 15 del celular: "0381 15 512-3456" → 5493815123456.
+   * Sin código de área se asume Tucumán (381). Si no queda un número válido
+   * devuelve '' (WhatsApp abre para elegir el contacto, nunca un número equivocado).
+   */
+  function telWA(tel) {
+    let n = soloDigitos(tel);
+    if (!n) return '';
+    if (n.startsWith('00')) n = n.slice(2);
+    if (n.startsWith('549')) n = n.slice(3);
+    else if (n.startsWith('54') && n.length >= 12) n = n.slice(2);
+    n = n.replace(/^0+/, '');
+    if (n.length === 11 && n.startsWith('9')) n = n.slice(1); // 9 + área + número
+    if (n.length === 12) {
+      // área (2 a 4 dígitos) + 15 + número
+      for (const L of [2, 3, 4]) if (n.substr(L, 2) === '15') { n = n.slice(0, L) + n.slice(L + 2); break; }
+    }
+    if (n.length === 9 && n.startsWith('15')) n = '381' + n.slice(2); // 15 + número, sin área
+    if (n.length === 7) n = '381' + n; // número suelto de Tucumán
+    return n.length === 10 ? '549' + n : '';
+  }
+
   // --------------------------------------------------------- búsqueda
   function puntaje(textoNorm, palabras) {
     let p = 0;
@@ -474,7 +498,7 @@
     sinAcentos, esc, soloDigitos, cuitValido, formatoCuit, condIvaDesdeTexto, numeroAR, nuevoId,
     normalizarCliente, normalizarProducto, partirPorTamano, MAX_BYTES_BLOQUE,
     cargar, guardarTodo, guardarUno, borrarUno, aprenderCliente, buscar, cargarEscuelas, porCodigo, escucharPistola,
-    llamarFacturador, despertarFacturador, urlFacturador, clientePorEscuela,
+    llamarFacturador, despertarFacturador, urlFacturador, clientePorEscuela, telWA,
     _cache: cache,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1778,7 +1778,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
-<script src="maestros.js?v=20261123c"></script>
+<script src="maestros.js?v=20261123d"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
@@ -3054,7 +3054,7 @@ let _snapFact=null; // datos fiscales al abrir el modal (PED-8)
 function resetForm(){
   limpiarBuscadoresForm(); _snapFact=null;
   ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon','f-cond-iva'].forEach(id=>document.getElementById(id).value='');
-  _items=[]; _itemsBloqueados=false; renderItems(); setDom('');
+  _items=[]; _itemsBloqueados=false; renderItems(); setDom(''); trabarFiscales(false);
   if(typeof pintarDocumentos==='function'){ pintarDocumentos(null); pintarNotasCredito(null); }
   mostrarMsgArca('');
   document.getElementById('f-turno').value='';
@@ -3111,7 +3111,22 @@ function mostrarMsgArca(texto, tipo){
 // está marcado para facturar. Si ya se emitió (vía este sistema, con CAE
 // real), muestra los datos del comprobante y el link de WhatsApp en vez del
 // botón de facturar.
+// ROJO-1: con la factura emitida (CAE), los datos fiscales y el total no se tocan: el único camino es la nota de crédito
+let _fiscalTrabado=false;
+function trabarFiscales(on){
+  _fiscalTrabado=!!on;
+  ['f-cuit','f-razon','f-cond-iva','f-total'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    if(el.tagName==='SELECT') el.disabled=_fiscalTrabado; else el.readOnly=_fiscalTrabado;
+    el.style.opacity=_fiscalTrabado?'.6':'';
+    el.title=_fiscalTrabado?'Ya está facturado: no se puede cambiar. Para corregir, emití una nota de crédito.':'';
+  });
+  let av=document.getElementById('aviso-fiscal-trabado');
+  if(!av){ const ref=document.getElementById('factura-extra'); if(!ref) return; av=document.createElement('div'); av.id='aviso-fiscal-trabado'; av.style.cssText='font-size:12.5px;color:#5B4636;background:#F3ECE4;border-radius:8px;padding:8px 10px;margin-top:10px'; av.textContent='🔒 Ya está facturado: CUIT, razón social, condición IVA y total no se pueden cambiar. Si hay un error, emití una nota de crédito y volvé a facturar.'; ref.insertBefore(av, ref.firstChild); }
+  av.style.display=_fiscalTrabado?'block':'none';
+}
 function actualizarPanelFacturacionArca(p){
+  trabarFiscales(!!(p&&p.cae));
   const panel=document.getElementById('factura-arca-panel');
   // Solo para pedidos ya guardados y marcados "Requiere factura"
   const filaAdm=document.getElementById('fila-factura-emitida');
@@ -3232,9 +3247,10 @@ window.facturarConArca = async function(){
   const letra=document.getElementById('f-factura-letra').value;
   totalConfirmado=total;
   const sinProductos=!_items.some(it=>String(it.descripcion||'').trim()) && !document.getElementById('f-productos').value.trim();
+  const sinDomicilio=cuit.replace(/\D/g,'').length===11 && !domReceptor();
   mostrarConfirm(
     `¿Emitir factura${letra?' '+letra:''} por $${fmt(total)}?`,
-    `${cliente} · ${COND_IVA_TXT[cond]||''}${cuit?' · CUIT '+cuit:''}. Se informa a ARCA y no se puede deshacer.${sinProductos?' ⚠️ No cargaste productos: el detalle va a decir "Juguetes didácticos de madera".':''}`,
+    `${cliente} · ${COND_IVA_TXT[cond]||''}${cuit?' · CUIT '+cuit:''}. Se informa a ARCA y no se puede deshacer.${sinProductos?' ⚠️ No cargaste productos: el detalle va a decir "Juguetes didácticos de madera".':''}${sinDomicilio?' ⚠️ Falta el domicilio del cliente: elegí la escuela de la lista o escribilo en Facturación antes de emitir.':''}`,
     '🧾',
     ejecutar,
     { textoOk:'Emitir factura', colorOk:'#2E7D4F' }
@@ -3259,7 +3275,7 @@ window.borrarFacturaPrueba = function(){
   if(!p||!p.cae||p.facturaAmbiente==='produccion'){ toast('Solo se pueden borrar facturas de prueba'); return; }
   mostrarConfirm('¿Borrar la factura de PRUEBA?','Quita el CAE de homologación de este pedido para poder volver a probar. Solo para pruebas.','🧪', async ()=>{
     const del=firebase.firestore.FieldValue.delete();
-    const campos=['cae','caeVencimiento','nroComprobante','puntoVenta','tipoComprobanteLetra','tipoComprobanteCodigo','facturaFecha','facturaImporte','facturaImpNeto','facturaImpIVA','facturaDocTipo','facturaDocNro','facturaCondicionIVAReceptor','facturaAmbiente','facturaObservaciones','facturaEmitidaAt','facturaEmitidaPor','facturaPdfUrl','facturaIntento','facturaEnProceso','facturaEnProcesoDesde'];
+    const campos=['cae','caeVencimiento','nroComprobante','puntoVenta','tipoComprobanteLetra','tipoComprobanteCodigo','facturaFecha','facturaImporte','facturaImpNeto','facturaImpIVA','facturaDocTipo','facturaDocNro','facturaCondicionIVAReceptor','facturaAmbiente','facturaObservaciones','facturaEmitidaAt','facturaEmitidaPor','facturaPdfUrl','facturaIntento','facturaEnProceso','facturaEnProcesoDesde','facturaRazon','facturaEnviadaAt'];
     const upd={facturaEmitida:false}; campos.forEach(c=>upd[c]=del);
     try{
       await db.collection('pedidos').doc(editandoId).update(upd);
@@ -3332,7 +3348,12 @@ async function _guardarPedido(opts){
   else if(pedidoActual?.evento && !['jardin2026','padre2026','estudiante2026','madre2026'].includes(pedidoActual.evento)) eventoFinal = pedidoActual.evento;
   const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,...datosItemsParaGuardar(!!editandoId),domicilioReceptor:domReceptor(),fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
   // Una factura electrónica emitida (con CAE) no se puede "desmarcar" desde el formulario
-  if(pedidoActual && pedidoActual.cae){ data.factura=true; data.facturaEmitida=true; }
+  if(pedidoActual && pedidoActual.cae){
+    data.factura=true; data.facturaEmitida=true;
+    // ROJO-1: facturado → CUIT, razón, condición IVA y total quedan como estaban
+    data.cuit=pedidoActual.cuit||''; data.razon=pedidoActual.razon||''; data.condicionIVAReceptor=pedidoActual.condicionIVAReceptor||null;
+    if(pedidoActual.total!=null) data.total=pedidoActual.total;
+  }
   conservarFiscalesDelServidor(data, pedidoActual);
   protegerFactura(data, pedidoActual, _snapFact);
   try{
@@ -3402,7 +3423,7 @@ function avisoCuitOculto(){
   else el.style.display='none';
 }
 window.buscarEscuela=function(){
-  if(_autoFact && document.getElementById('f-escuela').value!==_autoFact.escuela && document.getElementById('f-cuit').value===_autoFact.cuit){
+  if(!_fiscalTrabado && _autoFact && document.getElementById('f-escuela').value!==_autoFact.escuela && document.getElementById('f-cuit').value===_autoFact.cuit){
     ponerFacturacion('','',null); _autoFact=null; setDom('');
   }
   const q=document.getElementById('f-escuela').value.trim();
@@ -3423,6 +3444,22 @@ window.buscarEscuela=function(){
 };
 window.elegirCliente=function(id){
   const c=_clientesBase.find(x=>x.id===id); if(!c) return;
+  if(_fiscalTrabado){
+    // Pedido facturado: solo se puede corregir el nombre de la escuela y el domicilio, y solo con el MISMO CUIT de la factura
+    const p=pedidoEnEdicion()||{};
+    const cuitFactura=String(p.facturaDocNro||p.cuit||'').replace(/\D/g,'');
+    if(String(c.cuit||'').replace(/\D/g,'')!==cuitFactura){
+      document.getElementById('escuela-list').style.display='none';
+      document.getElementById('f-escuela').value=p.escuela||'';
+      toast('⚠️ Esa escuela tiene otro CUIT y este pedido ya está facturado. No se cambió nada (para corregir: nota de crédito).',6000);
+      return;
+    }
+    setDom([c.dom,c.loc].filter(x=>x&&String(x).trim()).join(', ').slice(0,200));
+    document.getElementById('f-escuela').value=c.fantasia||c.nombre;
+    document.getElementById('escuela-list').style.display='none';
+    toast('✅ Domicilio actualizado. Tocá "Rearmar el PDF" para que salga en la factura.');
+    return;
+  }
   setDom([c.dom,c.loc].filter(x=>x&&String(x).trim()).join(', ').slice(0,200)); // va a la factura (domicilio del receptor)
   document.getElementById('f-escuela').value=c.fantasia||c.nombre;
   // Siempre se reemplazan (vacíos si este cliente no tiene CUIT)
@@ -3521,7 +3558,7 @@ function pintarTotalItems(){
 }
 window.usarSumaItems=function(){ actualizarTotalDesdeItems(); };
 function actualizarTotalDesdeItems(){
-  if(!_items.length||_itemsBloqueados) return;
+  if(!_items.length||_itemsBloqueados||_fiscalTrabado) return; // facturado: el total no cambia (ROJO-1)
   document.getElementById('f-total').value=sumaItems();
   if(typeof calcularSaldo==='function') calcularSaldo();
   pintarTotalItems();
@@ -4280,16 +4317,8 @@ function waLink(p){
   return `https://api.whatsapp.com/send?${telWA?'phone='+telWA+'&':''}text=${encodeURIComponent(msg)}`;
 }
 function formatTelWA(tel){
-  // Limpiar todo lo que no sea número
-  let n=tel.replace(/\D/g,'');
-  // Si ya empieza con 54, dejarlo
-  if(n.startsWith('54')) return n;
-  // Si empieza con 9 y tiene 11 dígitos (ej: 93815691528), agregar 54
-  if(n.startsWith('9')&&n.length===11) return '54'+n;
-  // Si tiene 10 dígitos (ej: 3815691528), agregar 549
-  if(n.length===10) return '549'+n;
-  // Si tiene 8 dígitos (sin código de área), no podemos arreglarlo bien
-  return '549'+n;
+  // Una sola regla para todo el sistema (maestros.js): saca el 0 del área y el 15 del celular
+  return (typeof Maestros!=='undefined' && Maestros.telWA) ? Maestros.telWA(tel) : String(tel||'').replace(/\D/g,'');
 }
 function formatFechaCorta(f){
   if(!f)return'';
@@ -5015,7 +5044,7 @@ window.renderClientes = function(){
           <div class="cliente-meta">🏫 ${c.escuela}${c.tel?' · 📞 '+c.tel:''}</div>
           <div class="cliente-meta">Último pedido: ${ultimo?.fechaPedido||'—'} · ${c.pedidos.length} pedido${c.pedidos.length!==1?'s':''}</div>
         </div>
-        ${c.tel?`<a href="https://wa.me/549${c.tel.replace(/\D/g,'')}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;background:#E7F9EF;color:#25D366;font-weight:700;padding:5px 12px;border-radius:100px;text-decoration:none;flex-shrink:0;white-space:nowrap;">💬 WA</a>`:''}
+        ${c.tel&&formatTelWA(c.tel)?`<a href="https://api.whatsapp.com/send?phone=${formatTelWA(c.tel)}" target="_blank" onclick="event.stopPropagation()" style="font-size:11px;background:#E7F9EF;color:#25D366;font-weight:700;padding:5px 12px;border-radius:100px;text-decoration:none;flex-shrink:0;white-space:nowrap;">💬 WA</a>`:''}
       </div>
       <div class="cliente-stats">
         <div class="cliente-stat"><div class="cliente-stat-val">$${fmtK(totalFacturado)}</div><div class="cliente-stat-label">Facturado</div></div>

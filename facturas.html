@@ -81,6 +81,7 @@
 </div>
 
 <div id="app" style="display:none">
+  <div id="aviso-cert" style="display:none;margin:12px auto 0;max-width:1100px;padding:12px 16px;border-radius:12px;background:var(--rojo-light);color:var(--rojo);font-weight:600;font-size:14px"></div>
   <div class="tabs">
     <div class="tab on" id="tab-pend" onclick="irA('pend')">🧾 Pendientes <span class="badge" id="b-pend">0</span></div>
     <div class="tab" id="tab-emit" onclick="irA('emit')">✅ Emitidas <span class="badge" id="b-emit">0</span></div>
@@ -135,7 +136,7 @@ firebase.initializeApp({
   appId: "1:783225891542:web:82490ed46b64b186d0f777"
 });
 </script>
-<script src="maestros.js?v=20261123c"></script>
+<script src="maestros.js?v=20261123d"></script>
 <script>
 const db = firebase.firestore(), functions = firebase.app().functions('southamerica-east1');
 const M = Maestros, esc = M.esc, $ = (id) => document.getElementById(id);
@@ -171,7 +172,7 @@ function sospecha(p) {
 }
 const ESTADO = { pendiente: '⏳ Pendiente', produccion: '🔧 Producción', listo: '✅ Listo', entregado: '🚚 Entregado', cobrado: '💵 Cobrado' };
 function toast(t, ms = 2600) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => (el.style.display = 'none'), ms); }
-function telWA(tel) { let n = String(tel || '').replace(/\D/g, ''); if (!n) return ''; if (n.startsWith('54')) return n; if (n.startsWith('9') && n.length === 11) return '54' + n; return '549' + n.replace(/^0/, ''); }
+const telWA = (tel) => M.telWA(tel); // una sola regla para todo el sistema (saca el 0 y el 15)
 function mensajeFacturaWA(p){
   const url = String(p.facturaPdfUrl||'').replace(/&s=https%3A%2F%2Ftaller-facturador\.onrender\.com\/?$/i,'');
   const nro = `${p.tipoComprobanteLetra||'C'} ${String(p.puntoVenta||0).padStart(5,'0')}-${String(p.nroComprobante||0).padStart(8,'0')}`;
@@ -185,9 +186,22 @@ function waLink(p) {
   const t = telWA(p.tel); return `https://api.whatsapp.com/send?${t ? 'phone=' + t + '&' : ''}text=${encodeURIComponent(msg)}`;
 }
 
+// Certificado de ARCA: vence cada ~2 años y ese día deja de facturar. Aviso desde 45 días antes.
+async function avisoCertificado() {
+  try {
+    const r = (await M.llamarFacturador('estadoCertificado', {}, { timeout: 90000 })).data;
+    if (!r || r.ambiente !== 'produccion' || !(r.dias <= 45)) return;
+    const fecha = new Date(r.vence).toLocaleDateString('es-AR');
+    $('aviso-cert').textContent = r.dias < 0
+      ? `⛔ El certificado de ARCA venció el ${fecha}: no se puede facturar hasta cargar uno nuevo en Render.`
+      : `⚠️ El certificado de ARCA vence el ${fecha} (faltan ${r.dias} días). Generá uno nuevo en ARCA y cargalo en Render antes de esa fecha, o se corta la facturación.`;
+    $('aviso-cert').style.display = 'block';
+  } catch (e) { console.warn('estado del certificado', e); }
+}
 // ------------------------------------------------------------- sesión y datos
 firebase.auth().onAuthStateChanged((u) => {
   if (u) M.despertarFacturador(); // el servidor gratuito se duerme: lo despertamos al entrar
+  if (u) avisoCertificado();
   $('login').style.display = u ? 'none' : 'block';
   $('app').style.display = u ? 'block' : 'none';
   if (!u) { $('barra').style.display = 'none'; return; }
@@ -284,6 +298,15 @@ function pintar() {
 }
 
 // ------------------------------------------------------------- pendientes
+// Domicilio que va a salir en la factura (RG 1415: obligatorio si el cliente tiene CUIT).
+// El del pedido, o el de la base de clientes si la escuela está y tiene el mismo CUIT.
+function domicilioDe(p) {
+  if (String(p.domicilioReceptor || '').trim()) return String(p.domicilioReceptor).trim();
+  if (typeof M.clientePorEscuela !== 'function') return '';
+  const c = M.clientePorEscuela(clientesBase, p.escuela);
+  return c && M.soloDigitos(c.cuit) === M.soloDigitos(p.cuit) ? [c.dom, c.loc].filter((v) => v && String(v).trim()).join(', ') : '';
+}
+const faltaDomicilio = (p) => M.soloDigitos(p.cuit).length === 11 && !domicilioDe(p);
 function problemas(p) {
   const out = [];
   const tieneCuit = M.soloDigitos(p.cuit).length === 11;
@@ -317,7 +340,7 @@ function pintarPendientes() {
       <div class="ppal">
         <div class="n">${esc(cliente(p))}</div>
         <div class="d">${p.razon && p.escuela ? esc(p.escuela) + ' · ' : ''}${esc(p.nombre || '')}${p.fechaPedido ? ' · pedido ' + esc(fechaCorta(p.fechaPedido)) : ''}</div>
-        <div><span class="chip">${esc(ESTADO[p.estado] || p.estado || '')}</span>${cuit ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.cuit))}</span>` : '<span class="chip">Consumidor Final</span>'}${prob.map((x) => `<span class="chip mal">⚠️ ${esc(x)}</span>`).join('')}${sosp ? `<span class="chip mal" title="${esc(sosp)}">🚩 Revisar: ${esc(sosp)}</span>` : ''}${p.origen === 'catalogo-web' ? '<span class="chip">🌐 catálogo web</span>' : ''}</div>
+        <div><span class="chip">${esc(ESTADO[p.estado] || p.estado || '')}</span>${cuit ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.cuit))}</span>` : '<span class="chip">Consumidor Final</span>'}${prob.map((x) => `<span class="chip mal">⚠️ ${esc(x)}</span>`).join('')}${!prob.length && faltaDomicilio(p) ? '<span class="chip mal" title="Abrí el pedido y elegí la escuela de la lista, o escribí el domicilio en Facturación">⚠️ falta domicilio</span>' : ''}${sosp ? `<span class="chip mal" title="${esc(sosp)}">🚩 Revisar: ${esc(sosp)}</span>` : ''}${p.origen === 'catalogo-web' ? '<span class="chip">🌐 catálogo web</span>' : ''}</div>
         <select class="ivasel js-iva ${cuit && !p.condicionIVAReceptor ? 'falta' : ''}" data-id="${esc(p.id)}">
           <option value="">${cuit ? 'Elegí condición IVA del cliente…' : 'Consumidor Final (sin CUIT)'}</option>${opciones}
         </select>
@@ -373,8 +396,9 @@ window.confirmarEmision = () => {
   if (incompletas.length) { incompletas.forEach((p) => seleccion.delete(p.id)); pintarPendientes(); toast(`${incompletas.length} con datos incompletos quedaron afuera de la emisión`, 4000); return confirmarEmision(); }
   const total = sel.reduce((a, p) => a + (Number(p.total) || 0), 0);
   $('ov-tit').textContent = `¿Emitir ${sel.length} factura${sel.length === 1 ? '' : 's'} por $${fmt(total)}?`;
-  $('ov-sub').innerHTML = `Se informan a ARCA una por una. <b>No se pueden deshacer</b> (solo con nota de crédito).${ambienteConfig !== 'produccion' ? '<br>🧪 Estás en modo PRUEBA: no tienen validez fiscal.' : ''}`;
-  $('ov-log').innerHTML = sel.map((p) => `<div>${esc(cliente(p))} · $${fmt(p.total)}</div>`).join('');
+  const sinDom = sel.filter(faltaDomicilio).length;
+  $('ov-sub').innerHTML = `Se informan a ARCA una por una. <b>No se pueden deshacer</b> (solo con nota de crédito).${ambienteConfig !== 'produccion' ? '<br>🧪 Estás en modo PRUEBA: no tienen validez fiscal.' : ''}${sinDom ? `<br>⚠️ <b>${sinDom} sin domicilio</b>: van a salir sin domicilio del cliente. Conviene completarlo antes (abrí el pedido y elegí la escuela de la lista).` : ''}`;
+  $('ov-log').innerHTML = sel.map((p) => `<div>${esc(cliente(p))} · $${fmt(p.total)}${faltaDomicilio(p) ? ' · ⚠️ sin domicilio' : ''}</div>`).join('');
   $('ov-ok').style.display = ''; $('ov-ok').disabled = false; $('ov-ok').textContent = 'Emitir'; $('ov-cancel').textContent = 'Cancelar';
   // Se congela el total que se mostró: la Function no emite si en el servidor es otro (totalEsperado)
   const totales = {}; sel.forEach((p) => { totales[p.id] = Number(p.total) || 0; });

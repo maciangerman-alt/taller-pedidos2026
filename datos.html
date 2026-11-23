@@ -163,9 +163,10 @@ firebase.initializeApp({
   appId: "1:783225891542:web:82490ed46b64b186d0f777"
 });
 </script>
-<script src="maestros.js?v=20261122"></script>
+<script src="maestros.js?v=20261123d"></script>
 <script>
 const M = Maestros, esc = M.esc;
+let soloSinDom = false; // filtro de clientes con CUIT sin domicilio
 const $ = (id) => document.getElementById(id);
 let tipo = 'productos', items = [], limite = 200, editando = null;
 
@@ -284,6 +285,7 @@ window.addEventListener('hashchange', () => { const h = location.hash.slice(1); 
 // ---------------------------------------------------------------- lista
 window.irA = async (t) => {
   tipo = esTipo(t) ? t : 'productos';
+  soloSinDom = false;
   if (location.hash.slice(1) !== tipo) history.replaceState(null, '', '#' + tipo);
   document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('on', x.id === 'tab-' + tipo));
   $('q').value = ''; $('q').placeholder = tipo === 'productos' ? 'Buscar o escanear producto...' : 'Buscar escuela, razón social, CUIT o localidad...';
@@ -305,18 +307,24 @@ M.escucharPistola((codigo) => {
   if (p) abrirEditar(p.id); else { $('q').value = codigo; pintar(); toast(`Código ${codigo}: no está cargado. Tocá "+ Agregar" para darlo de alta.`, 4500); }
 });
 
+// Clientes con CUIT y sin domicilio: la factura sale sin domicilio (RG 1415). Se pueden filtrar para completarlos.
+const sinDomicilio = (c) => !!c.cuit && !String(c.dom || '').trim();
+window.toggleSinDom = () => { soloSinDom = !soloSinDom; limite = 200; pintar(); };
 window.pintar = () => {
   const d = DEF[tipo], q = $('q').value.trim();
-  const ordenados = q ? M.buscar(items, q, d.buscarEn, 100000) : items.slice().sort((a, b) => M.sinAcentos(a.fantasia || a.nombre).localeCompare(M.sinAcentos(b.fantasia || b.nombre)));
+  let ordenados = q ? M.buscar(items, q, d.buscarEn, 100000) : items.slice().sort((a, b) => M.sinAcentos(a.fantasia || a.nombre).localeCompare(M.sinAcentos(b.fantasia || b.nombre)));
   let extra = '';
   if (tipo === 'clientes') {
     const sinIva = items.filter((c) => c.cuit && !c.iva).length, malCuit = items.filter((c) => c.cuit && !M.cuitValido(c.cuit)).length;
-    extra = (sinIva ? ` · ⚠️ ${sinIva} con CUIT pero sin condición IVA` : '') + (malCuit ? ` · ❌ ${malCuit} con CUIT inválido` : '');
+    const nSinDom = items.filter(sinDomicilio).length;
+    if (soloSinDom) ordenados = ordenados.filter(sinDomicilio);
+    extra = esc((sinIva ? ` · ⚠️ ${sinIva} con CUIT pero sin condición IVA` : '') + (malCuit ? ` · ❌ ${malCuit} con CUIT inválido` : ''))
+      + (nSinDom || soloSinDom ? ` · <button class="btn" style="padding:4px 10px;font-size:13px" onclick="toggleSinDom()">${soloSinDom ? '✖ Ver todos' : `⚠️ ${nSinDom} con CUIT sin domicilio`}</button>` : '');
   } else {
     const sinPrecio = items.filter((p) => p.precio == null).length;
-    extra = sinPrecio ? ` · ⚠️ ${sinPrecio} sin precio` : '';
+    extra = esc(sinPrecio ? ` · ⚠️ ${sinPrecio} sin precio` : '');
   }
-  $('resumen').textContent = `${items.length} ${tipo} en la base${q ? ` · ${ordenados.length} coinciden` : ''}${extra}`;
+  $('resumen').innerHTML = `${items.length} ${tipo} en la base${q || soloSinDom ? ` · ${ordenados.length} coinciden` : ''}${extra}`;
   if (!items.length) {
     $('lista').innerHTML = `<div class="vacio">Todavía no hay ${tipo} cargados.<br><br>Tocá <b>📥 Importar Excel</b> para traerlos de ADM Global, o <b>+ Agregar</b> para cargar uno a mano.</div>`;
     $('btn-mas').style.display = 'none'; return;
@@ -637,13 +645,20 @@ window.importar = async () => {
       } else { agregar(x); agregados++; }
     });
     // Respaldo automático antes de "Reemplazar todo"
+    let avisoCopia = '';
     if (modo === 'reemplazar' && items.length) {
-      try { await firebase.firestore().collection('maestros').doc(`${tipo}_respaldo`).set({ fecha: new Date().toISOString(), por: (firebase.auth().currentUser || {}).email || '', total: items.length, nota: 'Copia automática antes de Reemplazar todo (solo los primeros 1.000 por el límite de tamaño)', items: items.slice(0, 1000).map(({ _k, ...r }) => r) }); }
-      catch (e) { console.warn('respaldo', e); }
+      // Entra TODA la base mientras quepa en un documento (1 MiB): ~1.500 productos ocupan unos 300 KB.
+      // Antes se cortaba en 1.000 fijos y con 1.558 productos se perdían 558 de la copia.
+      const enc = new TextEncoder(), copia = []; let bytes = 0;
+      for (const { _k, ...r } of items) { const b = enc.encode(JSON.stringify(r)).length + 40; if (bytes + b > 900000) break; copia.push(r); bytes += b; }
+      try {
+        await firebase.firestore().collection('maestros').doc(`${tipo}_respaldo`).set({ fecha: new Date().toISOString(), por: (firebase.auth().currentUser || {}).email || '', total: items.length, guardados: copia.length, completo: copia.length === items.length, nota: 'Copia automática antes de Reemplazar todo', items: copia });
+        if (copia.length < items.length) avisoCopia = ` ⚠️ La copia de seguridad guardó ${copia.length} de ${items.length} (no entran más).`;
+      } catch (e) { console.warn('respaldo', e); avisoCopia = ' ⚠️ No se pudo guardar la copia de seguridad.'; }
     }
     items = await M.guardarTodo(tipo, final, { siBase: base ? base.actualizado || null : null });
     cerrar('ov-importar'); pintar();
-    toast(`✅ Listo: ${agregados} nuevos${actualizados ? `, ${actualizados} actualizados` : ''}. Total: ${items.length}`, 5000);
+    toast(`✅ Listo: ${agregados} nuevos${actualizados ? `, ${actualizados} actualizados` : ''}. Total: ${items.length}${avisoCopia}`, avisoCopia ? 8000 : 5000);
   } catch (e) {
     console.error(e);
     if (e.code === 'base-cambio') { items = await M.cargar(tipo, { forzar: true }).catch(() => items); pintar(); }
