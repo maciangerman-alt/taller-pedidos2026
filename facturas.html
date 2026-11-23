@@ -100,7 +100,7 @@
     </div>
     <div id="v-emit" style="display:none">
       <div class="totales" id="totales"></div>
-      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select><button class="fbtn" onclick="exportarMes()" title="Baja un archivo que abre en Excel, para la contadora o como respaldo">📥 Excel del mes</button><span style="flex:1"></span><button class="fbtn" id="btn-sin-enviar" onclick="toggleSinEnviar()"></button></div>
+      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select><button class="fbtn" onclick="exportarMes()" title="Baja un archivo que abre en Excel, para la contadora o como respaldo">📥 Excel del mes</button><button class="fbtn" id="btn-verif-mes" onclick="verificarMes()" title="Le pregunta a ARCA si cada factura del mes existe y coincide">🛡️ Verificar en ARCA</button><span style="flex:1"></span><button class="fbtn" id="btn-sin-enviar" onclick="toggleSinEnviar()"></button></div>
       <div class="lista" id="l-emit"></div>
     </div>
   </div>
@@ -382,7 +382,10 @@ $('l-pend').addEventListener('change', (e) => {
   const sel = e.target.closest('.js-sel'); if (sel) { toggleSel(sel.dataset.id, sel.checked); return; }
   const iva = e.target.closest('.js-iva'); if (iva) cambiarIva(iva.dataset.id, iva.value);
 });
-$('l-emit').addEventListener('click', (e) => { const b = e.target.closest('.js-gen'); if (b) generarPdf(b.dataset.id, b); });
+$('l-emit').addEventListener('click', (e) => {
+  const b = e.target.closest('.js-gen'); if (b) generarPdf(b.dataset.id, b);
+  const v = e.target.closest('.js-verif'); if (v) verificarUna(v.dataset.id, v);
+});
 window.seleccionarTodos = () => {
   let lista = pedidos.filter(esPendiente);
   if (filtro === 'cerrados') lista = lista.filter((p) => p.estado === 'entregado' || p.estado === 'cobrado');
@@ -565,9 +568,9 @@ window.pintarEmitidas = () => {
     return `<div class="fila" ${f.anulada ? 'style="opacity:.75"' : ''}><div class="ppal">
         <div class="n">${esc(cliente(p))}</div>
         <div class="d">Factura ${esc(nroF)} · ${esc(fechaCorta(d.facturaFecha))} · CAE ${esc(d.cae)}</div>
-        <div>${chips}${f.anulada ? `<span class="chip mal">Anulada por NC ${esc(d.anuladaPorNC || '')}</span>` : ''}${d.facturaDocTipo === 80 ? `<span class="chip az">CUIT ${esc(M.formatoCuit(d.facturaDocNro))}</span>` : '<span class="chip">Consumidor Final</span>'}</div>
+        <div>${chips}${!f.anulada && !f.prueba && p.facturaVerificadaArca ? (p.facturaVerificadaArca.ok ? '<span class="chip ok" title="ARCA confirmó CAE, importe, cliente y fecha">🛡️ verificada en ARCA</span>' : '<span class="chip mal">⚠️ ARCA no coincide: tocá Verificar</span>') : ''}${f.anulada ? `<span class="chip mal">Anulada por NC ${esc(d.anuladaPorNC || '')}</span>` : ''}${d.facturaDocTipo === 80 ? `<span class="chip az">CUIT ${esc(M.formatoCuit(d.facturaDocNro))}</span>` : '<span class="chip">Consumidor Final</span>'}</div>
         <div class="acc">${urlSegura(d.facturaPdfUrl)
-          ? `<a class="mini pdf" href="${esc(urlSegura(d.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a>${f.anulada ? '' : `<a class="mini wa js-enviar ${p.facturaEnviadaAt ? 'enviada' : ''}" data-id="${esc(p.id)}" href="${esc(waLink(p))}" target="wa" rel="noopener">${p.facturaEnviadaAt ? '✓ Enviada · reenviar' : '📤 WhatsApp'}</a>`}`
+          ? `<a class="mini pdf" href="${esc(urlSegura(d.facturaPdfUrl))}" target="_blank" rel="noopener">📄 PDF</a>${f.anulada ? '' : `<a class="mini wa js-enviar ${p.facturaEnviadaAt ? 'enviada' : ''}" data-id="${esc(p.id)}" href="${esc(waLink(p))}" target="wa" rel="noopener">${p.facturaEnviadaAt ? '✓ Enviada · reenviar' : '📤 WhatsApp'}</a>`}${f.anulada || f.prueba ? '' : `<button class="mini gen js-verif" data-id="${esc(p.id)}">🛡️ Verificar</button>`}`
           : (f.anulada ? '' : `<button class="mini gen js-gen" data-id="${esc(p.id)}">📄 Generar PDF</button>`)}</div>
       </div><div class="der"><div class="monto">$${fmt(f.importe)}</div></div></div>`;
   }).join('');
@@ -599,6 +602,39 @@ window.exportarMes = () => {
   a.download = `Facturas Taller Artesanal - ${m === 'todas' ? 'todas' : m}.csv`;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   toast(`📥 ${filas.length} comprobante${filas.length === 1 ? '' : 's'} · total $${fmt(total)}`);
+};
+// ------------------------------------------------------------- verificar contra ARCA
+// Le pregunta a ARCA (FECompConsultar) qué tiene registrado y lo compara con el sistema. No emite nada.
+function textoVerificacion(r) {
+  if (!r.existe) return `❌ ${r.mensaje}`;
+  const mal = r.checks.filter((c) => !c.ok);
+  return r.ok ? `🛡️ ARCA confirma la factura ${r.comprobante}: CAE, importe, cliente y fecha coinciden.`
+    : `⚠️ ${r.comprobante}: ARCA tiene otros datos en ${mal.map((c) => `${c.dato} (ARCA: ${c.arca} · sistema: ${c.sistema})`).join(', ')}.`;
+}
+async function verificarUna(id, b) {
+  const t = b.textContent; b.disabled = true; b.textContent = 'Consultando ARCA...';
+  try { const r = (await M.llamarFacturador('verificarFactura', { pedidoId: id }, { timeout: 120000 })).data; toast(textoVerificacion(r), 9000); }
+  catch (e) { toast('❌ ' + ((e && e.message) || 'No se pudo consultar'), 8000); }
+  finally { b.disabled = false; b.textContent = t; }
+}
+window.verificarMes = async () => {
+  const m = $('mes').value;
+  const lista = comprobantesEmitidos().filter((f) => f.tipo === 'F' && !f.anulada && !f.prueba && (m === 'todas' || mesDeFila(f) === m));
+  if (!lista.length) { toast('No hay facturas reales en ese período'); return; }
+  $('ov-tit').textContent = `Verificando ${lista.length} factura${lista.length === 1 ? '' : 's'} en ARCA...`;
+  $('ov-sub').textContent = 'Se le pregunta a ARCA una por una si existe y si coinciden CAE, importe, cliente y fecha. No se emite nada.';
+  $('ov-log').innerHTML = ''; $('ov-ok').style.display = 'none'; $('ov-cancel').disabled = true; $('ov-cancel').textContent = 'Cerrar';
+  $('ov').classList.add('show');
+  let bien = 0, mal = 0;
+  for (const f of lista) {
+    const fila = document.createElement('div'); fila.textContent = `⏳ ${cliente(f.p)}...`; $('ov-log').appendChild(fila);
+    try {
+      const r = (await M.llamarFacturador('verificarFactura', { pedidoId: f.p.id }, { timeout: 120000 })).data;
+      fila.className = r.ok ? 'ok' : 'mal'; fila.textContent = `${cliente(f.p)} · ${textoVerificacion(r)}`; r.ok ? bien++ : mal++;
+    } catch (e) { fila.className = 'mal'; fila.textContent = `❌ ${cliente(f.p)}: ${(e && e.message) || 'error'}`; mal++; }
+  }
+  $('ov-tit').textContent = mal ? `⚠️ ${bien} confirmadas por ARCA, ${mal} con diferencias o error` : `🛡️ Las ${bien} facturas están registradas en ARCA y coinciden`;
+  $('ov-cancel').disabled = false;
 };
 window.generarPdf = async (id, b) => {
   b.disabled = true; b.textContent = 'Generando...';

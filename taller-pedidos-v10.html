@@ -1680,6 +1680,7 @@
             <a id="btn-ver-factura-pdf" href="#" target="_blank" style="display:block;text-align:center;background:#F3EEE7;color:var(--madera-dark);font-weight:700;padding:10px;border-radius:10px;text-decoration:none;margin-bottom:8px">📄 Ver PDF</a>
             <a id="btn-enviar-factura-wa" href="#" target="wa" onclick="preguntarEnvioFactura()" style="display:block;text-align:center;background:#E7F9EF;color:#25D366;font-weight:700;padding:10px;border-radius:10px;text-decoration:none">📤 Enviar factura por WhatsApp</a>
             <button type="button" class="btn btn-secondary" id="btn-generar-pdf" onclick="facturarConArca()" style="width:100%;margin-top:6px;display:none">📄 Generar PDF</button>
+            <button type="button" onclick="verificarEnArca(this)" style="width:100%;margin-top:8px;background:#EEF6F1;border:1px solid #BFDCCB;color:#1F4D35;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer">🛡️ Verificar en ARCA que la factura es válida</button>
             <button type="button" onclick="regenerarPdfFactura(this)" style="width:100%;margin-top:8px;background:none;border:1px solid var(--borde);color:var(--madera-dark);border-radius:10px;padding:8px;font-size:12.5px;font-weight:700;cursor:pointer">🔄 Rearmar el PDF (misma factura, datos actualizados)</button>
             <button type="button" id="btn-nota-credito" onclick="abrirNotaCredito()" style="width:100%;margin-top:8px;background:#FFF6E8;border:1px solid #E8C48C;color:#8A5A12;border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer">↩️ Nota de crédito (anular o descontar)</button>
             <button type="button" id="btn-borrar-factura-prueba" onclick="borrarFacturaPrueba()" style="display:none;width:100%;margin-top:8px;background:none;border:1px dashed #C0392B;color:#C0392B;border-radius:10px;padding:8px;font-size:12px;cursor:pointer">🧪 Borrar factura de PRUEBA (homologación)</button>
@@ -3263,6 +3264,18 @@ window.preguntarEnvioFactura = function(){
   setTimeout(()=>mostrarConfirm('¿Se mandó la factura?','Tocá "Sí, se mandó" si la mandaste por WhatsApp. Así deja de aparecer en "Sin enviar".','📤',
     ()=>{ db.collection('pedidos').doc(id).update({facturaEnviadaAt:new Date().toISOString()}).then(()=>toast('✓ Marcada como enviada')).catch(()=>{}); },
     { textoOk:'Sí, se mandó', colorOk:'#2E7D4F' }), 300);
+};
+// Consulta a ARCA (no emite nada) que la factura exista y coincida con el sistema
+window.verificarEnArca = async function(btn){
+  const id=editandoId; if(!id) return;
+  const t=btn.textContent; btn.disabled=true; btn.textContent='Consultando ARCA...';
+  try{
+    const r=(await Maestros.llamarFacturador('verificarFactura',{pedidoId:id},{timeout:120000})).data;
+    if(!r.existe) mostrarMsgArca('❌ '+r.mensaje,'error');
+    else if(r.ok) mostrarMsgArca(`🛡️ ARCA confirma la factura ${r.comprobante}: está registrada y coinciden CAE, importe, cliente y fecha. Es una factura válida.`,'ok');
+    else mostrarMsgArca(`⚠️ ARCA tiene otros datos para ${r.comprobante}:\n`+r.checks.filter(c=>!c.ok).map(c=>`• ${c.dato}: ARCA ${c.arca} · sistema ${c.sistema}`).join('\n'),'error');
+  }catch(err){ mostrarMsgArca(mensajeErrorArca(err),'error'); }
+  finally{ btn.disabled=false; btn.textContent=t; }
 };
 window.regenerarPdfFactura = async function(btn){
   const p=pedidoEnEdicion(); if(!p||!p.cae){ toast('Este pedido no tiene factura emitida'); return; }
