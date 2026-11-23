@@ -1778,7 +1778,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
-<script src="maestros.js?v=20261123b"></script>
+<script src="maestros.js?v=20261123c"></script>
 <script>
 firebase.initializeApp({
   apiKey: "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc",
@@ -3408,7 +3408,14 @@ window.buscarEscuela=function(){
   const q=document.getElementById('f-escuela').value.trim();
   const list=document.getElementById('escuela-list');
   if(q.length<2 || typeof Maestros==='undefined'){ list.style.display='none'; return; }
-  const cli=Maestros.buscar(_clientesBase,q,['fantasia','nombre','cuit','dom','loc','contacto'],10);
+  const CAMPOS=['fantasia','nombre','cuit','dom','loc','contacto'];
+  let cli=Maestros.buscar(_clientesBase,q,CAMPOS,10);
+  if(!cli.length){
+    // "ESC. JOSE INGENIEROS" tiene que encontrar "ENI JOSE INGENIEROS": reintenta sin las palabras genéricas
+    const GEN=new Set(['esc','escuela','eni','jardin','colegio','instituto','de','del','la','el','n','no','nro','nivel','inicial']);
+    const q2=q.split(/\s+/).filter(w=>!GEN.has(w.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''))).join(' ');
+    if(q2 && q2!==q) cli=Maestros.buscar(_clientesBase,q2,CAMPOS,10);
+  }
   if(!cli.length){ list.style.display='none'; return; }
   list.innerHTML =
     cli.map(c=>`<div class="autocomplete-item" onclick="elegirCliente(${jsArg(c.id)})"><strong>${escH(c.fantasia||c.nombre)}</strong><span>${c.fantasia?escH(c.nombre)+' · ':''}${c.cuit?'CUIT '+escH(Maestros.formatoCuit(c.cuit)):'sin CUIT'}${c.iva?' · '+escH(Maestros.COND_IVA_CORTO[c.iva]||''):''}${c.loc?' · '+escH(c.loc):''}</span></div>`).join('');
@@ -3599,7 +3606,7 @@ function aprenderClienteDePedido(d){
     if(typeof Maestros==='undefined' || !d || !d.cuit || !Maestros.cuitValido(d.cuit)) return;
     // Solo con razón social (no se inventa con el nombre de la escuela) y SIN el teléfono de la seño (PRIV-1)
     if(!String(d.razon||'').trim()) return;
-    Maestros.aprenderCliente({ nombre:d.razon, cuit:d.cuit, iva:d.condicionIVAReceptor, fantasia:d.escuela })
+    Maestros.aprenderCliente({ nombre:d.razon, cuit:d.cuit, iva:d.condicionIVAReceptor, fantasia:d.escuela, dom:d.domicilioReceptor })
       .then(()=>Maestros.cargar('clientes')).then(l=>{ _clientesBase=l; }).catch(e=>console.warn('aprenderCliente',e));
   }catch(e){ console.warn(e); }
 }

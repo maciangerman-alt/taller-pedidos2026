@@ -294,7 +294,7 @@
    * completa. Nunca pisa datos cargados a mano. NO guarda el teléfono del
    * pedido (es el celular de la seño, no el de la institución).
    */
-  async function aprenderCliente({ nombre, cuit, iva, fantasia }) {
+  async function aprenderCliente({ nombre, cuit, iva, fantasia, dom }) {
     const c = soloDigitos(cuit);
     if (!cuitValido(c) || !String(nombre || '').trim()) return null;
     const items = await cargar('clientes');
@@ -302,17 +302,22 @@
     const quien = sinAcentos(String(fantasia || '').trim() || nombre);
     const mismo = (x) => x.cuit === c && sinAcentos(x.fantasia || x.nombre) === quien;
     const enCache = items.find(mismo);
-    if (enCache && (enCache.iva || !iva)) return enCache; // nada que aprender: ni una lectura más
+    const d = String(dom || '').trim().slice(0, 200);
+    if (enCache && (enCache.iva || !iva) && (enCache.dom || !d)) return enCache; // nada que aprender: ni una lectura más
     return mutar('clientes', (listas) => {
       for (let k = 0; k < listas.length; k++) {
         const i = listas[k].findIndex(mismo);
         if (i < 0) continue;
         const ya = listas[k][i];
-        if (!ya.iva && iva) { listas[k][i] = { ...ya, iva: Number(iva) }; return { tocados: [k], valor: listas[k][i] }; }
+        // Completa lo que falte (condición IVA, domicilio); nunca pisa lo que ya estaba cargado
+        const falta = {};
+        if (!ya.iva && iva) falta.iva = Number(iva);
+        if (!ya.dom && d) falta.dom = d;
+        if (Object.keys(falta).length) { listas[k][i] = { ...ya, ...falta }; return { tocados: [k], valor: listas[k][i] }; }
         return { tocados: [], valor: ya };
       }
       const f = String(fantasia || '').trim();
-      const nuevo = normalizarCliente({ nombre, cuit: c, iva, fantasia: f && sinAcentos(f) !== sinAcentos(nombre) ? f : '', origen: 'pedido' });
+      const nuevo = normalizarCliente({ nombre, cuit: c, iva, dom: d, fantasia: f && sinAcentos(f) !== sinAcentos(nombre) ? f : '', origen: 'pedido' });
       const k = elegirBloque(listas, nuevo);
       listas[k].push(nuevo);
       return { tocados: [k], valor: nuevo };
