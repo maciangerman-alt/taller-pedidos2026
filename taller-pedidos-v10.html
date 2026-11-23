@@ -1639,6 +1639,10 @@
           </div>
         </div>
         <div class="form-group" style="margin-top:10px">
+          <label class="form-label">Domicilio del cliente <span style="font-weight:400;color:var(--texto-secundario)">(sale en la factura; se completa al elegir la escuela de la lista)</span></label>
+          <input class="form-input" id="f-domicilio" placeholder="Calle y número, localidad" maxlength="200">
+        </div>
+        <div class="form-group" style="margin-top:10px">
           <label class="form-label">Condición IVA del cliente <span style="font-weight:400;color:var(--texto-secundario)">(obligatoria para ARCA)</span></label>
           <select class="form-select" id="f-cond-iva">
             <option value="">Consumidor Final (si no tiene CUIT)</option>
@@ -3002,7 +3006,7 @@ window.abrirEditar=function(id){
   document.getElementById('f-turno').value=p.turno||'';
   document.getElementById('f-tel').value=p.tel||'';
   cargarItemsDePedido(p);
-  _domCliente=p.domicilioReceptor||'';
+  setDom(p.domicilioReceptor||'');
   document.getElementById('f-fecha-pedido').value=p.fechaPedido||'';
   document.getElementById('f-fecha-entrega').value=p.fechaEntrega||'';
   document.getElementById('f-obs').value=p.obs||'';
@@ -3050,7 +3054,7 @@ let _snapFact=null; // datos fiscales al abrir el modal (PED-8)
 function resetForm(){
   limpiarBuscadoresForm(); _snapFact=null;
   ['f-nombre','f-escuela','f-tel','f-productos','f-obs','f-total','f-senia','f-provincia','f-cuit','f-razon','f-cond-iva'].forEach(id=>document.getElementById(id).value='');
-  _items=[]; _itemsBloqueados=false; renderItems(); _domCliente='';
+  _items=[]; _itemsBloqueados=false; renderItems(); setDom('');
   if(typeof pintarDocumentos==='function'){ pintarDocumentos(null); pintarNotasCredito(null); }
   mostrarMsgArca('');
   document.getElementById('f-turno').value='';
@@ -3159,7 +3163,7 @@ async function guardarCamposFacturacion(){
     nombre:document.getElementById('f-nombre').value.trim(),
     tel:document.getElementById('f-tel').value,
     ...datosItemsParaGuardar(true),
-    domicilioReceptor:_domCliente||'',
+    domicilioReceptor:domReceptor(),
     total,
     cuit:document.getElementById('f-cuit').value.trim(),
     razon:document.getElementById('f-razon').value.trim(),
@@ -3239,10 +3243,11 @@ window.facturarConArca = async function(){
 
 window.regenerarPdfFactura = async function(btn){
   const p=pedidoEnEdicion(); if(!p||!p.cae){ toast('Este pedido no tiene factura emitida'); return; }
+  if(Number(p.facturaDocTipo)===80 && !domReceptor()){ toast('Escribí el domicilio del cliente (en Facturación) antes de rearmar'); document.getElementById('f-domicilio').focus(); return; }
   const txt=btn.textContent; btn.disabled=true; btn.textContent='Rearmando el PDF...';
   try{
     // guarda el domicilio/aclaraciones actuales; los datos fiscales (CAE, número, importe, CUIT) no cambian
-    await db.collection('pedidos').doc(editandoId).update({ domicilioReceptor:_domCliente||p.domicilioReceptor||'', updatedAt:new Date().toISOString() });
+    await db.collection('pedidos').doc(editandoId).update({ domicilioReceptor:domReceptor(), updatedAt:new Date().toISOString() });
     const r=(await Maestros.llamarFacturador('facturarPedido',{pedidoId:editandoId, regenerarPdf:true},{timeout:TIMEOUT_FACTURAR})).data;
     toast('✅ PDF rearmado: es la misma factura y el mismo link');
     if(r.facturaPdfUrl) document.getElementById('btn-ver-factura-pdf').href=urlSegura(r.facturaPdfUrl);
@@ -3325,7 +3330,7 @@ async function _guardarPedido(opts){
   else if(pedidoActual?.evento==='madre2026' && madreOn) eventoFinal = 'madre2026';
   // Eventos sin interruptor en este formulario (ej. Fin de Año): no se pierden al guardar
   else if(pedidoActual?.evento && !['jardin2026','padre2026','estudiante2026','madre2026'].includes(pedidoActual.evento)) eventoFinal = pedidoActual.evento;
-  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,...datosItemsParaGuardar(!!editandoId),domicilioReceptor:_domCliente||'',fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
+  const data={nombre,escuela,turno:document.getElementById('f-turno').value,tel:document.getElementById('f-tel').value,...datosItemsParaGuardar(!!editandoId),domicilioReceptor:domReceptor(),fechaPedido,fechaEntrega,obs:document.getElementById('f-obs').value,total:_total,senia:_senia,pago:document.getElementById('f-pago').value,factura:facturaOn,facturaEmitida:facturaEmitidaOn,cuit:document.getElementById('f-cuit').value,razon:document.getElementById('f-razon').value,condicionIVAReceptor:Number(document.getElementById('f-cond-iva').value)||null,estado,logistica,provincia:document.getElementById('f-provincia').value,evento:eventoFinal,updatedAt:new Date().toISOString()};
   // Una factura electrónica emitida (con CAE) no se puede "desmarcar" desde el formulario
   if(pedidoActual && pedidoActual.cae){ data.factura=true; data.facturaEmitida=true; }
   conservarFiscalesDelServidor(data, pedidoActual);
@@ -3367,7 +3372,9 @@ function conservarFiscalesDelServidor(data, actual){
 // Usan maestros.js: la base de clientes y productos (importada de ADM Global)
 // (la base de 2.121 escuelas de Tucumán queda solo para la Ruta del día).
 let _clientesBase=[], _productosBase=[];
-let _domCliente=''; // domicilio de la escuela elegida de la base (para la factura)
+// Domicilio del receptor (factura): campo visible y editable; se llena al elegir la escuela de la base
+function domReceptor(){ const el=document.getElementById('f-domicilio'); return el?el.value.trim().slice(0,200):''; }
+function setDom(v){ const el=document.getElementById('f-domicilio'); if(el) el.value=v||''; }
 async function cargarBasesBuscadores(){
   if(typeof Maestros==='undefined') return;
   try{ _clientesBase = await Maestros.cargar('clientes'); }catch(e){ console.warn('clientes',e); }
@@ -3396,7 +3403,7 @@ function avisoCuitOculto(){
 }
 window.buscarEscuela=function(){
   if(_autoFact && document.getElementById('f-escuela').value!==_autoFact.escuela && document.getElementById('f-cuit').value===_autoFact.cuit){
-    ponerFacturacion('','',null); _autoFact=null; _domCliente='';
+    ponerFacturacion('','',null); _autoFact=null; setDom('');
   }
   const q=document.getElementById('f-escuela').value.trim();
   const list=document.getElementById('escuela-list');
@@ -3409,7 +3416,7 @@ window.buscarEscuela=function(){
 };
 window.elegirCliente=function(id){
   const c=_clientesBase.find(x=>x.id===id); if(!c) return;
-  _domCliente=[c.dom,c.loc].filter(x=>x&&String(x).trim()).join(', ').slice(0,200); // va a la factura (domicilio del receptor)
+  setDom([c.dom,c.loc].filter(x=>x&&String(x).trim()).join(', ').slice(0,200)); // va a la factura (domicilio del receptor)
   document.getElementById('f-escuela').value=c.fantasia||c.nombre;
   // Siempre se reemplazan (vacíos si este cliente no tiene CUIT)
   ponerFacturacion(c.cuit||'', c.cuit?(c.nombre||''):'', c.cuit?c.iva:null);
@@ -3653,7 +3660,7 @@ async function guardarParaDocumento(){
     escuela:document.getElementById('f-escuela').value.trim(),
     tel:document.getElementById('f-tel').value,
     ...datosItemsParaGuardar(true),
-    domicilioReceptor:_domCliente||'',
+    domicilioReceptor:domReceptor(),
     total:Number(document.getElementById('f-total').value)||0,
     cuit:document.getElementById('f-cuit').value.trim(),
     razon:document.getElementById('f-razon').value.trim(),
