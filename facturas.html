@@ -41,6 +41,7 @@
   .vacio{text-align:center;color:var(--gris);padding:40px 10px;background:#fff;border-radius:14px;border:1px dashed var(--borde);line-height:1.5}
   .totales{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:12px}
   .tot{background:#fff;border:1px solid var(--borde);border-radius:12px;padding:10px 12px}
+  .medidor{grid-column:1/-1}.med-barra{height:12px;border-radius:99px;background:var(--crema-dark);overflow:hidden;margin:8px 0 6px}.med-barra i{display:block;height:100%;border-radius:99px;transition:width .5s}
   .tot .v{font-size:18px;font-weight:700;color:var(--madera-dark)}.tot .l{font-size:11px;color:var(--gris)}
   .barra-emitir{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--borde);padding:10px 14px;display:none;z-index:40;box-shadow:0 -6px 20px rgba(0,0,0,.06)}
   .barra-emitir .in{max-width:960px;margin:0 auto;display:flex;gap:10px;align-items:center}
@@ -99,7 +100,7 @@
     </div>
     <div id="v-emit" style="display:none">
       <div class="totales" id="totales"></div>
-      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select><span style="flex:1"></span><button class="fbtn" id="btn-sin-enviar" onclick="toggleSinEnviar()"></button></div>
+      <div class="filtros"><select class="selmes" id="mes" onchange="pintarEmitidas()"></select><button class="fbtn" onclick="exportarMes()" title="Baja un archivo que abre en Excel, para la contadora o como respaldo">📥 Excel del mes</button><span style="flex:1"></span><button class="fbtn" id="btn-sin-enviar" onclick="toggleSinEnviar()"></button></div>
       <div class="lista" id="l-emit"></div>
     </div>
   </div>
@@ -121,6 +122,11 @@
 </div></div>
 
 <div class="toast" id="toast"></div>
+<div id="conf-envio" style="display:none;position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:300;background:#fff;border:2px solid var(--verde);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.18);padding:12px 14px;gap:10px;align-items:center;flex-wrap:wrap;max-width:92vw">
+  <span id="conf-envio-txt" style="font-weight:700"></span>
+  <button class="btn prim" id="conf-envio-si" style="background:var(--verde)">✓ Sí, se mandó</button>
+  <button class="btn" id="conf-envio-no">No</button>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -152,6 +158,10 @@ const urlSegura = (u) => { const t = String(u || '').trim(); return /^https?:\/\
 // Llamada a la Function con margen: ARCA puede tardar (el navegador cortaba a los 70 s)
 const TIMEOUT_FACTURAR = 310000;
 const facturarPedido = (datos) => M.llamarFacturador('facturarPedido', datos, { timeout: TIMEOUT_FACTURAR });
+function esDemora(e) {
+  const code = String((e && e.code) || ''), msg = String((e && e.message) || '');
+  return /deadline-exceeded|aborted/.test(code) || /deadline|timeout|tiempo|esperando la respuesta de ARCA/i.test(msg);
+}
 function mensajeError(e) {
   const code = String((e && e.code) || '');
   if (/deadline-exceeded/.test(code) || /deadline|timeout|tiempo/i.test(String((e && e.message) || '')))
@@ -205,6 +215,7 @@ firebase.auth().onAuthStateChanged((u) => {
   $('login').style.display = u ? 'none' : 'block';
   $('app').style.display = u ? 'block' : 'none';
   if (!u) { $('barra').style.display = 'none'; return; }
+  db.collection('pedidos').doc('_config_metas').get().then((s) => { categoriaMono = (s.exists && s.data().categoriaMonotributo) || ''; pintarEmitidas(); }).catch(() => {});
   db.collection('pedidos').doc('_config_facturacion').get().then((s) => {
     ambienteConfig = s.exists ? s.data().ambiente : '';
     $('sub-amb').textContent = ambienteConfig === 'produccion' ? 'ARCA · producción' : ambienteConfig ? '🧪 ARCA · modo PRUEBA (homologación)' : '⚠️ Falta configurar la facturación';
@@ -270,11 +281,22 @@ window.toggleSinEnviar = () => { soloSinEnviar = !soloSinEnviar; pintarEmitidas(
 async function marcarEnviada(id) {
   try { await db.collection('pedidos').doc(id).update({ facturaEnviadaAt: new Date().toISOString() }); } catch (e) { console.warn(e); }
 }
+// Al tocar "Enviar" se abre WhatsApp; recién cuando volvés se confirma si se mandó (antes se marcaba al tocar, aunque no se mandara)
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a.js-enviar'); if (!a) return;
-  marcarEnviada(a.dataset.id);
-  a.textContent = '✓ Enviada'; a.classList.add('enviada');
+  const p = pedidos.find((x) => x.id === a.dataset.id) || {};
+  preguntarEnvio(a.dataset.id, cliente(p), a);
 });
+function preguntarEnvio(id, quien, link) {
+  const bar = $('conf-envio');
+  $('conf-envio-txt').textContent = `¿Se mandó la factura a ${quien}?`;
+  bar.style.display = 'flex';
+  $('conf-envio-si').onclick = () => {
+    bar.style.display = 'none'; marcarEnviada(id);
+    document.querySelectorAll(`a.js-enviar[data-id="${CSS.escape(id)}"]`).forEach((x) => { x.textContent = '✓ Enviada'; x.classList.add('enviada'); });
+  };
+  $('conf-envio-no').onclick = () => { bar.style.display = 'none'; };
+}
 window.ingresar = async () => {
   $('l-err').textContent = '';
   try { await firebase.auth().signInWithEmailAndPassword($('l-mail').value.trim(), $('l-pass').value); }
@@ -340,7 +362,7 @@ function pintarPendientes() {
       <div class="ppal">
         <div class="n">${esc(cliente(p))}</div>
         <div class="d">${p.razon && p.escuela ? esc(p.escuela) + ' · ' : ''}${esc(p.nombre || '')}${p.fechaPedido ? ' · pedido ' + esc(fechaCorta(p.fechaPedido)) : ''}</div>
-        <div><span class="chip">${esc(ESTADO[p.estado] || p.estado || '')}</span>${cuit ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.cuit))}</span>` : '<span class="chip">Consumidor Final</span>'}${prob.map((x) => `<span class="chip mal">⚠️ ${esc(x)}</span>`).join('')}${!prob.length && faltaDomicilio(p) ? '<span class="chip mal" title="Abrí el pedido y elegí la escuela de la lista, o escribí el domicilio en Facturación">⚠️ falta domicilio</span>' : ''}${sosp ? `<span class="chip mal" title="${esc(sosp)}">🚩 Revisar: ${esc(sosp)}</span>` : ''}${p.origen === 'catalogo-web' ? '<span class="chip">🌐 catálogo web</span>' : ''}</div>
+        <div><span class="chip">${esc(ESTADO[p.estado] || p.estado || '')}</span>${cuit ? `<span class="chip az">CUIT ${esc(M.formatoCuit(p.cuit))}</span>` : '<span class="chip">Consumidor Final</span>'}${prob.map((x) => `<span class="chip mal">⚠️ ${esc(x)}</span>`).join('')}${!prob.length && faltaDomicilio(p) ? '<span class="chip mal" title="Abrí el pedido y elegí la escuela de la lista, o escribí el domicilio en Facturación">⚠️ falta domicilio</span>' : ''}${!M.telWA(p.tel) ? `<span class="chip av" title="${p.tel ? 'El teléfono cargado no es válido: ' + esc(p.tel) : 'No tiene teléfono'}: al enviar vas a tener que elegir el contacto en WhatsApp">📵 ${p.tel ? 'teléfono raro' : 'sin teléfono'}</span>` : ''}${sosp ? `<span class="chip mal" title="${esc(sosp)}">🚩 Revisar: ${esc(sosp)}</span>` : ''}${p.origen === 'catalogo-web' ? '<span class="chip">🌐 catálogo web</span>' : ''}</div>
         <select class="ivasel js-iva ${cuit && !p.condicionIVAReceptor ? 'falta' : ''}" data-id="${esc(p.id)}">
           <option value="">${cuit ? 'Elegí condición IVA del cliente…' : 'Consumidor Final (sin CUIT)'}</option>${opciones}
         </select>
@@ -396,9 +418,9 @@ window.confirmarEmision = () => {
   if (incompletas.length) { incompletas.forEach((p) => seleccion.delete(p.id)); pintarPendientes(); toast(`${incompletas.length} con datos incompletos quedaron afuera de la emisión`, 4000); return confirmarEmision(); }
   const total = sel.reduce((a, p) => a + (Number(p.total) || 0), 0);
   $('ov-tit').textContent = `¿Emitir ${sel.length} factura${sel.length === 1 ? '' : 's'} por $${fmt(total)}?`;
-  const sinDom = sel.filter(faltaDomicilio).length;
-  $('ov-sub').innerHTML = `Se informan a ARCA una por una. <b>No se pueden deshacer</b> (solo con nota de crédito).${ambienteConfig !== 'produccion' ? '<br>🧪 Estás en modo PRUEBA: no tienen validez fiscal.' : ''}${sinDom ? `<br>⚠️ <b>${sinDom} sin domicilio</b>: van a salir sin domicilio del cliente. Conviene completarlo antes (abrí el pedido y elegí la escuela de la lista).` : ''}`;
-  $('ov-log').innerHTML = sel.map((p) => `<div>${esc(cliente(p))} · $${fmt(p.total)}${faltaDomicilio(p) ? ' · ⚠️ sin domicilio' : ''}</div>`).join('');
+  const sinDom = sel.filter(faltaDomicilio).length, sinTel = sel.filter((p) => !M.telWA(p.tel)).length;
+  $('ov-sub').innerHTML = `Se informan a ARCA una por una. <b>No se pueden deshacer</b> (solo con nota de crédito).${ambienteConfig !== 'produccion' ? '<br>🧪 Estás en modo PRUEBA: no tienen validez fiscal.' : ''}${sinDom ? `<br>⚠️ <b>${sinDom} sin domicilio</b>: van a salir sin domicilio del cliente. Conviene completarlo antes (abrí el pedido y elegí la escuela de la lista).` : ''}${sinTel ? `<br>📵 <b>${sinTel} sin teléfono válido</b>: al enviarlas vas a tener que elegir el contacto en WhatsApp.` : ''}`;
+  $('ov-log').innerHTML = sel.map((p) => `<div>${esc(cliente(p))} · $${fmt(p.total)}${faltaDomicilio(p) ? ' · ⚠️ sin domicilio' : ''}${!M.telWA(p.tel) ? ' · 📵 sin teléfono' : ''}</div>`).join('');
   $('ov-ok').style.display = ''; $('ov-ok').disabled = false; $('ov-ok').textContent = 'Emitir'; $('ov-cancel').textContent = 'Cancelar';
   // Se congela el total que se mostró: la Function no emite si en el servidor es otro (totalEsperado)
   const totales = {}; sel.forEach((p) => { totales[p.id] = Number(p.total) || 0; });
@@ -408,8 +430,14 @@ window.confirmarEmision = () => {
 async function emitirTanda(ids, totales) {
   emitiendo = true; $('ov-ok').disabled = true; $('ov-cancel').disabled = true; actualizarBarra();
   const log = $('ov-log'); log.innerHTML = '';
-  let ok = 0, mal = 0;
+  let ok = 0, mal = 0, pausa = false;
+  const reintentar = []; // las que conviene volver a intentar (demora de ARCA) + las que no llegaron a salir
   for (const id of ids) {
+    if (pausa) {
+      const p = pedidos.find((x) => x.id === id) || { id };
+      const fila = document.createElement('div'); fila.textContent = `⏸ ${cliente(p)} · $${fmt(p.total)} · no se intentó (tanda pausada)`; log.appendChild(fila);
+      reintentar.push(id); continue;
+    }
     const p = pedidos.find((x) => x.id === id) || { id };
     const fila = document.createElement('div'); fila.textContent = `⏳ ${cliente(p)} · $${fmt(p.total)}...`; log.appendChild(fila);
     try {
@@ -424,11 +452,18 @@ async function emitirTanda(ids, totales) {
       ok++; seleccion.delete(id);
     } catch (e) {
       fila.className = 'mal'; fila.textContent = `❌ ${cliente(p)}: ${mensajeError(e)}`; mal++;
+      // Demora de ARCA u otra factura todavía esperando respuesta: seguir solo genera más errores. Se pausa.
+      if (esDemora(e)) { pausa = true; reintentar.push(id); }
     }
   }
   emitiendo = false; $('ov-cancel').disabled = false; $('ov-cancel').textContent = 'Cerrar'; $('ov-ok').style.display = 'none';
-  $('ov-tit').textContent = mal ? `Listo: ${ok} emitida${ok === 1 ? '' : 's'}, ${mal} con error` : `✅ ${ok} factura${ok === 1 ? '' : 's'} emitida${ok === 1 ? '' : 's'}`;
-  $('ov-sub').textContent = (mal ? 'Las que dieron error siguen en Pendientes: revisá el mensaje, corregí y volvé a intentar. Si el error fue por demora de ARCA, esperá unos minutos antes de reintentar. ' : '') + 'Mandalas con "📤 Enviar": se abre WhatsApp en una sola pestaña, mandás, volvés y tocás la próxima. Las que te queden quedan en Emitidas → "Sin enviar".';
+  $('ov-tit').textContent = pausa ? `⏸ Tanda pausada: ${ok} emitida${ok === 1 ? '' : 's'}, ${reintentar.length} para reintentar` : mal ? `Listo: ${ok} emitida${ok === 1 ? '' : 's'}, ${mal} con error` : `✅ ${ok} factura${ok === 1 ? '' : 's'} emitida${ok === 1 ? '' : 's'}`;
+  if (pausa) {
+    // ARCA tardó: puede que la última SÍ se haya emitido. Al reintentar, el servidor primero lo verifica en ARCA (no duplica).
+    $('ov-ok').style.display = ''; $('ov-ok').disabled = false; $('ov-ok').textContent = `🔄 Reintentar ${reintentar.length}`;
+    $('ov-ok').onclick = () => emitirTanda(reintentar, totales);
+  }
+  $('ov-sub').textContent = (pausa ? 'ARCA tardó en responder y se frenó la tanda para no amontonar errores. Esperá 2 o 3 minutos y tocá "Reintentar": antes de emitir, el sistema verifica en ARCA si la que se cortó ya salió (no se duplica). ' : '') + (mal ? 'Las que dieron error siguen en Pendientes: revisá el mensaje, corregí y volvé a intentar. Si el error fue por demora de ARCA, esperá unos minutos antes de reintentar. ' : '') + 'Mandalas con "📤 Enviar": se abre WhatsApp en una sola pestaña, mandás, volvés y tocás la próxima. Las que te queden quedan en Emitidas → "Sin enviar".';
   pintarPendientes();
 }
 
@@ -459,6 +494,33 @@ function waLinkNC(p, n) {
   const msg = `¡Hola${p.nombre ? ' ' + String(p.nombre).trim().split(/\s+/)[0] : ''}! 😊\nTe enviamos la nota de crédito ${nro} por $${fmt(n.importe)} de *Taller Artesanal*, correspondiente a la factura ${n.facturaLetra || ''} ${n.facturaNro || ''}.\n📄 ${url}`;
   return `https://api.whatsapp.com/send?${telWA(p.tel) ? 'phone=' + telWA(p.tel) + '&' : ''}text=${encodeURIComponent(msg)}`;
 }
+// ------------------------------------------------------------- medidor del monotributo
+// Escala de ingresos brutos anuales vigente del 1/8/2026 al 31/1/2027 (ARCA la actualiza en febrero y agosto).
+const ESCALA = { desde: '2026-08-01', hasta: '2027-01-31', topes: { A: 12009410.45, B: 17595182.74, C: 24670494.31, D: 30628651.43, E: 36028231.33, F: 45151659.41, G: 53995798.87, H: 81924660.37, I: 91699761.90, J: 105012519.20, K: 126610838.75 } };
+let categoriaMono = '';
+function proximaRecategorizacion() { const m = new Date().getMonth() + 1; return m >= 2 && m <= 7 ? 'julio' : 'enero'; }
+function medidorMonotributo(arca, adm) {
+  const total = arca + adm, cats = Object.keys(ESCALA.topes);
+  const sel = `<select class="selmes" id="sel-cat" onchange="guardarCategoria(this.value)" style="padding:4px 8px;font-size:13px"><option value="">Elegí tu categoría</option>${cats.map((c) => `<option value="${c}" ${c === categoriaMono ? 'selected' : ''}>Categoría ${c} · hasta $${fmt(Math.round(ESCALA.topes[c]))}</option>`).join('')}</select>`;
+  const detalle = `Facturado acá $${fmt(arca)} (exacto)${adm ? ` + marcados como facturados en ADM $${fmt(adm)} (estimado: usa el total de cada pedido)` : ''}. El tope cuenta <b>todos</b> los ingresos, también lo que no se facturó acá: para recategorizar usá Mis Comprobantes de ARCA. Próxima recategorización: ${proximaRecategorizacion()}.${new Date().toISOString().slice(0, 10) > ESCALA.hasta ? ' ⚠️ La escala cargada es la de agosto 2026: ya hay una nueva, pedí que la actualicen.' : ''}`;
+  const tope = ESCALA.topes[categoriaMono];
+  if (!tope) return `<div class="tot medidor"><div class="v">$${fmt(total)} <span class="l">en los últimos 12 meses</span></div><div class="l" style="margin:6px 0">${sel} para ver cuánto te queda hasta el tope.</div><div class="l">${detalle}</div></div>`;
+  const pct = total / tope * 100;
+  const siguiente = cats.find((c) => ESCALA.topes[c] >= total);
+  const color = pct >= 100 ? 'var(--rojo)' : pct >= 80 ? 'var(--amarillo)' : 'var(--verde)';
+  const aviso = pct >= 100
+    ? (siguiente ? `⚠️ Pasaste el tope de la categoría ${categoriaMono}: en la próxima recategorización te corresponde la ${siguiente}.` : '⛔ Pasaste el tope máximo del monotributo (categoría K): hablalo ya con la contadora.')
+    : pct >= 80 ? `⚠️ Llevás el ${Math.floor(pct)}% del tope de la categoría ${categoriaMono}: te quedan $${fmt(Math.round(tope - total))}.` : `Te quedan $${fmt(Math.round(tope - total))} hasta el tope de la categoría ${categoriaMono}.`;
+  return `<div class="tot medidor"><div class="v">$${fmt(total)} <span class="l">de $${fmt(Math.round(tope))} · ${Math.floor(pct)}%</span></div>
+    <div class="med-barra"><i style="width:${Math.min(100, pct).toFixed(1)}%;background:${color}"></i></div>
+    <div class="l" style="color:${pct >= 80 ? color : 'inherit'};font-weight:${pct >= 80 ? 700 : 400}">${aviso}</div>
+    <div class="l" style="margin:6px 0">${sel}</div><div class="l">${detalle}</div></div>`;
+}
+window.guardarCategoria = async (c) => {
+  categoriaMono = c; pintarEmitidas();
+  try { await db.collection('pedidos').doc('_config_metas').set({ esConfig: true, categoriaMonotributo: c, updatedAt: new Date().toISOString() }, { merge: true }); toast('✅ Categoría guardada'); }
+  catch (e) { console.warn(e); toast('❌ No se pudo guardar la categoría'); }
+};
 window.pintarEmitidas = () => {
   const todas = comprobantesEmitidos();
   const reales = todas.filter((f) => !f.prueba && f.tipo !== 'ADM');
@@ -475,7 +537,7 @@ window.pintarEmitidas = () => {
   const ncMes = delMes.filter((f) => f.tipo === 'NC').length;
   $('totales').innerHTML =
     `<div class="tot"><div class="v">$${fmt(suma(delMes) + suma(admMes))}</div><div class="l">Facturado este mes (${delMes.filter((f) => f.tipo === 'F').length + admMes.length})${detalle(suma(delMes), suma(admMes))}${ncMes ? ` · ya descuenta ${ncMes} nota(s) de crédito` : ''}</div></div>` +
-    `<div class="tot"><div class="v">$${fmt(suma(ult12) + suma(adm12))}</div><div class="l">Últimos 12 meses${detalle(suma(ult12), suma(adm12))} · el tope del monotributo se mide sobre TODOS los ingresos, no solo lo facturado acá</div></div>` +
+    medidorMonotributo(suma(ult12), suma(adm12)) +
     (pruebas ? `<div class="tot"><div class="v">${pruebas}</div><div class="l">🧪 de prueba (no suman)</div></div>` : '');
   const m = $('mes').value;
   const sinEnviar = todas.filter((f) => f.tipo === 'F' && !f.anulada && !f.prueba && f.p.facturaPdfUrl && !f.p.facturaEnviadaAt);
@@ -509,6 +571,34 @@ window.pintarEmitidas = () => {
           : (f.anulada ? '' : `<button class="mini gen js-gen" data-id="${esc(p.id)}">📄 Generar PDF</button>`)}</div>
       </div><div class="der"><div class="monto">$${fmt(f.importe)}</div></div></div>`;
   }).join('');
+};
+// ------------------------------------------------------------- exportar (para la contadora / respaldo)
+// CSV con ";" y coma decimal: Excel en castellano lo abre directo, con acentos (BOM UTF-8).
+window.exportarMes = () => {
+  const m = $('mes').value;
+  const filas = comprobantesEmitidos().filter((f) => f.tipo !== 'ADM' && !f.prueba && (m === 'todas' || mesDeFila(f) === m))
+    .sort((a, b) => String(a.fecha || '').localeCompare(String(b.fecha || '')));
+  if (!filas.length) { toast('No hay comprobantes reales en ese período'); return; }
+  const num = (n) => (Number(n) || 0).toFixed(2).replace('.', ',');
+  const cel = (v) => { const t = String(v == null ? '' : v); return /[";\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+  const nro = (pv, n) => `${String(pv || 0).padStart(5, '0')}-${String(n || 0).padStart(8, '0')}`;
+  const cab = ['Fecha', 'Comprobante', 'Número', 'CAE', 'Escuela', 'Razón social', 'CUIT/DNI', 'Condición IVA', 'Importe', 'Estado', 'Link del PDF'];
+  const lineas = filas.map((f) => {
+    const p = f.p, d = f.d, nc = f.tipo === 'NC';
+    const docNro = nc ? d.docNro : d.facturaDocNro;
+    const docTxt = docNro && String(docNro).length === 11 ? M.formatoCuit(String(docNro)) : (docNro && Number(docNro) > 0 ? String(docNro) : 'Consumidor Final');
+    const cond = M.COND_IVA_CORTO[nc ? d.condicionIVAReceptorId : d.facturaCondicionIVAReceptor] || '';
+    return [fechaCorta(f.fecha), `${nc ? 'Nota de crédito' : 'Factura'} ${(nc ? d.letra : d.tipoComprobanteLetra) || 'C'}`, nc ? nro(d.puntoVenta, d.numero) : nro(d.puntoVenta, d.nroComprobante),
+      d.cae || '', p.escuela || '', (nc ? '' : d.facturaRazon) || p.razon || p.nombre || '', docTxt, cond, num(f.importe),
+      nc ? `de la factura ${d.facturaNro || ''}` : f.anulada ? `Anulada por NC ${d.anuladaPorNC || ''}` : '', String((nc ? d.pdfUrl : d.facturaPdfUrl) || '').replace(/&s=.*$/, '')].map(cel).join(';');
+  });
+  const total = filas.reduce((a, f) => a + f.importe, 0);
+  const csv = '\ufeff' + [cab.join(';'), ...lineas, '', ['', '', '', '', '', '', '', 'TOTAL', num(total)].join(';')].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = `Facturas Taller Artesanal - ${m === 'todas' ? 'todas' : m}.csv`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(`📥 ${filas.length} comprobante${filas.length === 1 ? '' : 's'} · total $${fmt(total)}`);
 };
 window.generarPdf = async (id, b) => {
   b.disabled = true; b.textContent = 'Generando...';
