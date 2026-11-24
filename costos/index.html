@@ -154,13 +154,23 @@ html.grande button,html.grande input,html.grande select,html.grande textarea{fon
     <div id="lg-err" class="muted"></div>
   </div>
 </div>
+<div id="demo-in" class="card" hidden>
+  <h2>Costos y Producción · demostración</h2>
+  <p class="muted">Herramienta de costeo y decisión del Taller JD. Ingresá el código de acceso que te enviaron. Vas a poder usar todas las funciones con los datos reales del taller; los cambios que hagas no se guardan.</p>
+  <div style="display:grid;gap:8px">
+    <input id="demo-cod" type="password" autocomplete="off" placeholder="Código de acceso" onkeydown="if(event.key==='Enter')document.getElementById('demo-btn').click()">
+    <button class="b" id="demo-btn">Entrar a la demo</button>
+    <div id="demo-err" class="muted"></div>
+  </div>
+</div>
 
 <div id="app" hidden>
 <header>
-  <div class="top"><h1><a href="../inicio.html" title="Volver al inicio" style="text-decoration:none;margin-right:10px;font-size:13px;font-weight:700;padding:6px 10px;border-radius:10px;border:1px solid currentColor;opacity:.85;vertical-align:middle">🏠 Inicio</a><span class="logo" aria-hidden="true">$</span>Costos y Producción</h1><div class="who"><button id="letra" title="Agrandar o achicar la letra">A+</button> <span id="who" class="mail"></span><a href="#" id="salir">Salir</a></div></div>
+  <div class="top"><h1><a id="ir-inicio" href="../inicio.html" title="Volver al inicio" style="text-decoration:none;margin-right:10px;font-size:13px;font-weight:700;padding:6px 10px;border-radius:10px;border:1px solid currentColor;opacity:.85;vertical-align:middle">🏠 Inicio</a><span class="logo" aria-hidden="true">$</span>Costos y Producción</h1><div class="who"><button id="letra" title="Agrandar o achicar la letra">A+</button> <span id="who" class="mail"></span><a href="#" id="salir">Salir</a></div></div>
   <nav id="nav"></nav>
 </header>
 <main>
+  <div id="demo-franja" class="alert" hidden></div>
   <div id="avisos-banner"></div>
 
   <!-- TABLERO -->
@@ -314,6 +324,12 @@ html.grande button,html.grande input,html.grande select,html.grande textarea{fon
       <label style="display:block;margin-top:8px">Correos con acceso completo (separados por coma; el resto del personal ve sólo Corte) <input id="cfg-admins" style="width:100%"></label>
       <div class="row" style="margin-top:8px"><button class="s" id="cfg-guardar">Guardar</button><span class="muted">La clave de la IA no se carga acá: vive en el servidor.</span></div>
     </div>
+    <div class="card" id="demo-card">
+      <h2>Demo para invitados</h2>
+      <p class="muted">Un invitado (por ejemplo, el tutor) entra con este link y el código de acceso, y usa la herramienta completa con una foto de los datos actuales, sin nombres ni teléfonos de clientes. Lo que cambie no se guarda. El código y el límite diario de consultas al asesor se configuran en el servidor de la IA.</p>
+      <div class="row" style="margin-top:8px"><input id="demo-link" readonly style="flex:1;min-width:260px"><button class="s" id="demo-copiar">Copiar link</button></div>
+      <div class="row" style="margin-top:8px"><button class="s" id="demo-subir">Actualizar los datos de la demo ahora</button><span class="muted" id="demo-estado">Se actualizan solos cada vez que entrás (como mucho, una vez cada 6 horas).</span></div>
+    </div>
   </section>
 </main>
 </div>
@@ -334,7 +350,117 @@ firebase.initializeApp({
   messagingSenderId: "783225891542",
   appId: "1:783225891542:web:82490ed46b64b186d0f777"
 });
-const db=firebase.firestore(), auth=firebase.auth();
+const auth=firebase.auth();
+let db=firebase.firestore();
+
+// ---------- modo demo ----------
+// costos/?demo=<cuenta> → acceso con código para invitados. La página usa una copia en memoria de los datos
+// (la foto que sube el administrador) con la misma interfaz que Firestore: todo funciona, nada se guarda.
+const QS=new URLSearchParams(location.search), DEMO=QS.has('demo');
+let codigoDemo='', demoRestantes=0, demoLimite=10;
+const FV=DEMO?{arrayUnion:(...a)=>({__union:a})}:firebase.firestore.FieldValue;
+function workerDeParam(v){
+  v=String(v||'').trim().toLowerCase(); if(!v) return '';
+  const host=v.includes('.')?v.replace(/^https?:\/\//,'').replace(/\/.*$/,''):'consulta-taller.'+v+'.workers.dev';
+  return /(^|\.)workers\.dev$|(^|\.)tallerartesanal\.com\.ar$/.test(host)?'https://'+host:'';
+}
+function paramDeWorker(url){
+  try{ const h=new URL(url).host, m=h.match(/^consulta-taller\.([^.]+)\.workers\.dev$/); return m?m[1]:h; }catch(e){ return ''; }
+}
+function crearDbDemo(datos){
+  const subs=[]; let nid=0;
+  const clon=x=>x===undefined?undefined:JSON.parse(JSON.stringify(x));
+  const col=n=>datos[n]||(datos[n]={});
+  const aplicar=(viejo,nuevo)=>{ const r=Object.assign({},viejo||{}); Object.entries(nuevo||{}).forEach(([k,v])=>{ r[k]=v&&v.__union?[...(Array.isArray(r[k])?r[k]:[]),...clon(v.__union)]:clon(v); }); return r; };
+  const avisar=n=>setTimeout(()=>subs.filter(s=>s.n===n).forEach(s=>s.emit()),0);
+  const snapDoc=(n,id)=>{ const d=col(n)[id]; return {id,exists:d!==undefined,data:()=>clon(d)}; };
+  function docRef(n,id){ return {id,
+    get:async()=>snapDoc(n,id),
+    set:async(data,opt)=>{ col(n)[id]=aplicar(opt&&opt.merge?col(n)[id]:{},data); avisar(n); },
+    update:async data=>{ if(col(n)[id]===undefined) throw new Error('no existe'); col(n)[id]=aplicar(col(n)[id],data); avisar(n); },
+    delete:async()=>{ delete col(n)[id]; avisar(n); },
+    onSnapshot:(cb)=>{ const s={n,emit:()=>cb(snapDoc(n,id))}; subs.push(s); setTimeout(s.emit,0); return ()=>subs.splice(subs.indexOf(s),1); } }; }
+  function consulta(n,orden,lim){
+    const snap=()=>{ let l=Object.keys(col(n)).map(id=>snapDoc(n,id));
+      orden.forEach(([f])=>{ l=l.filter(d=>d.data()[f]!==undefined); });
+      if(orden.length) l.sort((a,b)=>{ for(const [f,dir] of orden){ const x=a.data()[f], y=b.data()[f]; if(x<y) return dir==='desc'?1:-1; if(x>y) return dir==='desc'?-1:1; } return 0; });
+      if(lim) l=l.slice(0,lim);
+      return {docs:l,size:l.length,empty:!l.length,forEach:fn=>l.forEach(fn)}; };
+    return { orderBy:(f,dir)=>consulta(n,[...orden,[f,dir]],lim), limit:k=>consulta(n,orden,k),
+      get:async()=>snap(),
+      onSnapshot:(cb)=>{ const s={n,emit:()=>cb(snap())}; subs.push(s); setTimeout(s.emit,0); return ()=>subs.splice(subs.indexOf(s),1); },
+      doc:id=>docRef(n,id||('demo_'+Date.now()+'_'+(++nid))),
+      add:async data=>{ const r=docRef(n,'demo_'+Date.now()+'_'+(++nid)); await r.set(data); return r; } };
+  }
+  return { collection:n=>consulta(n,[],0),
+    batch:()=>{ const ops=[]; return { set:(r,d,o)=>ops.push(()=>r.set(d,o)), update:(r,d)=>ops.push(()=>r.update(d)), delete:r=>ops.push(()=>r.delete()), commit:async()=>{ for(const op of ops) await op(); } }; } };
+}
+function pintarFranjaDemo(){
+  $('demo-franja').innerHTML=`<b>Modo demostración.</b> Estás viendo la herramienta con los datos reales del taller (sin datos personales de clientes). Podés cambiar precios, simular y consultar al asesor: <b>nada se guarda</b> y al recargar vuelve todo a como estaba. Consultas al asesor que quedan hoy: <b>${demoRestantes} de ${demoLimite}</b>.`;
+}
+async function entrarDemo(codigo,auto){
+  const w=workerDeParam(QS.get('demo'));
+  if(!w){ $('demo-err').textContent='El link de la demo está incompleto. Pedile a quien te lo mandó que lo copie de nuevo.'; return; }
+  $('demo-err').textContent='Entrando…'; $('demo-btn').disabled=true;
+  try{
+    const r=await fetch(w+'/demo/entrar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({codigo})});
+    const res=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(res.error||('el servidor respondió '+r.status));
+    codigoDemo=codigo; demoRestantes=res.restantes; demoLimite=res.limite;
+    try{ sessionStorage.setItem('demoCodigo',codigo); }catch(e){}
+    db=crearDbDemo((res.foto&&res.foto.colecciones)||{});
+    config={admins:[],worker:w};
+    usuario={email:'invitado',getIdToken:async()=>''};
+    rol='admin';
+    $('demo-in').hidden=true; $('app').hidden=false; $('demo-franja').hidden=false; pintarFranjaDemo();
+    $('who').textContent='Invitado · demo'+(res.foto&&res.foto.fecha?' · datos del '+new Date(res.foto.fecha).toLocaleDateString('es-AR'):'');
+    $('ir-inicio').hidden=true; $('demo-card').hidden=true; $('cfg-guardar').closest('.card').hidden=true;
+    $('salir').textContent='Salir de la demo';
+    $('salir').onclick=e=>{ e.preventDefault(); try{ sessionStorage.removeItem('demoCodigo'); }catch(x){} location.reload(); };
+    armarNav(); escuchar();
+  }catch(e){
+    if(auto){ try{ sessionStorage.removeItem('demoCodigo'); }catch(x){} }
+    $('demo-err').textContent='No se pudo entrar: '+e.message; $('demo-btn').disabled=false;
+  }
+}
+
+// Foto de los datos para la demo: sólo la sube un administrador. De los pedidos se quedan los datos
+// del negocio (montos, fechas, estado, evento y productos); nombres, teléfonos, CUIT, domicilios y notas no salen.
+const CAMPOS_PEDIDO=['estado','total','senia','fechaPedido','fechaEntrega','evento'];
+function pedidoSinDatosPersonales(p){
+  if(p.esConfig) return {esConfig:true,valores:p.valores||{}};
+  const o={}; CAMPOS_PEDIDO.forEach(k=>{ if(p[k]!==undefined) o[k]=p[k]; });
+  Object.keys(p).forEach(k=>{ if(/^items[A-Z]/.test(k)&&p[k]&&typeof p[k]==='object') o[k]=p[k]; });
+  return o;
+}
+async function subirFotoDemo(manual){
+  if(DEMO||rol!=='admin'||!config.worker) return;
+  if(!manual){ const u=+(pref('demoFotoSubida')||0); if(Date.now()-u<6*3600e3) return; }
+  const est=t=>{ if($('demo-estado')) $('demo-estado').textContent=t; };
+  est('Actualizando los datos de la demo…');
+  try{
+    const leer=async q=>{ const s=await q.get(), o={}; s.forEach(d=>o[d.id]=d.data()); return o; };
+    const mod=await db.collection('costos_modelo').doc('vigente').get();
+    const ped=await leer(db.collection('pedidos')), pedidos={};
+    Object.entries(ped).forEach(([id,p])=>{ pedidos[id]=pedidoSinDatosPersonales(id==='_config_metas'?{...p,esConfig:true}:p); });
+    const colecciones={
+      costos_modelo: mod.exists?{vigente:{modelo:mod.data().modelo,fechas:mod.data().fechas||{}}}:{},
+      costos_importados: await leer(db.collection('costos_importados')),
+      costos_corte: await leer(db.collection('costos_corte')),
+      costos_memoria: await leer(db.collection('costos_memoria')),
+      costos_consultas: await leer(db.collection('costos_consultas').orderBy('fecha','desc').limit(200)),
+      costos_config: {general:{worker:'',admins:[]}},
+      pedidos
+    };
+    // Los correos del equipo tampoco viajan a la demo.
+    const texto=JSON.stringify({fecha:new Date().toISOString(),colecciones}).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g,'equipo del taller');
+    const token=await usuario.getIdToken();
+    const r=await fetch(config.worker.replace(/\/$/,'')+'/demo/foto',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:texto});
+    if(!r.ok){ let m=''; try{ m=(await r.json()).error||''; }catch(e){} throw new Error(m||('el servidor respondió '+r.status)); }
+    pref('demoFotoSubida',String(Date.now()));
+    est('Datos de la demo actualizados ('+new Date().toLocaleString('es-AR')+').'); if(manual) toast('Demo actualizada');
+  }catch(e){ console.warn('foto demo',e); est('No se pudo actualizar la demo: '+e.message); if(manual) toast('No se pudo actualizar la demo'); }
+}
 const $=id=>document.getElementById(id);
 const n0=v=>Math.round(v).toLocaleString('es-AR'), n2=v=>(+v).toLocaleString('es-AR',{maximumFractionDigits:2}), pct=v=>Math.round(v*100)+'%';
 const hoyISO=()=>new Date().toISOString().slice(0,10);
@@ -364,13 +490,15 @@ function diasDesde(f){ if(!f) return 999; return Math.floor((Date.now()-new Date
 // ---------- login ----------
 $('lg-btn').onclick=async()=>{ $('lg-err').textContent=''; try{ await auth.signInWithEmailAndPassword($('lg-mail').value.trim(),$('lg-pass').value); }catch(e){ $('lg-err').textContent='No se pudo entrar: revisá el correo y la contraseña.'; } };
 $('salir').onclick=e=>{e.preventDefault();auth.signOut();};
-auth.onAuthStateChanged(async u=>{
+if(!DEMO) auth.onAuthStateChanged(async u=>{
   usuario=u; $('login').hidden=!!u; $('app').hidden=!u; if(!u) return;
   $('who').textContent=u.email;
   try{ const c=await db.collection('costos_config').doc('general').get(); if(c.exists) config=Object.assign(config,c.data()); }catch(e){ console.warn(e); }
   rol=(config.admins||[]).map(x=>x.toLowerCase()).includes(u.email.toLowerCase()) || !(config.admins||[]).length ? 'admin':'personal';
   armarNav(); escuchar();
+  if(rol==='admin') setTimeout(()=>subirFotoDemo(false),8000);
 });
+$('demo-btn').onclick=()=>{ const c=$('demo-cod').value.trim(); if(c) entrarDemo(c,false); };
 
 const TABS=[['tablero','Tablero','admin'],['consultar','Asesor','admin'],['modelo','Modelo','admin'],['precios','Precios','admin'],['corte','Corte','todos'],['memoria','Memoria','admin'],['validacion','Validación','admin']];
 function armarNav(){
@@ -398,7 +526,7 @@ function escuchar(){
     db.collection('pedidos').onSnapshot(s=>{ pedidosPend=[]; pedidosAll=[]; s.forEach(d=>{ const p=d.data(); if(p.esConfig||d.id==='_config_metas'){ if(p.valores) metas=p.valores; return; } pedidosAll.push({id:d.id,...p}); if(['entregado','cobrado'].includes(p.estado)) return; pedidosPend.push({id:d.id,...p}); }); pintarPendientes(); if(!$('t-tablero').hidden) pintarTablero(); },e=>console.warn('pedidos',e));
     db.collection('costos_memoria').orderBy('fecha','desc').onSnapshot(s=>{ memoria=[]; s.forEach(d=>memoria.push({id:d.id,...d.data()})); pintarMemoria(); },e=>console.warn('memoria',e));
     db.collection('costos_consultas').orderBy('fecha','desc').limit(200).onSnapshot(s=>{ const v=[]; s.forEach(d=>v.push({id:d.id,...d.data()})); consultas=v; pintarValidacion(v); pintarAprendizajes(); if(!historial.length&&!ocupado) bienvenida(); },e=>console.warn('consultas',e));
-    $('cfg-worker').value=config.worker||''; $('cfg-admins').value=(config.admins||[]).join(', ');
+    $('cfg-worker').value=config.worker||''; $('cfg-admins').value=(config.admins||[]).join(', '); pintarLinkDemo();
   }
 }
 async function sembrarImportados(){
@@ -434,7 +562,7 @@ $('p-guardar').onclick=async()=>{
   $('p-params').querySelectorAll('input[data-k]').forEach(i=>{ const k=i.dataset.k, v=parseFloat(i.value); if(!isNaN(v) && v!==getVal(k)){ setVal(k,v); cambios.push(k);} });
   // marcar como revisados también los que se confirman sin cambio
   const f=Object.assign({},fechas); $('p-params').querySelectorAll('input[data-k]').forEach(i=>{ if(cambios.includes(i.dataset.k)) f[i.dataset.k]=hoyISO(); });
-  try{ await db.collection('costos_modelo').doc('vigente').set({modelo:M,fechas:f,actualizadoPor:usuario.email,actualizado:new Date().toISOString(),historial:firebase.firestore.FieldValue.arrayUnion({fecha:new Date().toISOString(),por:usuario.email,cambios})},{merge:true});
+  try{ await db.collection('costos_modelo').doc('vigente').set({modelo:M,fechas:f,actualizadoPor:usuario.email,actualizado:new Date().toISOString(),historial:FV.arrayUnion({fecha:new Date().toISOString(),por:usuario.email,cambios})},{merge:true});
     $('p-estado').textContent=cambios.length?`Guardado: ${cambios.length} cambio(s). El modelo se recalculó.`:'Sin cambios.'; toast('Guardado'); }
   catch(e){ $('p-estado').textContent='No se pudo guardar. Revisá la conexión o los permisos de la base.'; console.error(e); }
 };
@@ -628,8 +756,8 @@ function bienvenida(){
 // Lee la respuesta a medida que se genera (streaming) y arma el mensaje completo para devolverlo en la siguiente vuelta.
 // Si el servidor todavía es la versión anterior (sin streaming), usa la respuesta completa.
 async function llamarIA(body,onEv){
-  const token=await usuario.getIdToken();
-  const r=await fetch(config.worker.replace(/\/$/,'')+'/consulta',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({...body,stream:true})});
+  const autorizacion=DEMO?'Demo '+codigoDemo:'Bearer '+(await usuario.getIdToken());
+  const r=await fetch(config.worker.replace(/\/$/,'')+'/consulta',{method:'POST',headers:{'Content-Type':'application/json','Authorization':autorizacion},body:JSON.stringify({...body,stream:true})});
   if(!r.ok){ let m=''; try{ m=(await r.json()).error||''; }catch(e){} throw new Error(m||('el servidor respondió '+r.status)); }
   if(!(r.headers.get('Content-Type')||'').includes('text/event-stream')){
     const res=await r.json(); (res.content||[]).forEach(b=>{ if(b.type==='text') onEv('text',b.text); else if(b.type==='tool_use'||b.type==='server_tool_use') onEv('tool',b.name); }); return res;
@@ -678,6 +806,7 @@ async function preguntar(texto){
         if(tipo==='text'){ if(nuevoTramo&&total.trim()) total+='\n\n'; nuevoTramo=false; total+=v; setEstado(''); pintar(); }
         else setEstado(v==='web_search'?'Buscando en internet…':'Calculando: '+(NOMBRE_H[v]||v)+'…'); });
       historial.push({role:'assistant',content:res.content});
+      if(DEMO&&vuelta===0){ demoRestantes=Math.max(0,demoRestantes-1); pintarFranjaDemo(); }
       res.content.forEach(c=>(c.citations||[]).forEach(ci=>{ if(ci.url&&!citas.some(x=>x.url===ci.url)) citas.push({url:ci.url,title:ci.title||ci.url}); }));
       if(res.stop_reason==='refusal') throw new Error('el asesor no pudo responder esta consulta; probá reformularla');
       if(res.stop_reason==='pause_turn') continue;
@@ -690,7 +819,8 @@ async function preguntar(texto){
     }
     if(!terminado) throw new Error('la consulta necesitó demasiados pasos; probá dividirla en preguntas más cortas');
   }catch(e){
-    fin=true; console.error(e); historial.length=inicio; // se descarta sólo esta pregunta; la conversación sigue
+    fin=true; console.error(e); historial.length=inicio;
+    if(DEMO&&/límite/.test(e.message)){ demoRestantes=0; pintarFranjaDemo(); } // se descarta sólo esta pregunta; la conversación sigue
     burbuja.className='msg a err'; burbuja.innerHTML=`No pude completar la consulta (${esc(e.message)}). <button class="s" style="margin-left:6px">Reintentar</button>`;
     burbuja.querySelector('button').onclick=()=>{ burbuja.previousElementSibling&&burbuja.previousElementSibling.remove(); burbuja.remove(); preguntar(q); };
     ocupado=false; $('q-btn').disabled=false; return;
@@ -783,7 +913,7 @@ function pintarCorte(){
     <div class="est" data-id="${r.id}">${ESTADOS.map(e=>`<button data-e="${e}" class="${r.estado===e?'on':''}">${e}</button>`).join('')}</div>
     <div class="muted" style="font-size:12px">${esc((r.historial||[]).slice(-1).map(h=>h.estado+' · '+h.por.split('@')[0]+' · '+h.fecha.slice(0,16).replace('T',' ')).join(''))}</div></div>`;}).join(''):'<p class="muted">No hay requisiciones.</p>';
   $('c-lista').querySelectorAll('.est button').forEach(b=>b.onclick=async()=>{ const id=b.parentElement.dataset.id, e=b.dataset.e;
-    try{ await db.collection('costos_corte').doc(id).update({estado:e,historial:firebase.firestore.FieldValue.arrayUnion({estado:e,por:usuario.email,fecha:new Date().toISOString()})}); }catch(err){ toast('No se pudo actualizar'); } });
+    try{ await db.collection('costos_corte').doc(id).update({estado:e,historial:FV.arrayUnion({estado:e,por:usuario.email,fecha:new Date().toISOString()})}); }catch(err){ toast('No se pudo actualizar'); } });
 }
 $('c-filtro').onchange=pintarCorte;
 // ---------- ventas (sistema de pedidos) ----------
@@ -857,6 +987,15 @@ function pintarPendientes(){
   $('c-pend').querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>{ const id=tr.dataset.id; const fam={rompe10:'10×10',importado:null}[id];
     if(fam){ $('c-prod').value=fam; } else { $('c-prod').value='otro'; $('c-otro').value=id; }
     $('c-cant').value=tr.dataset.q; if(tr.dataset.f) $('c-fecha').value=tr.dataset.f; calcHojas(); window.scrollTo({top:0,behavior:'smooth'}); });
+}
+// ---------- arranque del modo demo ----------
+function pintarLinkDemo(){ const p=paramDeWorker(config.worker); $('demo-link').value=p?location.origin+location.pathname+'?demo='+p:'Primero cargá la dirección del servidor de la IA (arriba).'; }
+$('demo-copiar').onclick=()=>{ const v=$('demo-link').value; if(!/\?demo=/.test(v)) return; navigator.clipboard.writeText(v).then(()=>toast('Link copiado'),()=>{ $('demo-link').select(); toast('Copialo con Ctrl+C'); }); };
+$('demo-subir').onclick=()=>subirFotoDemo(true);
+if(DEMO){
+  $('login').hidden=true; $('demo-in').hidden=false;
+  let guardado=''; try{ guardado=sessionStorage.getItem('demoCodigo')||''; }catch(e){}
+  if(guardado) entrarDemo(guardado,true); else setTimeout(()=>$('demo-cod').focus(),50);
 }
 </script>
 </body>

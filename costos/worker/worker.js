@@ -72,6 +72,28 @@ async function sesionValida(token, env) {
   return true;
 }
 
+// ---------- Modo demo (acceso con código, sin escribir en Firebase) ----------
+// Secreto DEMO_CODE: el código que se le pasa al invitado. Si no está cargado, la demo queda apagada.
+// KV con binding DEMO: guarda la foto de los datos (la sube la página cuando entra un administrador) y el contador diario.
+// Variable opcional DEMO_LIMITE: preguntas al asesor por día (por defecto 10).
+function codigoValido(codigo, env) {
+  const a = String(env.DEMO_CODE || ''), b = String(codigo || '').trim().toLowerCase();
+  if (!a || !b) return false;
+  const x = a.toLowerCase();
+  let d = x.length ^ b.length; // comparación en tiempo constante
+  for (let i = 0; i < x.length; i++) d |= x.charCodeAt(i) ^ (b.charCodeAt(i) || 0);
+  return d === 0;
+}
+const hoyTucuman = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+const limiteDemo = env => +env.DEMO_LIMITE || 10;
+async function usadasHoy(env) { return +(await env.DEMO.get('uso:' + hoyTucuman())) || 0; }
+// Una pregunta nueva es la vuelta cuyo último mensaje es texto del usuario (no resultados de herramientas ni pause_turn).
+function esPreguntaNueva(messages) {
+  const u = messages[messages.length - 1];
+  return !!u && u.role === 'user' && Array.isArray(u.content) && u.content.some(c => c.type === 'text');
+}
+const espera = ms => new Promise(r => setTimeout(r, ms));
+
 export default {
   async fetch(req, env) {
     const origin = req.headers.get('Origin') || '';
@@ -79,15 +101,45 @@ export default {
     const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { ...h, 'Content-Type': 'application/json' } });
     if (req.method === 'OPTIONS') return new Response(null, { headers: h });
     const url = new URL(req.url);
-    if (req.method !== 'POST' || url.pathname !== '/consulta') return new Response('No encontrado', { status: 404, headers: h });
-    // 1. ¿Inició sesión en el sistema del Taller?
-    const token = (req.headers.get('Authorization') || '').replace('Bearer ', '');
-    if (!(await sesionValida(token, env))) return json({ error: 'sesión no válida' }, 401);
+    if (req.method !== 'POST') return new Response('No encontrado', { status: 404, headers: h });
+    const auth = req.headers.get('Authorization') || '';
+
+    // Demo: el administrador sube la foto de los datos (ya sin datos personales de clientes).
+    if (url.pathname === '/demo/foto') {
+      if (!env.DEMO) return json({ error: 'demo sin configurar (falta el KV DEMO)' }, 501);
+      if (!(await sesionValida(auth.replace('Bearer ', ''), env))) return json({ error: 'sesión no válida' }, 401);
+      const texto = await req.text();
+      if (texto.length > 20e6) return json({ error: 'foto demasiado grande' }, 413);
+      await env.DEMO.put('foto', texto);
+      return json({ ok: true, bytes: texto.length });
+    }
+    // Demo: el invitado entra con el código y recibe la foto.
+    if (url.pathname === '/demo/entrar') {
+      if (!env.DEMO || !env.DEMO_CODE) return json({ error: 'La demo no está habilitada.' }, 503);
+      let codigo = ''; try { codigo = (await req.json()).codigo; } catch (e) {}
+      if (!codigoValido(codigo, env)) { await espera(1200); return json({ error: 'Código incorrecto.' }, 401); }
+      const foto = await env.DEMO.get('foto');
+      if (!foto) return json({ error: 'La demo todavía no tiene datos: el administrador tiene que entrar una vez a la herramienta.' }, 503);
+      const usadas = await usadasHoy(env);
+      return new Response(`{"limite":${limiteDemo(env)},"restantes":${Math.max(0, limiteDemo(env) - usadas)},"foto":${foto}}`, { headers: { ...h, 'Content-Type': 'application/json' } });
+    }
+    if (url.pathname !== '/consulta') return new Response('No encontrado', { status: 404, headers: h });
+
+    // 1. ¿Inició sesión en el sistema del Taller, o es un invitado de la demo con el código?
+    const body = await req.json();
+    const messages = body.messages || [];
+    if (auth.startsWith('Demo ')) {
+      if (!env.DEMO || !codigoValido(auth.slice(5), env)) return json({ error: 'código de demo no válido' }, 401);
+      if (esPreguntaNueva(messages)) {
+        const usadas = await usadasHoy(env), lim = limiteDemo(env);
+        if (usadas >= lim) return json({ error: `la demo llegó al límite de ${lim} consultas por hoy; mañana se renueva` }, 429);
+        await env.DEMO.put('uso:' + hoyTucuman(), String(usadas + 1), { expirationTtl: 3 * 86400 });
+      }
+    } else if (!(await sesionValida(auth.replace('Bearer ', ''), env))) return json({ error: 'sesión no válida' }, 401);
+
     // 2. Consulta a la IA con las herramientas fijas.
     // El historial no se recorta acá: la página empieza una conversación nueva cuando se alarga
     // (recortarlo separaba pedidos de cálculo de sus resultados y la consulta fallaba).
-    const body = await req.json();
-    const messages = body.messages || [];
     const modelo = env.MODELO_IA || MODELO_IA;
     const conRespaldo = !/haiku/.test(modelo); // si el modelo rechaza una consulta, la reintenta otro modelo
     const pedido = {

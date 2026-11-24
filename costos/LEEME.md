@@ -26,5 +26,18 @@ Página: https://tallerartesanal.com.ar/costos/ (mismo usuario y misma base de F
 3. **Usuarios del personal**: crearlos en Firebase → Authentication (correo y contraseña).
 4. **Reglas de Firestore**: si las reglas limitan colecciones, permitir a usuarios con sesión leer y escribir `costos_modelo`, `costos_importados`, `costos_corte`, `costos_consultas`, `costos_config` y `costos_memoria`.
 
+## Demo para invitados (tutor, tribunal)
+Link: pestaña **Validación → Demo para invitados → Copiar link** (queda `costos/?demo=<cuenta>`). El invitado pone el código y usa la herramienta completa con una foto de los datos: los cambios quedan en la memoria del navegador y no llegan a Firebase; al recargar vuelve a la foto.
+- **Qué ve:** modelo, precios, importados, corte, memoria, las últimas 200 consultas y los pedidos **sólo con monto, seña, fechas, estado, evento y productos** (sin nombre, teléfono, escuela, CUIT, domicilio ni notas). Los correos del equipo se reemplazan por «equipo del taller».
+- **Foto:** la sube sola la página cada vez que entra un administrador (como mucho cada 6 horas) o con el botón *Actualizar los datos de la demo ahora*.
+- **Puesta en marcha (una vez, en Cloudflare):**
+  1. Storage & Databases → **KV** → Create → nombre `DEMO`.
+  2. Workers → `consulta-taller` → Settings → **Bindings** → Add → KV namespace → nombre de la variable `DEMO`, namespace `DEMO`.
+  3. Settings → **Variables and Secrets** → Add → tipo *Secret* → nombre `DEMO_CODE`, valor: el código.
+  4. Opcional: variable `DEMO_LIMITE` (preguntas al asesor por día para la demo; por defecto 10).
+  5. Editar código → pegar el `worker/worker.js` nuevo → Implementar.
+  6. Entrar una vez a la herramienta con tu usuario (sube la foto) y probar el link en una ventana privada.
+- **Cortar el acceso:** borrar o cambiar el secreto `DEMO_CODE`.
+
 ## Verificación
 `engine.js` reproduce el Excel: contribución $20.675.302 (base), $18.364.782 (compras actuales, máquina al 99% en semanas pico), precio sombra ≈ $9 con anticipación y ≈ $31.645 sin anticipación (pico al 45%), y con tiempos +15% anticipa 214 de 25×25 simple y 8 de complejo.
