@@ -8,6 +8,6 @@ FIREBASE_API_KEY = "AIzaSyB2cAptrwiAZiSDI5KPcvEWfpApqmek3Uc"
 # El secreto ANTHROPIC_API_KEY se carga con:  npx wrangler secret put ANTHROPIC_API_KEY
 # Demo para invitados: secreto DEMO_CODE (npx wrangler secret put DEMO_CODE) y un KV con binding DEMO:
 #   npx wrangler kv namespace create DEMO   → pegar el id abajo y descomentar.
-# [[kv_namespaces]]
-# binding = "DEMO"
-# id = "<id del namespace>"
+[[kv_namespaces]]
+binding = "DEMO"
+id = "70f44d6482c840b0a4936b3ae95f768a"
